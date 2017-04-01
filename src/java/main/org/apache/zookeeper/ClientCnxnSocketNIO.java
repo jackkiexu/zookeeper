@@ -191,6 +191,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         }
     }
 
+    // 关闭 SelectionKey 对应的 channel
     @Override
     void cleanup() {
         if (sockKey != null) {
@@ -337,6 +338,9 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         }
     }
 
+    /**
+     * 唤醒此刻可能阻塞的 selector (select.sleect() 可能此刻还在阻塞)
+     */
     @Override
     synchronized void wakeupCnxn() {
         selector.wakeup();

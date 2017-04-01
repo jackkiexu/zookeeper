@@ -1125,6 +1125,8 @@ public class ClientCnxn {
                     }
                 }
             }
+
+
             cleanup();
             clientCnxnSocket.close();
             if (state.isAlive()) {
