@@ -370,19 +370,25 @@ public class ClientCnxn {
     public ClientCnxn(String chrootPath, HostProvider hostProvider, int sessionTimeout, ZooKeeper zooKeeper,
             ClientWatchManager watcher, ClientCnxnSocket clientCnxnSocket,
             long sessionId, byte[] sessionPasswd, boolean canBeReadOnly) {
+        // 下面是 链接zookeeper 服务端的组件
         this.zooKeeper = zooKeeper;
+        // 默认watcher
         this.watcher = watcher;
-        this.sessionId = sessionId;
+        this.sessionId = sessionId; // 从构造函数来看 默认值 0
         this.sessionPasswd = sessionPasswd;
         this.sessionTimeout = sessionTimeout;
         this.hostProvider = hostProvider;
         this.chrootPath = chrootPath;
-
+        // 默认值 30000(惊呆了竟然 30 秒)
         connectTimeout = sessionTimeout / hostProvider.size();
+        // 默认值 20000(惊呆了竟然 20 秒)
         readTimeout = sessionTimeout * 2 / 3;
         readOnly = canBeReadOnly;
 
+        // clientCnxnSocketNio 才是 连接 zookeeper 正真的组件
+        // 进行数据发送的 Thread
         sendThread = new SendThread(clientCnxnSocket);
+        // 进行处理 watch 的事件
         eventThread = new EventThread();
 
     }
@@ -1331,6 +1337,9 @@ public class ClientCnxn {
         return xid++;
     }
 
+    /**
+     * 提交 请求 head, request, response, 及 watch
+     */
     public ReplyHeader submitRequest(RequestHeader h, Record request,
             Record response, WatchRegistration watchRegistration)
             throws InterruptedException {

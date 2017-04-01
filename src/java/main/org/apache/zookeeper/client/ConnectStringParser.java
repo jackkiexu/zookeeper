@@ -41,12 +41,13 @@ public final class ConnectStringParser {
     private final ArrayList<InetSocketAddress> serverAddresses = new ArrayList<InetSocketAddress>();
 
     /**
-     * 
+     *  以下是一个 zookeeper 链接地址的解析过程
      * @throws IllegalArgumentException
      *             for an invalid chroot path.
      */
     public ConnectStringParser(String connectString) {
         // parse out chroot, if any
+        // 1. 解析除 chroot, 这个 chroot 作用于连接服务的所有机器
         int off = connectString.indexOf('/');
         if (off >= 0) {
             String chrootPath = connectString.substring(off);
@@ -61,7 +62,7 @@ public final class ConnectStringParser {
         } else {
             this.chrootPath = null;
         }
-
+        // 2. 分割所有需要进行链接的 地址(分隔符号 , )
         String hostsList[] = connectString.split(",");
         for (String host : hostsList) {
             int port = DEFAULT_PORT;
@@ -73,6 +74,7 @@ public final class ConnectStringParser {
                 }
                 host = host.substring(0, pidx);
             }
+            // 加入数组中s
             serverAddresses.add(InetSocketAddress.createUnresolved(host, port));
         }
     }

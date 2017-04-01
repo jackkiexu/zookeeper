@@ -435,6 +435,12 @@ public class ZooKeeper {
             boolean canBeReadOnly)
         throws IOException
     {
+        /**
+         * 1. 将 zookeeper 请求的地址包转成 connectStringParser(解析除 chrootPaths)
+         * 2. 将 zookeeper 请求的地址包装成 List<InetSocketAddress> 并且打撒成随机的循环数组
+         * 3. 构建连接zookeeper的 clientCnxn
+         * 4. 启动 clientCnxn
+         */
         LOG.info("Initiating client connection, connectString=" + connectString
                 + " sessionTimeout=" + sessionTimeout + " watcher=" + watcher);
 
@@ -504,8 +510,7 @@ public class ZooKeeper {
      */
     public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher,
             long sessionId, byte[] sessionPasswd)
-        throws IOException
-    {
+        throws IOException {
         this(connectString, sessionTimeout, watcher, sessionId, sessionPasswd, false);
     }
 
@@ -685,6 +690,7 @@ public class ZooKeeper {
     }
 
     /**
+     * 在请求的 path 前面增加 初次连接时设置 的 chrootPath
      * Prepend the chroot to the client path (if present). The expectation of
      * this function is that the client path has been validated before this
      * function is called
@@ -1769,6 +1775,11 @@ public class ZooKeeper {
         return cnxn.sendThread.getClientCnxnSocket().getLocalSocketAddress();
     }
 
+    /**
+     * 获取 client 连接 server 的客户端, 这里有 ClientCnxnSocket
+     * (若想使用 netty 作为底层连接组件, 则 在 java 启动中加入 -Dzookeeper.serverCnxnFactory=org.apache.zookeeper.server.NIOServerCnxnFactory)
+     *
+     */
     private static ClientCnxnSocket getClientCnxnSocket() throws IOException {
         String clientCnxnSocketName = System
                 .getProperty(ZOOKEEPER_CLIENT_CNXN_SOCKET);

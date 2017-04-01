@@ -58,9 +58,13 @@ public final class StaticHostProvider implements HostProvider {
             throws UnknownHostException {
         for (InetSocketAddress address : serverAddresses) {
             InetAddress ia = address.getAddress();
+            // 1. 获取对应的 hostAddress 或 hostName
             InetAddress resolvedAddresses[] = InetAddress.getAllByName((ia!=null) ? ia.getHostAddress():
                 address.getHostName());
+            // 2. 循环遍历 resolvedAddresses
             for (InetAddress resolvedAddress : resolvedAddresses) {
+                // 3. 通过设置 host String 为 hostName 防止发送数据时根据 域名来进行 DNS lookup(查询)
+
                 // If hostName is null but the address is not, we can tell that
                 // the hostName is an literal IP address. Then we can set the host string as the hostname
                 // safely to avoid reverse DNS lookup.
@@ -84,6 +88,7 @@ public final class StaticHostProvider implements HostProvider {
             throw new IllegalArgumentException(
                     "A HostProvider may not be empty!");
         }
+        // 3. 通过 shuffle 将 serverAddresses 变成一个循环的链表s
         Collections.shuffle(this.serverAddresses);
     }
 
