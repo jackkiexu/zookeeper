@@ -76,6 +76,7 @@
                 rev="3.2.2" conf="releaseaudit->default"/>
 
     <dependency org="net.java.dev.javacc" name="javacc" rev="5.0" />
+    <dependency org="commons-collections" name="commons-collections" rev="3.0"/>
 
     <dependency org="org.eclipse.jetty" name="jetty-server" rev="9.2.18.v20160721"
                 conf="optional->default"/>
