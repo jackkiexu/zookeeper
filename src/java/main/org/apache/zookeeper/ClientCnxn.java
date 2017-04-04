@@ -370,25 +370,23 @@ public class ClientCnxn {
     public ClientCnxn(String chrootPath, HostProvider hostProvider, int sessionTimeout, ZooKeeper zooKeeper,
             ClientWatchManager watcher, ClientCnxnSocket clientCnxnSocket,
             long sessionId, byte[] sessionPasswd, boolean canBeReadOnly) {
-        // ÏÂÃæÊÇ Á´½Ózookeeper ·şÎñ¶ËµÄ×é¼ş
+        // è¿™é‡Œçš„ zookeeper å…¶å®æ˜¯ä¸€ä¸ª client è¿æ¥æœåŠ¡å™¨çš„ unitly
         this.zooKeeper = zooKeeper;
-        // Ä¬ÈÏwatcher
+        // é»˜è®¤çš„ watcher
         this.watcher = watcher;
-        this.sessionId = sessionId; // ´Ó¹¹Ôìº¯ÊıÀ´¿´ Ä¬ÈÏÖµ 0
+        this.sessionId = sessionId;
         this.sessionPasswd = sessionPasswd;
-        this.sessionTimeout = sessionTimeout;
+        this.sessionTimeout = sessionTimeout; // è¿æ¥è¶…æ—¶æ—¶é—´
         this.hostProvider = hostProvider;
         this.chrootPath = chrootPath;
-        // Ä¬ÈÏÖµ 30000(¾ª´ôÁË¾¹È» 30 Ãë)
+
         connectTimeout = sessionTimeout / hostProvider.size();
-        // Ä¬ÈÏÖµ 20000(¾ª´ôÁË¾¹È» 20 Ãë)
+
         readTimeout = sessionTimeout * 2 / 3;
         readOnly = canBeReadOnly;
 
-        // clientCnxnSocketNio ²ÅÊÇ Á¬½Ó zookeeper ÕıÕæµÄ×é¼ş
-        // ½øĞĞÊı¾İ·¢ËÍµÄ Thread
+        // clientCnxnSocketNio
         sendThread = new SendThread(clientCnxnSocket);
-        // ½øĞĞ´¦Àí watch µÄÊÂ¼ş
         eventThread = new EventThread();
 
     }
@@ -970,6 +968,7 @@ public class ClientCnxn {
             }
             logStartConnect(addr);
 
+            // å¼€å¯ socket è¿æ¥
             clientCnxnSocket.connect(addr);
         }
 
@@ -994,7 +993,9 @@ public class ClientCnxn {
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             while (state.isAlive()) {
                 try {
+                    // é€šè¿‡åˆ¤æ–­ selectKey æ˜¯å¦ä¸º null æ¥è¿›è¡Œåˆ¤æ–­
                     if (!clientCnxnSocket.isConnected()) {
+                        // è‹¥ä¸æ˜¯ç¬¬ä¸€æ¬¡è¿æ¥, åˆ™è¿›è¡Œ éšæœºçš„ sleep
                         if(!isFirstConnect){
                             try {
                                 Thread.sleep(r.nextInt(1000));
@@ -1006,6 +1007,7 @@ public class ClientCnxn {
                         if (closing || !state.isAlive()) {
                             break;
                         }
+                        // å¼€å¯ socket è¿æ¥
                         startConnect();
                         clientCnxnSocket.updateLastSendAndHeard();
                     }
@@ -1340,7 +1342,7 @@ public class ClientCnxn {
     }
 
     /**
-     * Ìá½» ÇëÇó head, request, response, ¼° watch
+     * ï¿½á½» ï¿½ï¿½ï¿½ï¿½ head, request, response, ï¿½ï¿½ watch
      */
     public ReplyHeader submitRequest(RequestHeader h, Record request,
             Record response, WatchRegistration watchRegistration)

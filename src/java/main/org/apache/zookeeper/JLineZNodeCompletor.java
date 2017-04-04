@@ -20,9 +20,9 @@ package org.apache.zookeeper;
 
 import java.util.List;
 
-import jline.Completor;
+//import jline.Completor;
 
-class JLineZNodeCompletor implements Completor {
+class JLineZNodeCompletor  {
     private ZooKeeper zk;
 
     public JLineZNodeCompletor(ZooKeeper zk) {

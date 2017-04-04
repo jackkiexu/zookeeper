@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ClientBase extends ZKTestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(ClientBase.class);
 
-    public static int CONNECTION_TIMEOUT = 30000;
+    public static int CONNECTION_TIMEOUT = 30000000;
     static final File BASETEST =
         new File(System.getProperty("build.test.dir", "build"));
 
@@ -182,6 +182,7 @@ public abstract class ClientBase extends ZKTestCase {
     {
         watcher.reset();
         TestableZooKeeper zk = new TestableZooKeeper(hp, timeout, watcher);
+        // 通过下面的 await 来达到 zookeeper client 连接 server 成功后才继续向下执行 程序
         if (!watcher.clientConnected.await(timeout, TimeUnit.MILLISECONDS))
         {
             Assert.fail("Unable to connect to server");

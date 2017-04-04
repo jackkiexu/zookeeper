@@ -191,7 +191,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         }
     }
 
-    // �ر� SelectionKey ��Ӧ�� channel
+    // �ر� SelectionKey ��Ӧ�� channel
     @Override
     void cleanup() {
         if (sockKey != null) {
@@ -253,6 +253,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     }
     
     /**
+     * 创建一个服务端 socket
      * create a socket channel.
      * @return the created socket channel
      * @throws IOException
@@ -261,7 +262,17 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         SocketChannel sock;
         sock = SocketChannel.open();
         sock.configureBlocking(false);
+        /**
+         * socket 端口进行关闭时, 是否等待底层的数据包都发送完才进行返回
+         * 下面的 false 表示默认, 在进行close时程序会立刻返回, 而底层的数据包, 系统会将发送给对方
+         * http://blog.csdn.net/factor2000/article/details/3929816
+         * http://blog.csdn.net/woshisap/article/details/6576719
+         */
         sock.socket().setSoLinger(false, -1);
+        /**
+         * 禁用 Nagle’s Algorithm (合并小的 TCP 包, 避免过多小 TCP 包头浪费带宽)
+         * http://jerrypeng.me/2013/08/mythical-40ms-delay-and-tcp-nodelay/
+         */
         sock.socket().setTcpNoDelay(true);
         return sock;
     }
@@ -339,7 +350,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     }
 
     /**
-     * ���Ѵ˿̿��������� selector (select.sleect() ���ܴ˿̻�������)
+     * ���Ѵ˿̿��������� selector (select.sleect() ���ܴ˿̻�������)
      */
     @Override
     synchronized void wakeupCnxn() {
