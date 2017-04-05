@@ -436,10 +436,10 @@ public class ZooKeeper {
         throws IOException
     {
         /**
-         * 1. ½« zookeeper ÇëÇóµÄµØÖ·°ü×ª³É connectStringParser(½âÎö³ı chrootPaths)
-         * 2. ½« zookeeper ÇëÇóµÄµØÖ·°ü×°³É List<InetSocketAddress> ²¢ÇÒ´òÈö³ÉËæ»úµÄÑ­»·Êı×é
-         * 3. ¹¹½¨Á¬½ÓzookeeperµÄ clientCnxn
-         * 4. Æô¶¯ clientCnxn
+         * 1. ï¿½ï¿½ zookeeper ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½×ªï¿½ï¿½ connectStringParser(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ chrootPaths)
+         * 2. ï¿½ï¿½ zookeeper ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·ï¿½ï¿½×°ï¿½ï¿½ List<InetSocketAddress> ï¿½ï¿½ï¿½Ò´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+         * 3. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½zookeeperï¿½ï¿½ clientCnxn
+         * 4. ï¿½ï¿½ï¿½ï¿½ clientCnxn
          */
         LOG.info("Initiating client connection, connectString=" + connectString
                 + " sessionTimeout=" + sessionTimeout + " watcher=" + watcher);
@@ -690,7 +690,7 @@ public class ZooKeeper {
     }
 
     /**
-     * ÔÚÇëÇóµÄ path Ç°ÃæÔö¼Ó ³õ´ÎÁ¬½ÓÊ±ÉèÖÃ µÄ chrootPath
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ path Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ chrootPath
      * Prepend the chroot to the client path (if present). The expectation of
      * this function is that the client path has been validated before this
      * function is called
@@ -1260,10 +1260,11 @@ public class ZooKeeper {
         throws KeeperException, InterruptedException
     {
         final String clientPath = path;
+        // æ£€éªŒè·¯å¾„
         PathUtils.validatePath(clientPath);
-
+        // å¢åŠ  chroot
         final String serverPath = prependChroot(clientPath);
-
+        // å°è£… requestHeader, RequestBody
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.setData);
         SetDataRequest request = new SetDataRequest();
@@ -1272,6 +1273,7 @@ public class ZooKeeper {
         request.setVersion(version);
         SetDataResponse response = new SetDataResponse();
         ReplyHeader r = cnxn.submitRequest(h, request, response, null);
+
         if (r.getErr() != 0) {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()),
                     clientPath);
@@ -1776,8 +1778,8 @@ public class ZooKeeper {
     }
 
     /**
-     * »ñÈ¡ client Á¬½Ó server µÄ¿Í»§¶Ë, ÕâÀïÓĞ ClientCnxnSocket
-     * (ÈôÏëÊ¹ÓÃ netty ×÷Îªµ×²ãÁ¬½Ó×é¼ş, Ôò ÔÚ java Æô¶¯ÖĞ¼ÓÈë -Dzookeeper.serverCnxnFactory=org.apache.zookeeper.server.NIOServerCnxnFactory)
+     * ï¿½ï¿½È¡ client ï¿½ï¿½ï¿½ï¿½ server ï¿½Ä¿Í»ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ClientCnxnSocket
+     * (ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ netty ï¿½ï¿½Îªï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ java ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¼ï¿½ï¿½ï¿½ -Dzookeeper.serverCnxnFactory=org.apache.zookeeper.server.NIOServerCnxnFactory)
      *
      */
     private static ClientCnxnSocket getClientCnxnSocket() throws IOException {

@@ -120,6 +120,7 @@ public class ZooKeeperTest extends ClientBase {
 
         };
         final AtomicInteger ctx = new AtomicInteger(3);
+        // 递归删除
         ZKUtil.deleteRecursive(zk, "/a", cb, ctx);
         synchronized (ctx) {
             ctx.wait();

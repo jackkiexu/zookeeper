@@ -1388,6 +1388,7 @@ public class ClientCnxn {
         // Note that we do not generate the Xid for the packet yet. It is
         // generated later at send-time, by an implementation of ClientCnxnSocket::doIO(),
         // where the packet is actually sent.
+        // 增加 数据包 packet 到 outgoingQueue
         synchronized (outgoingQueue) {
             packet = new Packet(h, r, request, response, watchRegistration);
             packet.cb = cb;
