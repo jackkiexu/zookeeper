@@ -276,23 +276,28 @@ public class ClientCnxn {
             this.watchRegistration = watchRegistration;
         }
 
+        // 将 packet 序列化成 ByteBuffer
         public void createBB() {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
                 boa.writeInt(-1, "len"); // We'll fill this in later
+                // 序列化 requestHeader
                 if (requestHeader != null) {
                     requestHeader.serialize(boa, "header");
                 }
+                // 序列化 ConnectRequest
                 if (request instanceof ConnectRequest) {
                     request.serialize(boa, "connect");
                     // append "am-I-allowed-to-be-readonly" flag
                     boa.writeBool(readOnly, "readOnly");
-                } else if (request != null) {
+                }
+                else if (request != null) {
                     request.serialize(boa, "request");
                 }
                 baos.close();
                 this.bb = ByteBuffer.wrap(baos.toByteArray());
+                // 为什么 - 4
                 this.bb.putInt(this.bb.capacity() - 4);
                 this.bb.rewind();
             } catch (IOException e) {
@@ -708,13 +713,19 @@ public class ClientCnxn {
         private Random r = new Random(System.nanoTime());        
         private boolean isFirstConnect = true;
 
+        /**
+         * 根据获取的 buffer 进行处理
+         */
         void readResponse(ByteBuffer incomingBuffer) throws IOException {
-            ByteBufferInputStream bbis = new ByteBufferInputStream(
-                    incomingBuffer);
+            // 反序列化出 消息头
+            ByteBufferInputStream bbis = new ByteBufferInputStream(incomingBuffer);
             BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
             ReplyHeader replyHdr = new ReplyHeader();
 
             replyHdr.deserialize(bbia, "header");
+
+            // xid 用于记录客户端请求发起的先后序号，用来确保单个客户端请求的响应顺序 (请求和响应是同一个值s)
+            // -2 是心跳包
             if (replyHdr.getXid() == -2) {
                 // -2 is the xid for pings
                 if (LOG.isDebugEnabled()) {
@@ -726,12 +737,13 @@ public class ClientCnxn {
                 }
                 return;
             }
+            // -4 授权包
             if (replyHdr.getXid() == -4) {
                 // -4 is the xid for AuthPacket               
-                if(replyHdr.getErr() == KeeperException.Code.AUTHFAILED.intValue()) {
-                    state = States.AUTH_FAILED;                    
-                    eventThread.queueEvent( new WatchedEvent(Watcher.Event.EventType.None, 
-                            Watcher.Event.KeeperState.AuthFailed, null) );            		            		
+                if(replyHdr.getErr() == KeeperException.Code.AUTHFAILED.intValue()) { // 授权失败,
+                    state = States.AUTH_FAILED;
+                    // 将授权失败的事件丢到队列里面, 等待处理
+                    eventThread.queueEvent( new WatchedEvent(Watcher.Event.EventType.None, Watcher.Event.KeeperState.AuthFailed, null) );
                 }
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Got auth sessionid:0x"
@@ -746,8 +758,10 @@ public class ClientCnxn {
                         + Long.toHexString(sessionId));
                 }
                 WatcherEvent event = new WatcherEvent();
+                // 反序列化 响应体
                 event.deserialize(bbia, "response");
 
+                // 若初始时设置了 chroot, 这时需要加上这个 chroot
                 // convert from a server path to a client path
                 if (chrootPath != null) {
                     String serverPath = event.getPath();
@@ -778,8 +792,7 @@ public class ClientCnxn {
             if (clientTunneledAuthenticationInProgress()) {
                 GetSASLRequest request = new GetSASLRequest();
                 request.deserialize(bbia,"token");
-                zooKeeperSaslClient.respondToServer(request.getToken(),
-                  ClientCnxn.this);
+                zooKeeperSaslClient.respondToServer(request.getToken(), ClientCnxn.this);
                 return;
             }
 
@@ -891,6 +904,7 @@ public class ClientCnxn {
                 outgoingQueue.addFirst(new Packet(null, null, conReq,
                             null, null, readOnly));
             }
+            //
             clientCnxnSocket.enableReadWriteOnly();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Session establishment request sent on "
@@ -1379,6 +1393,11 @@ public class ClientCnxn {
         sendThread.sendPacket(p);
     }
 
+    /**
+     * 1. 将数据包装成 Packet
+     * 2. 将 Packet 丢到 outgoingQueue
+     * 3. 唤醒 selector
+     */
     Packet queuePacket(RequestHeader h, ReplyHeader r, Record request,
             Record response, AsyncCallback cb, String clientPath,
             String serverPath, Object ctx, WatchRegistration watchRegistration)
@@ -1403,9 +1422,11 @@ public class ClientCnxn {
                 if (h.getType() == OpCode.closeSession) {
                     closing = true;
                 }
+                // 将要发送的数据包丢入队列, 就可以回去了
                 outgoingQueue.add(packet);
             }
         }
+        // 唤醒此时可能 sleep 的 selector
         sendThread.getClientCnxnSocket().wakeupCnxn();
         return packet;
     }

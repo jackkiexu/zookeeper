@@ -85,7 +85,8 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     @Override
     public void configure(InetSocketAddress addr, int maxcc) throws IOException {
         configureSaslLogin();
-
+        // 开启服务端端口的监听
+        // 这里不懂的可以看看 java nio
         thread = new Thread(this, "NIOServerCxn.Factory:" + addr);
         thread.setDaemon(true);
         maxClientCnxns = maxcc;
@@ -116,8 +117,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     }
 
     @Override
-    public void startup(ZooKeeperServer zks) throws IOException,
-            InterruptedException {
+    public void startup(ZooKeeperServer zks) throws IOException, InterruptedException {
         start();
         zks.startdata();
         zks.startup();
@@ -248,6 +248,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
         }
     }
 
+    // 关闭服务端链接
     public void shutdown() {
         try {
             ss.close();

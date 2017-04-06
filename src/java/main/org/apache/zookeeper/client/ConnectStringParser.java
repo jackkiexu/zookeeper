@@ -49,7 +49,7 @@ public final class ConnectStringParser {
         // parse out chroot, if any
         // 1. 解析除 chroot, 这个 chroot 作用于连接服务的所有机器
         int off = connectString.indexOf('/');
-        if (off >= 0) {
+        if (off >= 0) { // off >=0 说明有 chroot
             String chrootPath = connectString.substring(off);
             // ignore "/" chroot spec, same as null
             if (chrootPath.length() == 1) {
@@ -58,7 +58,7 @@ public final class ConnectStringParser {
                 PathUtils.validatePath(chrootPath);
                 this.chrootPath = chrootPath;
             }
-            connectString = connectString.substring(0, off);
+            connectString = connectString.substring(0, off); // 将 除 chroot 剩余的部分存储下来s
         } else {
             this.chrootPath = null;
         }

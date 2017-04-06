@@ -92,6 +92,7 @@ public class FileTxnSnapLog {
                         + this.snapDir);
             }
         }
+        // 这里其实就是 new 了两个 File
         txnLog = new FileTxnLog(this.dataDir);
         snapLog = new FileSnap(this.snapDir);
     }

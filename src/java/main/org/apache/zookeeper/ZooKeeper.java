@@ -147,6 +147,7 @@ public class ZooKeeper {
          * @see org.apache.zookeeper.ClientWatchManager#materialize(Event.KeeperState, 
          *                                                        Event.EventType, java.lang.String)
          */
+        // materialize  使具体化
         @Override
         public Set<Watcher> materialize(Watcher.Event.KeeperState state,
                                         Watcher.Event.EventType type,
@@ -435,21 +436,17 @@ public class ZooKeeper {
             boolean canBeReadOnly)
         throws IOException
     {
-        /**
-         * 1. �� zookeeper ����ĵ�ַ��ת�� connectStringParser(������ chrootPaths)
-         * 2. �� zookeeper ����ĵ�ַ��װ�� List<InetSocketAddress> ���Ҵ����������ѭ������
-         * 3. ��������zookeeper�� clientCnxn
-         * 4. ���� clientCnxn
-         */
+
         LOG.info("Initiating client connection, connectString=" + connectString
                 + " sessionTimeout=" + sessionTimeout + " watcher=" + watcher);
 
         watchManager.defaultWatcher = watcher;
-
-        ConnectStringParser connectStringParser = new ConnectStringParser(
-                connectString);
-        HostProvider hostProvider = new StaticHostProvider(
-                connectStringParser.getServerAddresses());
+        // zookeeper 连接的客户端
+        ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
+        // 连接地址的获取通过 hostProvider
+        HostProvider hostProvider = new StaticHostProvider(connectStringParser.getServerAddresses());
+        // 与 server 之间的 IO 交互都是通过 cnxn
+        // 其实正真做事的是 ClientCnxnSocket
         cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
                 hostProvider, sessionTimeout, this, watchManager,
                 getClientCnxnSocket(), canBeReadOnly);

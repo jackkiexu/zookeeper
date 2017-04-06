@@ -39,8 +39,8 @@ import org.junit.Test;
 public class ZooKeeperTest extends ClientBase {
 
     @Test
-    public void testDeleteRecursive() throws IOException, InterruptedException,
-            KeeperException {
+    public void testDeleteRecursive() throws IOException, InterruptedException, KeeperException {
+        // 创建客户端
         final ZooKeeper zk = createClient();
         // making sure setdata works on /
         zk.setData("/", "some".getBytes(), -1);

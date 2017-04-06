@@ -64,7 +64,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         if (sock == null) {
             throw new IOException("Socket is null!");
         }
-        if (sockKey.isReadable()) {
+        if (sockKey.isReadable()) { // selectKey 是可读事件
             int rc = sock.read(incomingBuffer);
             if (rc < 0) {
                 throw new EndOfStreamException(
@@ -72,7 +72,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                                 + Long.toHexString(sessionId)
                                 + ", likely server has closed socket");
             }
-            if (!incomingBuffer.hasRemaining()) {
+            if (!incomingBuffer.hasRemaining()) { // hasRemaining 表示 buffer 没有读满
                 incomingBuffer.flip();
                 if (incomingBuffer == lenBuffer) {
                     recvCount++;
@@ -372,12 +372,12 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         updateNow();
         for (SelectionKey k : selected) {
             SocketChannel sc = ((SocketChannel) k.channel());
-            if ((k.readyOps() & SelectionKey.OP_CONNECT) != 0) {
+            if ((k.readyOps() & SelectionKey.OP_CONNECT) != 0) { // 判断是否已经连接服务端
                 if (sc.finishConnect()) {
                     updateLastSendAndHeard();
                     sendThread.primeConnection();
                 }
-            } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {
+            } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) { // 判断是否有可读/写的事件
                 doIO(pendingQueue, outgoingQueue, cnxn);
             }
         }
@@ -410,7 +410,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     @Override
     public synchronized void disableWrite() {
         int i = sockKey.interestOps();
-        if ((i & SelectionKey.OP_WRITE) != 0) {
+        if ((i & SelectionKey.OP_WRITE) != 0) { // 通过 & 操作来判断当前是否支持 write
             sockKey.interestOps(i & (~SelectionKey.OP_WRITE));
         }
     }
@@ -424,6 +424,8 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
 
     @Override
     synchronized void enableReadWriteOnly() {
+        // 当有注册到 selector 的 channel 可读时会产生 Selectkey
+        // 当缓冲区未满时, 可以进行 write (设置这个要小心, 只在需要写时才进行设置)
         sockKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 

@@ -437,6 +437,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return running;
     }
 
+    // zookeeper 服务端关闭
     public void shutdown() {
         LOG.info("shutting down");
 
@@ -458,6 +459,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         unregisterJMX();
     }
 
+    // 退出 JMX 注册信息
     protected void unregisterJMX() {
         // unregister from JMX
         try {

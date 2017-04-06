@@ -67,10 +67,13 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
     public void testAclCount() throws Exception {
         File tmpDir = ClientBase.createTmpDir();
         ClientBase.setupTestEnv();
-        ZooKeeperServer zks = new ZooKeeperServer(tmpDir, tmpDir, 3000);
+        // 创建服务端
+        ZooKeeperServer zks = new ZooKeeperServer(tmpDir, tmpDir, 30000000);
         SyncRequestProcessor.setSnapCount(1000);
         final int PORT = Integer.parseInt(HOSTPORT.split(":")[1]);
+        // 创建 服务端连接器
         ServerCnxnFactory f = ServerCnxnFactory.createFactory(PORT, -1);
+        // 启动服务端
         f.startup(zks);
         ZooKeeper zk;
 
@@ -84,8 +87,8 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
 
         try {
             LOG.info("starting up the zookeeper server .. waiting");
-            Assert.assertTrue("waiting for server being up",
-                    ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
+            Assert.assertTrue("waiting for server being up", ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
+            // 启动客户端
             zk = new ZooKeeper(HOSTPORT, CONNECTION_TIMEOUT, this);
 
             zk.addAuthInfo("digest", "pat:test".getBytes());
@@ -100,7 +103,7 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
               LOG.error("Something is fundamentally wrong with ArrayList's add() method. add()ing four times to an empty ArrayList should result in an ArrayList with 4 members.");
               throw e;
             }
-
+            // 创建节点 (赋值权限 + 持久化的节点)
             zk.create(path,path.getBytes(),CREATOR_ALL_AND_WORLD_READABLE,CreateMode.PERSISTENT);
             List<ACL> acls = zk.getACL("/path", new Stat());
             Assert.assertEquals(2,acls.size());
