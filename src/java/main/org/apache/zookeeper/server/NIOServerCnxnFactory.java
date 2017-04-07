@@ -172,10 +172,13 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
         }
     }
 
+    /**
+     * 服务端时间监听
+     */
     public void run() {
         while (!ss.socket().isClosed()) {
             try {
-                selector.select(1000);
+                selector.select(1000);              // 阻塞方式获取事件
                 Set<SelectionKey> selected;
                 synchronized (this) {
                     selected = selector.selectedKeys();

@@ -152,6 +152,9 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public ZooKeeperServer(FileTxnSnapLog txnLogFactory, int tickTime,
             int minSessionTimeout, int maxSessionTimeout,
             DataTreeBuilder treeBuilder, ZKDatabase zkDb) {
+
+        System.out.println(Arrays.toString( new RuntimeException().getStackTrace()));
+
         serverStats = new ServerStats(this);
         this.txnLogFactory = txnLogFactory;
         this.zkDb = zkDb;
@@ -245,6 +248,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     
     /**
      *  Restore sessions and data
+     *  加载数据
      */
     public void loadData() throws IOException, InterruptedException {
         /*
@@ -527,10 +531,16 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    byte[] generatePasswd(long id) {
+    // 一大特点 只要 id 不变, 则每次调用 generatePasswd 第一次都会返回一样的结果
+    public static byte[] generatePasswd(long id) {
         Random r = new Random(id ^ superSecret);
         byte p[] = new byte[16];
         r.nextBytes(p);
+        System.out.println("p 1 :" + (Arrays.toString(p)));
+        r.nextBytes(p);
+        System.out.println("p 2 :" + (Arrays.toString(p)));
+        r.nextBytes(p);
+        System.out.println("p 2 :" + (Arrays.toString(p)));
         return p;
     }
 
@@ -539,14 +549,15 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 && Arrays.equals(passwd, generatePasswd(sessionId));
     }
 
+    // 创建对应的 session
     long createSession(ServerCnxn cnxn, byte passwd[], int timeout) {
-        long sessionId = sessionTracker.createSession(timeout);
+        long sessionId = sessionTracker.createSession(timeout);     // sessionTracker创建对应的 session, 并且存储到对应的 map 中, 返回 sessionid
         Random r = new Random(sessionId ^ superSecret);
-        r.nextBytes(passwd);
+        r.nextBytes(passwd);                                           // 这一步是生成密码(建议亲自试一下这个方法, 同样的方法两次调用得到的 passwd 是不一样的)
         ByteBuffer to = ByteBuffer.allocate(4);
         to.putInt(timeout);
         cnxn.setSessionId(sessionId);
-        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null);
+        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null); // 提交创建 session 请求
         return sessionId;
     }
 
@@ -667,11 +678,11 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         try {
             touch(si.cnxn);
-            boolean validpacket = Request.isValid(si.type);
+            boolean validpacket = Request.isValid(si.type); // 校验请求类型
             if (validpacket) {
-                firstProcessor.processRequest(si);
+                firstProcessor.processRequest(si);  // 处理请求
                 if (si.cnxn != null) {
-                    incInProcess();
+                    incInProcess(); // 处理计数器 +1
                 }
             } else {
                 LOG.warn("Received packet at server of unknown type " + si.type);

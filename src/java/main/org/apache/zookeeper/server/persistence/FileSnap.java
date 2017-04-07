@@ -62,6 +62,7 @@ public class FileSnap implements SnapShot {
 
     /**
      * deserialize a data tree from the most recent snapshot
+     * 从最近的 snapshot 里面恢复出来 DataTree
      * @return the zxid of the snapshot
      */ 
     public long deserialize(DataTree dt, Map<Long, Integer> sessions)

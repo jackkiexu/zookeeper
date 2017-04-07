@@ -20,6 +20,7 @@ package org.apache.zookeeper.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.zookeeper.ZKTestCase;
@@ -86,7 +87,7 @@ public class ZooKeeperServerTest extends ZKTestCase {
 
         File[] filelist =
                 FileTxnLog.getLogFiles(files,
-                Long.parseLong("10027c6de", 16));
+                        Long.parseLong("10027c6de", 16));
 
         Assert.assertEquals(3, filelist.length);
         Assert.assertEquals(orig[0], filelist[0]);
@@ -132,6 +133,14 @@ public class ZooKeeperServerTest extends ZKTestCase {
             if (null != tmpFileDir) {
                 ClientBase.recursiveDelete(tmpFileDir);
             }
+        }
+    }
+
+
+    @Test
+    public void generatePasswdc(){
+        for(int i = 0; i < 10; i++){
+            System.out.println(Arrays.toString(ZooKeeperServer.generatePasswd(123456)));
         }
     }
 }
