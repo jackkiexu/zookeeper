@@ -136,7 +136,9 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
      * Creates a ZooKeeperServer instance. Nothing is setup, use the setX
      * methods to prepare the instance (eg datadir, datalogdir, ticktime, 
      * builder, etc...)
-     * 
+     *
+     * è¿™é‡Œåªæ˜¯åˆå§‹åŒ–ä¸€ä¸ª ZooKeeperServer
+     *
      * @throws IOException
      */
     public ZooKeeperServer() {
@@ -248,7 +250,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     
     /**
      *  Restore sessions and data
-     *  ¼ÓÔØÊı¾İ
+     *  ????????
      */
     public void loadData() throws IOException, InterruptedException {
         /*
@@ -269,7 +271,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
          *  
          * See ZOOKEEPER-1642 for more detail.
          */
-        if(zkDb.isInitialized()){
+        if(zkDb.isInitialized()){ // å·²ç»åˆå§‹åŒ–äº†, ç›´æ¥ä» ZKDataBase é‡Œé¢æ‹¿å–æœ€æ–°å¤„ç†çš„ zxid
             setZxid(zkDb.getDataTreeLastProcessedZxid());
         }
         else {
@@ -399,7 +401,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (zkDb == null) {
             zkDb = new ZKDatabase(this.txnLogFactory);
         }  
-        if (!zkDb.isInitialized()) {
+        if (!zkDb.isInitialized()) { // åˆ¤æ–­æ˜¯å¦éœ€è¦åˆå§‹åŒ–
             loadData();
         }
     }
@@ -441,7 +443,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return running;
     }
 
-    // zookeeper ·şÎñ¶Ë¹Ø±Õ
+    // zookeeper ???????
     public void shutdown() {
         LOG.info("shutting down");
 
@@ -463,7 +465,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         unregisterJMX();
     }
 
-    // ÍË³ö JMX ×¢²áĞÅÏ¢
+    // ??? JMX ??????
     protected void unregisterJMX() {
         // unregister from JMX
         try {
@@ -531,7 +533,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    // Ò»´óÌØµã Ö»Òª id ²»±ä, ÔòÃ¿´Îµ÷ÓÃ generatePasswd µÚÒ»´Î¶¼»á·µ»ØÒ»ÑùµÄ½á¹û
     public static byte[] generatePasswd(long id) {
         Random r = new Random(id ^ superSecret);
         byte p[] = new byte[16];
@@ -549,15 +550,15 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 && Arrays.equals(passwd, generatePasswd(sessionId));
     }
 
-    // ´´½¨¶ÔÓ¦µÄ session
+    // ????????? session
     long createSession(ServerCnxn cnxn, byte passwd[], int timeout) {
-        long sessionId = sessionTracker.createSession(timeout);     // sessionTracker´´½¨¶ÔÓ¦µÄ session, ²¢ÇÒ´æ´¢µ½¶ÔÓ¦µÄ map ÖĞ, ·µ»Ø sessionid
+        long sessionId = sessionTracker.createSession(timeout);     // sessionTracker????????? session, ????æ´¢??????? map ??, ???? sessionid
         Random r = new Random(sessionId ^ superSecret);
-        r.nextBytes(passwd);                                           // ÕâÒ»²½ÊÇÉú³ÉÃÜÂë(½¨ÒéÇ××ÔÊÔÒ»ÏÂÕâ¸ö·½·¨, Í¬ÑùµÄ·½·¨Á½´Îµ÷ÓÃµÃµ½µÄ passwd ÊÇ²»Ò»ÑùµÄ)
+        r.nextBytes(passwd);                                           // ???????????????(????????????????????, ???????????Îµ??????? passwd ????????)
         ByteBuffer to = ByteBuffer.allocate(4);
         to.putInt(timeout);
         cnxn.setSessionId(sessionId);
-        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null); // Ìá½»´´½¨ session ÇëÇó
+        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null); // ?????? session ????
         return sessionId;
     }
 
@@ -678,11 +679,11 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         try {
             touch(si.cnxn);
-            boolean validpacket = Request.isValid(si.type); // Ğ£ÑéÇëÇóÀàĞÍ
+            boolean validpacket = Request.isValid(si.type); // Ğ£??????????
             if (validpacket) {
-                firstProcessor.processRequest(si);  // ´¦ÀíÇëÇó
+                firstProcessor.processRequest(si);  // ????????
                 if (si.cnxn != null) {
-                    incInProcess(); // ´¦Àí¼ÆÊıÆ÷ +1
+                    incInProcess(); // ????????? +1
                 }
             } else {
                 LOG.warn("Received packet at server of unknown type " + si.type);

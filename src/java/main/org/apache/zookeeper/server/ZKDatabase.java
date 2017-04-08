@@ -170,7 +170,6 @@ public class ZKDatabase {
     }      
     
     /**
-     * 获取最新处理的 zxid
      * get the last processed zxid from a datatree
      * @return the last processed zxid of a datatree
      */

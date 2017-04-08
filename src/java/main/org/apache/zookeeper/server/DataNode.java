@@ -36,22 +36,28 @@ import org.apache.zookeeper.data.StatPersisted;
  * 
  */
 public class DataNode implements Record {
+
+    // 父节点的引用
     /** the parent of this datanode */
     DataNode parent;
 
+    // 这个节点对应的数据 data
     /** the data for this datanode */
     byte data[];
 
+    // 这个节点对应的 acl 权限 (对应的 create, delete, get, admin)
     /**
      * the acl map long for this datanode. the datatree has the map
      */
     Long acl;
 
+    // 这个节点的 stat 值
     /**
      * the stat for this node that is persisted to disk.
      */
     public StatPersisted stat;
 
+    // 对应的子节点的路径
     /**
      * the list of children for this node. note that the list of children string
      * does not contain the parent path -- just the last part of the path. This

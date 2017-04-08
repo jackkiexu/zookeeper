@@ -158,6 +158,9 @@ public class Util {
      * @return true if the snapshot is valid
      * @throws IOException
      */
+    /**
+     * 校验 snapshot 文件是否有效
+     */
     public static boolean isValidSnapshot(File f) throws IOException {
         if (f==null || Util.getZxidFromName(f.getName(), "snapshot") == -1)
             return false;
@@ -167,28 +170,30 @@ public class Util {
         try {
             // including the header and the last / bytes
             // the snapshot should be atleast 10 bytes
+            // 文件的大小小于 10, 则说明文件不正确 (文件有对应的文件头)
             if (raf.length() < 10) {
                 return false;
             }
+            // 磁盘seek 到最后 5个字节的地方
             raf.seek(raf.length() - 5);
             byte bytes[] = new byte[5];
             int readlen = 0;
             int l;
+            // 读取文件的最后 5 个字节
             while(readlen < 5 &&
                   (l = raf.read(bytes, readlen, bytes.length - readlen)) >= 0) {
                 readlen += l;
             }
             if (readlen != bytes.length) {
-                LOG.info("Invalid snapshot " + f
-                        + " too short, len = " + readlen);
+                LOG.info("Invalid snapshot " + f + " too short, len = " + readlen);
                 return false;
             }
             ByteBuffer bb = ByteBuffer.wrap(bytes);
             int len = bb.getInt();
             byte b = bb.get();
+            // 校验这个 5 个字节是否是 1 和 '/'
             if (len != 1 || b != '/') {
-                LOG.info("Invalid snapshot " + f + " len = " + len
-                        + " byte = " + (b & 0xff));
+                LOG.info("Invalid snapshot " + f + " len = " + len + " byte = " + (b & 0xff));
                 return false;
             }
         } finally {
@@ -294,7 +299,7 @@ public class Util {
             this.prefix = prefix;
             this.ascending = ascending;
         }
-
+        // 根据 zxid 来进行排序 事务日志文件
         public int compare(File o1, File o2) {
             long z1 = Util.getZxidFromName(o1.getName(), prefix);
             long z2 = Util.getZxidFromName(o2.getName(), prefix);

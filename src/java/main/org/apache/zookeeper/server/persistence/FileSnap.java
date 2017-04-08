@@ -49,28 +49,30 @@ import org.apache.zookeeper.server.util.SerializeUtils;
  * and provides access to the snapshots.
  */
 public class FileSnap implements SnapShot {
+
     File snapDir;
     private volatile boolean close = false;
     private static final int VERSION=2;
     private static final long dbId=-1;
     private static final Logger LOG = LoggerFactory.getLogger(FileSnap.class);
     public final static int SNAP_MAGIC
-        = ByteBuffer.wrap("ZKSN".getBytes()).getInt();
+            = ByteBuffer.wrap("ZKSN".getBytes()).getInt();
     public FileSnap(File snapDir) {
         this.snapDir = snapDir;
     }
 
     /**
      * deserialize a data tree from the most recent snapshot
-     * ������� snapshot ����ָ����� DataTree
+     *
+     * 反序列化 (从最近的 snapshot 里面恢复出来 DataTree)
      * @return the zxid of the snapshot
-     */ 
-    public long deserialize(DataTree dt, Map<Long, Integer> sessions)
-            throws IOException {
+     */
+    public long deserialize(DataTree dt, Map<Long, Integer> sessions) throws IOException {
         // we run through 100 snapshots (not all of them)
         // if we cannot get it running within 100 snapshots
         // we should  give up
-        List<File> snapList = findNValidSnapshots(100);
+
+        List<File> snapList = findNValidSnapshots(100);         // 获取最新的 100 个 snapshot 文件
         if (snapList.size() == 0) {
             return -1L;
         }
@@ -83,30 +85,31 @@ public class FileSnap implements SnapShot {
             try {
                 LOG.info("Reading snapshot " + snap);
                 snapIS = new BufferedInputStream(new FileInputStream(snap));
-                crcIn = new CheckedInputStream(snapIS, new Adler32());
+                crcIn = new CheckedInputStream(snapIS, new Adler32());          // 通过 Adler32 算法获取 checkSum
                 InputArchive ia = BinaryInputArchive.getArchive(crcIn);
                 deserialize(dt,sessions, ia);
-                long checkSum = crcIn.getChecksum().getValue();
-                long val = ia.readLong("val");
-                if (val != checkSum) {
+                long checkSum = crcIn.getChecksum().getValue();                 // 获取文件对应的 checkSum ()
+                long val = ia.readLong("val");                                  // 对应的 checkSum 是一个 long 类型, 写在了文件的最开始部分
+                if (val != checkSum) {                                          // 校验通过 Adler32 算法获取的 checkSum 与文件中存储的 checkSum 进行比较
                     throw new IOException("CRC corruption in snapshot :  " + snap);
                 }
                 foundValid = true;
-                break;
+                break;                                                         // 从这个 break 可以看出, 只要在检测出有一个 snapshot文件有效, 则就退出
             } catch(IOException e) {
                 LOG.warn("problem reading snap file " + snap, e);
             } finally {
-                if (snapIS != null) 
+                if (snapIS != null)
                     snapIS.close();
-                if (crcIn != null) 
+                if (crcIn != null)
                     crcIn.close();
-            } 
+            }
         }
-        if (!foundValid) {
+
+        if (!foundValid) {      // 没有找到有效的 snapshot 文件
             throw new IOException("Not able to find valid snapshots in " + snapDir);
         }
         dt.lastProcessedZxid = Util.getZxidFromName(snap.getName(), "snapshot");
-        return dt.lastProcessedZxid;
+        return dt.lastProcessedZxid;                // 返回 snapshot 中最新的 zxid(后期还要加载大于这个 zxid 的事务信息)
     }
 
     /**
@@ -117,12 +120,12 @@ public class FileSnap implements SnapShot {
      * @throws IOException
      */
     public void deserialize(DataTree dt, Map<Long, Integer> sessions,
-            InputArchive ia) throws IOException {
+                            InputArchive ia) throws IOException {
         FileHeader header = new FileHeader();
         header.deserialize(ia, "fileheader");
         if (header.getMagic() != SNAP_MAGIC) {
             throw new IOException("mismatching magic headers "
-                    + header.getMagic() + 
+                    + header.getMagic() +
                     " !=  " + FileSnap.SNAP_MAGIC);
         }
         SerializeUtils.deserializeSnapshot(dt,ia,sessions);
@@ -139,7 +142,7 @@ public class FileSnap implements SnapShot {
         }
         return files.get(0);
     }
-    
+
     /**
      * find the last (maybe) valid n snapshots. this does some 
      * minor checks on the validity of the snapshots. It just
@@ -152,7 +155,9 @@ public class FileSnap implements SnapShot {
      * less than n in case enough snapshots are not available).
      * @throws IOException
      */
+    // 获取 最新的 n 个 snapshot 文件
     private List<File> findNValidSnapshots(int n) throws IOException {
+        // 根据文件的名称来进行排序 文件
         List<File> files = Util.sortDataDir(snapDir.listFiles(),"snapshot", false);
         int count = 0;
         List<File> list = new ArrayList<File>();
@@ -161,7 +166,7 @@ public class FileSnap implements SnapShot {
             // from the valid snapshot and continue
             // until we find a valid one
             try {
-                if (Util.isValidSnapshot(f)) {
+                if (Util.isValidSnapshot(f)) { // 通过文件大小及文件最后5(1 与 '/')个字节来判断是否是有效的文件
                     list.add(f);
                     count++;
                     if (count == n) {
@@ -203,15 +208,13 @@ public class FileSnap implements SnapShot {
      * @param header the header of this snapshot
      * @throws IOException
      */
-    protected void serialize(DataTree dt,Map<Long, Integer> sessions,
-            OutputArchive oa, FileHeader header) throws IOException {
+    protected void serialize(DataTree dt,Map<Long, Integer> sessions, OutputArchive oa, FileHeader header) throws IOException {
         // this is really a programmatic error and not something that can
         // happen at runtime
-        if(header==null)
-            throw new IllegalStateException(
-                    "Snapshot's not open for writing: uninitialized header");
-        header.serialize(oa, "fileheader");
-        SerializeUtils.serializeSnapshot(dt,oa,sessions);
+        if(header==null) throw new IllegalStateException("Snapshot's not open for writing: uninitialized header");
+
+        header.serialize(oa, "fileheader");                 // 文件头进行序列化
+        SerializeUtils.serializeSnapshot(dt,oa,sessions);   //
     }
 
     /**
@@ -219,9 +222,10 @@ public class FileSnap implements SnapShot {
      * @param dt the datatree to be serialized
      * @param sessions the sessions to be serialized
      * @param snapShot the file to store snapshot into
+     *
+     * 序列化 DataTree 与 sessions 到磁盘上
      */
-    public synchronized void serialize(DataTree dt, Map<Long, Integer> sessions, File snapShot)
-            throws IOException {
+    public synchronized void serialize(DataTree dt, Map<Long, Integer> sessions, File snapShot) throws IOException {
         if (!close) {
             OutputStream sessOS = new BufferedOutputStream(new FileOutputStream(snapShot));
             CheckedOutputStream crcOut = new CheckedOutputStream(sessOS, new Adler32());
@@ -248,4 +252,4 @@ public class FileSnap implements SnapShot {
         close = true;
     }
 
- }
+}

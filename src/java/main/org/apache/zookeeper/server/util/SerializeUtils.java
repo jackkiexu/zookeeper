@@ -127,15 +127,14 @@ public class SerializeUtils {
         dt.deserialize(ia, "tree");
     }
 
-    public static void serializeSnapshot(DataTree dt,OutputArchive oa,
-            Map<Long, Integer> sessions) throws IOException {
+    public static void serializeSnapshot(DataTree dt,OutputArchive oa, Map<Long, Integer> sessions) throws IOException {
         HashMap<Long, Integer> sessSnap = new HashMap<Long, Integer>(sessions);
-        oa.writeInt(sessSnap.size(), "count");
-        for (Entry<Long, Integer> entry : sessSnap.entrySet()) {
+        oa.writeInt(sessSnap.size(), "count");                          // 先写入 session 的个数
+        for (Entry<Long, Integer> entry : sessSnap.entrySet()) {        // 写入每个 sessionId 与 timeout
             oa.writeLong(entry.getKey().longValue(), "id");
             oa.writeInt(entry.getValue().intValue(), "timeout");
         }
-        dt.serialize(oa, "tree");
+        dt.serialize(oa, "tree");                                       // DataTree 进行序列化
     }
 
 }

@@ -85,8 +85,8 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     @Override
     public void configure(InetSocketAddress addr, int maxcc) throws IOException {
         configureSaslLogin();
-        // ¿ªÆô·þÎñ¶Ë¶Ë¿ÚµÄ¼àÌý
-        // ÕâÀï²»¶®µÄ¿ÉÒÔ¿´¿´ java nio
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶Ë¿ÚµÄ¼ï¿½ï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï²»ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½ java nio
         thread = new Thread(this, "NIOServerCxn.Factory:" + addr);
         thread.setDaemon(true);
         maxClientCnxns = maxcc;
@@ -173,12 +173,12 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     }
 
     /**
-     * ·þÎñ¶ËÊ±¼ä¼àÌý
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     public void run() {
         while (!ss.socket().isClosed()) {
             try {
-                selector.select(1000);              // ×èÈû·½Ê½»ñÈ¡ÊÂ¼þ
+                selector.select(1000);
                 Set<SelectionKey> selected;
                 synchronized (this) {
                     selected = selector.selectedKeys();
@@ -251,7 +251,6 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
         }
     }
 
-    // ¹Ø±Õ·þÎñ¶ËÁ´½Ó
     public void shutdown() {
         try {
             ss.close();

@@ -43,16 +43,24 @@ import org.slf4j.LoggerFactory;
  * above the implementations 
  * of txnlog and snapshot 
  * classes
+ *
+ * 事务日志 快照日志的工具类
+ *
  */
 public class FileTxnSnapLog {
     //the direcotry containing the 
     //the transaction logs
+    // 事务日志目录
     private final File dataDir;
     //the directory containing the
     //the snapshot directory
+    // 快照日志目录
     private final File snapDir;
+    // 事务日志
     private TxnLog txnLog;
+    // 快照日志
     private SnapShot snapLog;
+    // 版本号
     public final static int VERSION = 2;
     public final static String version = "version-";
     
@@ -77,9 +85,10 @@ public class FileTxnSnapLog {
      */
     public FileTxnSnapLog(File dataDir, File snapDir) throws IOException {
         LOG.debug("Opening datadir:{} snapDir:{}", dataDir, snapDir);
-
+        // 在对应目录下面生成 version-2 目录
         this.dataDir = new File(dataDir, version + VERSION);
         this.snapDir = new File(snapDir, version + VERSION);
+
         if (!this.dataDir.exists()) {
             if (!this.dataDir.mkdirs()) {
                 throw new IOException("Unable to create data directory "
@@ -92,7 +101,8 @@ public class FileTxnSnapLog {
                         + this.snapDir);
             }
         }
-        // ������ʵ���� new ������ File
+
+        // 初始化事务日志, snap日志
         txnLog = new FileTxnLog(this.dataDir);
         snapLog = new FileSnap(this.snapDir);
     }
@@ -126,9 +136,10 @@ public class FileTxnSnapLog {
      * @return the highest zxid restored
      * @throws IOException
      */
-    public long restore(DataTree dt, Map<Long, Integer> sessions, 
-            PlayBackListener listener) throws IOException {
+    public long restore(DataTree dt, Map<Long, Integer> sessions,  PlayBackListener listener) throws IOException {
+
         snapLog.deserialize(dt, sessions);
+
         FileTxnLog txnLog = new FileTxnLog(dataDir);
         TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
         long highestZxid = dt.lastProcessedZxid;

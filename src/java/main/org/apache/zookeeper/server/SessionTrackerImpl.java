@@ -41,15 +41,19 @@ import org.apache.zookeeper.KeeperException.SessionExpiredException;
  */
 public class SessionTrackerImpl extends Thread implements SessionTracker {
     private static final Logger LOG = LoggerFactory.getLogger(SessionTrackerImpl.class);
-    // sessionId Óë Session µÄÓ³Éä¹ØÏµ
+    // sessionId ä¸ Session çš„æ˜ å°„å…³ç³»
     HashMap<Long, SessionImpl> sessionsById = new HashMap<Long, SessionImpl>();
-    // ¹ıÆÚÊ±¼ä Ò»×é¼´½«Òª´¦ÀíµÄ session
+
+    // è¿‡æœŸæ—¶é—´ ä¸€ç»„å³å°†è¦å¤„ç†çš„ session
     HashMap<Long, SessionSet> sessionSets = new HashMap<Long, SessionSet>();
-    // sessionId ¶ÔÓ¦ timeout Ê±¼ä
+
+    // sessionId å¯¹åº” timeout æ—¶é—´ (è¿™ä¸ªå¯¹è±¡çœŸæ­£æ”¾åœ¨ ZKDatabase é‡Œé¢)
     ConcurrentHashMap<Long, Integer> sessionsWithTimeout;
-    // ¸ù¾İ sid ¼ÆËã³öµÄÏÂÒ»¸öĞÂ½¨µÄ sessionId
+
+    // æ ¹æ® sid è®¡ç®—å‡ºçš„ä¸‹ä¸€ä¸ªæ–°å»ºçš„ sessionId
     long nextSessionId = 0;
-    // ±íÊ¾ÏÂ´Î¹ıÆÚÊ±¼ä, Ïß³Ì»áÔÚ nextExpirationTimeÊ±¼äÀ´ÅúÁ¿´¦Àí session
+
+    // è¡¨ç¤ºä¸‹æ¬¡è¿‡æœŸæ—¶é—´, çº¿ç¨‹ä¼šåœ¨ nextExpirationTimeæ—¶é—´æ¥æ‰¹é‡å¤„ç† session
     long nextExpirationTime;
 
     int expirationInterval;
@@ -93,8 +97,8 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
     }
 
     public SessionTrackerImpl(SessionExpirer expirer,
-            ConcurrentHashMap<Long, Integer> sessionsWithTimeout, int tickTime,
-            long sid)
+                              ConcurrentHashMap<Long, Integer> sessionsWithTimeout, int tickTime,
+                              long sid)
     {
         super("SessionTracker");
         this.expirer = expirer;
@@ -144,19 +148,19 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         try {
             while (running) {
                 currentTime = System.currentTimeMillis();
-                if (nextExpirationTime > currentTime) { // 1. ÈôÏÂ´ÎµÄ¹ıÆÚÊ±¼äµ¤Óñµ±Ç°Ê±¼ä, Ôò½øĞĞ sleep
+                if (nextExpirationTime > currentTime) { // 1. è‹¥ä¸‹æ¬¡çš„è¿‡æœŸæ—¶é—´ä¸¹ç‰å½“å‰æ—¶é—´, åˆ™è¿›è¡Œ sleep
                     this.wait(nextExpirationTime - currentTime);
                     continue;
                 }
                 SessionSet set;
-                set = sessionSets.remove(nextExpirationTime); // ÒÆ³ı½«ÒªÉ¾³ıµÄ session
+                set = sessionSets.remove(nextExpirationTime); // ç§»é™¤å°†è¦åˆ é™¤çš„ session
                 if (set != null) {
                     for (SessionImpl s : set.sessions) {
-                        setSessionClosing(s.sessionId);         // ½« session µÄ×´Ì¬ÖÁÎª close
-                        expirer.expire(s);                      // ¸ø¿Í»§¶ËÌá½» session ¹Ø±ÕµÄ request
+                        setSessionClosing(s.sessionId);         // å°† session çš„çŠ¶æ€è‡³ä¸º close
+                        expirer.expire(s);                      // ç»™å®¢æˆ·ç«¯æäº¤ session å…³é—­çš„ request
                     }
                 }
-                nextExpirationTime += expirationInterval; // ¼ÓÉÏ¹ıÆÚ¼ä¸ôÊ±¼ä, ×÷ÎªÏÂ´Î¼à²âµãµÄÊ±¼ä
+                nextExpirationTime += expirationInterval; // åŠ ä¸Šè¿‡æœŸé—´éš”æ—¶é—´, ä½œä¸ºä¸‹æ¬¡ç›‘æµ‹ç‚¹çš„æ—¶é—´
             }
         } catch (InterruptedException e) {
             LOG.error("Unexpected interruption", e);
@@ -164,20 +168,20 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         LOG.info("SessionTrackerImpl exited loop!");
     }
 
-    // ¸üĞÂ session µÄ¹ıÆÚÊ±¼ä
+    // æ›´æ–° session çš„è¿‡æœŸæ—¶é—´
     synchronized public boolean touchSession(long sessionId, int timeout) {
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG,
-                                     ZooTrace.CLIENT_PING_TRACE_MASK,
-                                     "SessionTrackerImpl --- Touch session: 0x"
-                    + Long.toHexString(sessionId) + " with timeout " + timeout);
+                    ZooTrace.CLIENT_PING_TRACE_MASK,
+                    "SessionTrackerImpl --- Touch session: 0x"
+                            + Long.toHexString(sessionId) + " with timeout " + timeout);
         }
-        SessionImpl s = sessionsById.get(sessionId); // ´Ó sessionsById »ñÈ¡ session
+        SessionImpl s = sessionsById.get(sessionId); // ä» sessionsById è·å– session
         // Return false, if the session doesn't exists or marked as closing
         if (s == null || s.isClosing()) {
             return false;
         }
-        long expireTime = roundToInterval(System.currentTimeMillis() + timeout); // ¼ÆËã¹ıÆÚÊ±¼ä
+        long expireTime = roundToInterval(System.currentTimeMillis() + timeout); // è®¡ç®—è¿‡æœŸæ—¶é—´
         if (s.tickTime >= expireTime) {
             // Nothing needs to be done
             return true;
@@ -186,7 +190,7 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         if (set != null) {
             set.sessions.remove(s);
         }
-        s.tickTime = expireTime;                    // ÏÂÃæµÄ²½Öè¾ÍÊÇ½« session ÒÔ expireTime Îªµ¥Î»·ÅÈë sessionSets ÖĞ
+        s.tickTime = expireTime;                    // ä¸‹é¢çš„æ­¥éª¤å°±æ˜¯å°† session ä»¥ expireTime ä¸ºå•ä½æ”¾å…¥ sessionSets ä¸­
         set = sessionSets.get(s.tickTime);
         if (set == null) {
             set = new SessionSet();
@@ -213,11 +217,11 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                     "SessionTrackerImpl --- Removing session 0x"
-                    + Long.toHexString(sessionId));
+                            + Long.toHexString(sessionId));
         }
         if (s != null) {
             SessionSet set = sessionSets.get(s.tickTime);
-            // Session expiration has been removing the sessions   
+            // Session expiration has been removing the sessions
             if(set != null){
                 set.sessions.remove(s);
             }
@@ -230,7 +234,7 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         running = false;
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG, ZooTrace.getTextTraceLevel(),
-                                     "Shutdown SessionTrackerImpl!");
+                    "Shutdown SessionTrackerImpl!");
         }
     }
 
@@ -242,19 +246,19 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
 
     synchronized public void addSession(long id, int sessionTimeout) {
         sessionsWithTimeout.put(id, sessionTimeout);
-        if (sessionsById.get(id) == null) { // ÒòÎª¿ÉÄÜÓĞÖØ¸´ÇëÇó, ËùÒÔ¼ÓÉÏÕâ¸öÅĞ¶Ï
-            SessionImpl s = new SessionImpl(id, sessionTimeout, 0); // ¹¹½¨ session
+        if (sessionsById.get(id) == null) { // å› ä¸ºå¯èƒ½æœ‰é‡å¤è¯·æ±‚, æ‰€ä»¥åŠ ä¸Šè¿™ä¸ªåˆ¤æ–­
+            SessionImpl s = new SessionImpl(id, sessionTimeout, 0); // æ„å»º session
             sessionsById.put(id, s);
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                         "SessionTrackerImpl --- Adding session 0x"
-                        + Long.toHexString(id) + " " + sessionTimeout);
+                                + Long.toHexString(id) + " " + sessionTimeout);
             }
         } else {
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                         "SessionTrackerImpl --- Existing session 0x"
-                        + Long.toHexString(id) + " " + sessionTimeout);
+                                + Long.toHexString(id) + " " + sessionTimeout);
             }
         }
         touchSession(id, sessionTimeout);

@@ -79,19 +79,24 @@ public class DataTree {
      * This hashtable provides a fast lookup to the datanodes. The tree is the
      * source of truth and is where all the locking occurs
      */
-    private final ConcurrentHashMap<String, DataNode> nodes =
-        new ConcurrentHashMap<String, DataNode>();
+    // 以 path 为key, 存储 zookeeper 里面所有的 DataNode
+    private final ConcurrentHashMap<String, DataNode> nodes = new ConcurrentHashMap<String, DataNode>();
 
+    // 监视 data变化的 watcherManager
     private final WatchManager dataWatches = new WatchManager();
 
+    // 监视 child 变化的 watchManager
     private final WatchManager childWatches = new WatchManager();
 
+    // zooKeeper 的整个根路径
     /** the root of zookeeper tree */
     private static final String rootZookeeper = "/";
 
+    // 路径 /zookeeper
     /** the zookeeper nodes that acts as the management and status node **/
     private static final String procZookeeper = Quotas.procZookeeper;
 
+    // 子节点路径 zookeeper (被加入于 节点 Node(/) 的children里面)
     /** this will be the string thats stored as a child of root */
     private static final String procChildZookeeper = procZookeeper.substring(1);
 
@@ -99,11 +104,12 @@ public class DataTree {
      * the zookeeper quota node that acts as the quota management node for
      * zookeeper
      */
+    // 节点 '/zookeeper/quota'
     private static final String quotaZookeeper = Quotas.quotaZookeeper;
 
+    // 节点('/zookeeper') 的子节点 quota 的路径
     /** this will be the string thats stored as a child of /zookeeper */
-    private static final String quotaChildZookeeper = quotaZookeeper
-            .substring(procZookeeper.length() + 1);
+    private static final String quotaChildZookeeper = quotaZookeeper.substring(procZookeeper.length() + 1);
 
     /**
      * the path trie that keeps track fo the quota nodes in this datatree
@@ -113,25 +119,26 @@ public class DataTree {
     /**
      * This hashtable lists the paths of the ephemeral nodes of a session.
      */
-    private final Map<Long, HashSet<String>> ephemerals =
-        new ConcurrentHashMap<Long, HashSet<String>>();
+    // 每个 sessionId 对应的 HashSet<临时节点的路径 >
+    private final Map<Long, HashSet<String>> ephemerals = new ConcurrentHashMap<Long, HashSet<String>>();
 
     /**
      * this is map from longs to acl's. It saves acl's being stored for each
      * datanode.
      */
-    public final Map<Long, List<ACL>> longKeyMap =
-        new HashMap<Long, List<ACL>>();
+    // 每个数据节点的 acl 信息 (key 是 aclIndex 值)
+    public final Map<Long, List<ACL>> longKeyMap = new HashMap<Long, List<ACL>>();
 
     /**
      * this a map from acls to long.
      */
-    public final Map<List<ACL>, Long> aclKeyMap =
-        new HashMap<List<ACL>, Long>();
+    // ACL 信息到对应的 long 型数字的映射 (convertAcls 方法)
+    public final Map<List<ACL>, Long> aclKeyMap = new HashMap<List<ACL>, Long>();
 
     /**
      * these are the number of acls that we have in the datatree
      */
+    // 总共 acl信息的数目
     protected long aclIndex = 0;
 
     @SuppressWarnings("unchecked")
@@ -296,16 +303,26 @@ public class DataTree {
     private DataNode quotaDataNode = new DataNode(procDataNode, new byte[0],
             -1L, new StatPersisted());
 
+    /**
+     * DataTree 初始化
+     *
+     */
     public DataTree() {
         /* Rather than fight it, let root have an alias */
         nodes.put("", root);
+        // '/' 指整个根节点
         nodes.put(rootZookeeper, root);
 
         /** add the proc node and quota node */
-        root.addChild(procChildZookeeper);
+        // 根节点 '/' 加入子节点 'zookeeper'
+        root.addChild(procChildZookeeper); // 这个只是子节点路径
+        // '/zookeeper' 节点
         nodes.put(procZookeeper, procDataNode);
 
+        // 节点 zookeeper 加入子节点 'quota'
         procDataNode.addChild(quotaChildZookeeper);
+
+        // 将子节点对应的路径, 及 DataNode 加入到 ConcurrentHashMap 中
         nodes.put(quotaZookeeper, quotaDataNode);
     }
 
@@ -1158,8 +1175,7 @@ public class DataTree {
         }
     }
 
-    private synchronized void serializeList(Map<Long, List<ACL>> longKeyMap,
-            OutputArchive oa) throws IOException {
+    private synchronized void serializeList(Map<Long, List<ACL>> longKeyMap, OutputArchive oa) throws IOException {
         oa.writeInt(longKeyMap.size(), "map");
         Set<Map.Entry<Long, List<ACL>>> set = longKeyMap.entrySet();
         for (Map.Entry<Long, List<ACL>> val : set) {
@@ -1173,6 +1189,9 @@ public class DataTree {
         }
     }
 
+    /**
+     * DataTree 进行序列化
+     */
     public void serialize(OutputArchive oa, String tag) throws IOException {
         scount = 0;
         serializeList(longKeyMap, oa);
