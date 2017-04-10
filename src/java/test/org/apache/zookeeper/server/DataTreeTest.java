@@ -146,7 +146,7 @@ public class DataTreeTest extends ZKTestCase {
                 (newCversion == prevCversion + 1 && newPzxid == prevPzxid + 1));
     }
    
-    @Test(timeout = 60000)
+    @Test(timeout = 600000000)
     public void testPathTrieClearOnDeserialize() throws Exception {
 
         //Create a DataTree with quota nodes so PathTrie get updated

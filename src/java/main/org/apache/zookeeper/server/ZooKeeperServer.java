@@ -154,9 +154,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public ZooKeeperServer(FileTxnSnapLog txnLogFactory, int tickTime,
             int minSessionTimeout, int maxSessionTimeout,
             DataTreeBuilder treeBuilder, ZKDatabase zkDb) {
-
-        System.out.println(Arrays.toString( new RuntimeException().getStackTrace()));
-
         serverStats = new ServerStats(this);
         this.txnLogFactory = txnLogFactory;
         this.zkDb = zkDb;

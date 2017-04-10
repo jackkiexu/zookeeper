@@ -110,11 +110,10 @@ public class SerializeUtils {
         return txn;
     }
 
-    public static void deserializeSnapshot(DataTree dt,InputArchive ia,
-            Map<Long, Integer> sessions) throws IOException {
-        int count = ia.readInt("count");
+    public static void deserializeSnapshot(DataTree dt,InputArchive ia, Map<Long, Integer> sessions) throws IOException {
+        int count = ia.readInt("count");            // 1. 反序列化出有多少个 session
         while (count > 0) {
-            long id = ia.readLong("id");
+            long id = ia.readLong("id");            // 2. 进行 sessions 的反序列化
             int to = ia.readInt("timeout");
             sessions.put(id, to);
             if (LOG.isTraceEnabled()) {
@@ -124,7 +123,7 @@ public class SerializeUtils {
             }
             count--;
         }
-        dt.deserialize(ia, "tree");
+        dt.deserialize(ia, "tree");                 // 3. 进行 DataTree 的反序列化
     }
 
     public static void serializeSnapshot(DataTree dt,OutputArchive oa, Map<Long, Integer> sessions) throws IOException {

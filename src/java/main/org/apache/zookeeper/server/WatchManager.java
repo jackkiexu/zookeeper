@@ -93,11 +93,10 @@ public class WatchManager {
     }
 
     public Set<Watcher> triggerWatch(String path, EventType type, Set<Watcher> supress) {
-        WatchedEvent e = new WatchedEvent(type,
-                KeeperState.SyncConnected, path);
+        WatchedEvent e = new WatchedEvent(type, KeeperState.SyncConnected, path);
         HashSet<Watcher> watchers;
         synchronized (this) {
-            watchers = watchTable.remove(path);
+            watchers = watchTable.remove(path);// 这里有个特点, 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher
             if (watchers == null || watchers.isEmpty()) {
                 if (LOG.isTraceEnabled()) {
                     ZooTrace.logTraceMessage(LOG,

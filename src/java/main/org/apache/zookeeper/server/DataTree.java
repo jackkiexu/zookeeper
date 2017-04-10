@@ -112,6 +112,8 @@ public class DataTree {
     private static final String quotaChildZookeeper = quotaZookeeper.substring(procZookeeper.length() + 1);
 
     /**
+     * PathTrie 是一颗前缀树, 其每个 leaf 是一颗路径节点
+     * 如 /zookeeper/node, 则 (/)parent -> zookeeper(第一层) -> node(第二层树枝)
      * the path trie that keeps track fo the quota nodes in this datatree
      */
     private final PathTrie pTrie = new PathTrie();
@@ -309,7 +311,7 @@ public class DataTree {
      */
     public DataTree() {
         /* Rather than fight it, let root have an alias */
-        nodes.put("", root);
+        nodes.put("", root); // 最上层的 "" 与 / 都是 root
         // '/' 指整个根节点
         nodes.put(rootZookeeper, root);
 
@@ -472,8 +474,8 @@ public class DataTree {
             throws KeeperException.NoNodeException,
             KeeperException.NodeExistsException {
         int lastSlash = path.lastIndexOf('/');
-        String parentName = path.substring(0, lastSlash);
-        String childName = path.substring(lastSlash + 1);
+        String parentName = path.substring(0, lastSlash); // 1. 通过上面额 lastSlash 来获取 对应的 parent 的 path
+        String childName = path.substring(lastSlash + 1); // 2. 获取对应的 子 path
         StatPersisted stat = new StatPersisted();
         stat.setCtime(time);
         stat.setMtime(time);
@@ -483,13 +485,13 @@ public class DataTree {
         stat.setVersion(0);
         stat.setAversion(0);
         stat.setEphemeralOwner(ephemeralOwner);
-        DataNode parent = nodes.get(parentName);
+        DataNode parent = nodes.get(parentName);                        // 2. 对应的 parent DataNode
         if (parent == null) {
             throw new KeeperException.NoNodeException();
         }
         synchronized (parent) {
             Set<String> children = parent.getChildren();
-            if (children != null) {
+            if (children != null) {                                     // 3. 通过上面获取的 parent 查看是否 其下面已经设置过了 相同的 child_path
                 if (children.contains(childName)) {
                     throw new KeeperException.NodeExistsException();
                 }
@@ -499,14 +501,14 @@ public class DataTree {
                 parentCVersion = parent.stat.getCversion();
                 parentCVersion++;
             }    
-            parent.stat.setCversion(parentCVersion);
-            parent.stat.setPzxid(zxid);
+            parent.stat.setCversion(parentCVersion);                    // 4. 每个 parent 里面都有一个 stat, 来进行维护 对应的信息
+            parent.stat.setPzxid(zxid);                                 // 5. 设置 pZxid (每次子节点变化, 都需要更新这个值)
             Long longval = convertAcls(acl);
             DataNode child = new DataNode(parent, data, longval, stat);
-            parent.addChild(childName);
-            nodes.put(path, child);
-            if (ephemeralOwner != 0) {
-                HashSet<String> list = ephemerals.get(ephemeralOwner);
+            parent.addChild(childName);                                 // 6。parent 节点只将对应的 子 path 的名称加入到对应的 children(HashSet) 中
+            nodes.put(path, child);                                    // 7. 加入到 nodes(一个以 path 为key, DataNode 为 value 的 ConcurrentHashMap)中
+            if (ephemeralOwner != 0) {                                  // 8. 判断是否是 临时节点
+                HashSet<String> list = ephemerals.get(ephemeralOwner); // 9. ephemeralOwner 其实就是是 sessionId, 下面的就是一个 sessionId 对应一个 临时 path 的 ConcurrentHashMap
                 if (list == null) {
                     list = new HashSet<String>();
                     ephemerals.put(ephemeralOwner, list);
@@ -517,7 +519,7 @@ public class DataTree {
             }
         }
         // now check if its one of the zookeeper node child
-        if (parentName.startsWith(quotaZookeeper)) {
+        if (parentName.startsWith(quotaZookeeper)) {        // 10. 判断是否是 /zookeeper/quota 下面的节点
             // now check if its the limit node
             if (Quotas.limitNode.equals(childName)) {
                 // this is the limit node
@@ -525,8 +527,7 @@ public class DataTree {
                 pTrie.addPath(parentName.substring(quotaZookeeper.length()));
             }
             if (Quotas.statNode.equals(childName)) {
-                updateQuotaForPath(parentName
-                        .substring(quotaZookeeper.length()));
+                updateQuotaForPath(parentName.substring(quotaZookeeper.length()));
             }
         }
         // also check to update the quotas for this node
@@ -536,8 +537,8 @@ public class DataTree {
             updateCount(lastPrefix, 1);
             updateBytes(lastPrefix, data == null ? 0 : data.length);
         }
-        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);
-        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName,
+        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);        // 11. 节点创建事件触发
+        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName,  // 12. parent节点数据变化事件通知
                 Event.EventType.NodeChildrenChanged);
         return path;
     }
@@ -1119,6 +1120,7 @@ public class DataTree {
      * @throws IOException
      * @throws InterruptedException
      */
+    // 序列化 所有 DataNode
     void serializeNode(OutputArchive oa, StringBuilder path) throws IOException {
         String pathString = path.toString();
         DataNode node = getNode(pathString);
@@ -1129,7 +1131,7 @@ public class DataTree {
         synchronized (node) {
             scount++;
             oa.writeString(pathString, "path");
-            oa.writeRecord(node, "node");
+            oa.writeRecord(node, "node");                   // 单个 DataNode 进行序列化
             Set<String> childs = node.getChildren();
             if (childs != null) {
                 children = childs.toArray(new String[childs.size()]);
@@ -1153,8 +1155,7 @@ public class DataTree {
 
     public boolean initialized = false;
 
-    private void deserializeList(Map<Long, List<ACL>> longKeyMap,
-            InputArchive ia) throws IOException {
+    private void deserializeList(Map<Long, List<ACL>> longKeyMap, InputArchive ia) throws IOException {
         int i = ia.readInt("map");
         while (i > 0) {
             Long val = ia.readLong("long");
@@ -1175,6 +1176,7 @@ public class DataTree {
         }
     }
 
+    // 序列化 权限
     private synchronized void serializeList(Map<Long, List<ACL>> longKeyMap, OutputArchive oa) throws IOException {
         oa.writeInt(longKeyMap.size(), "map");
         Set<Map.Entry<Long, List<ACL>>> set = longKeyMap.entrySet();
@@ -1203,9 +1205,10 @@ public class DataTree {
         }
     }
 
+    // DataTree 反序列化
     public void deserialize(InputArchive ia, String tag) throws IOException {
-        deserializeList(longKeyMap, ia);
-        nodes.clear();
+        deserializeList(longKeyMap, ia);                    // 1. 反序列化 longKeyMap
+        nodes.clear();                                       // 2. 清空 <Path, DataNode> 组成的树
         pTrie.clear();
         String path = ia.readString("path");
         while (!path.equals("/")) {

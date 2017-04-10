@@ -75,13 +75,13 @@ public class DataNode implements Record {
     /**
      * create a DataNode with parent, data, acls and stat
      * 
-     * @param parent
+     * @param parent 对应的 parent DataNode
      *            the parent of this DataNode
-     * @param data
+     * @param data   这个节点上设置的 data 数据(是一个字节数组)
      *            the data to be set
-     * @param acl
+     * @param acl    这个节点上的 acl 值(权限控制)
      *            the acls for this node
-     * @param stat
+     * @param stat  节点的 stat 值
      *            the stat for this node.
      */
     public DataNode(DataNode parent, byte data[], Long acl, StatPersisted stat) {

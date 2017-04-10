@@ -197,18 +197,18 @@ public class PathTrie {
         if (path == null) {
             return;
         }
-        String[] pathComponents = path.split("/");
-        TrieNode parent = rootNode;
+        String[] pathComponents = path.split("/");                  // 1. 根据 '/' 来进行划分树的节点
+        TrieNode parent = rootNode;                                // 2. 获取总的根节点
         String part = null;
-        if (pathComponents.length <= 1) {
+        if (pathComponents.length <= 1) {                          // 3. 参数错误
             throw new IllegalArgumentException("Invalid path " + path);
         }
-        for (int i=1; i<pathComponents.length; i++) {
+        for (int i=1; i<pathComponents.length; i++) {             // 4. i 从 1 开始
             part = pathComponents[i];
-            if (parent.getChild(part) == null) {
-                parent.addChild(part, new TrieNode(parent));
+            if (parent.getChild(part) == null) {                   // 5. 从 rootNode 开始, 判断对应的几点是否已经在 整棵树中了
+                parent.addChild(part, new TrieNode(parent));        // 6. 将 节点加入到 树中
             }
-            parent = parent.getChild(part);
+            parent = parent.getChild(part);                         // 7. 将这次设置的叶子 (leaf) 节点设置为 parent 节点
         }
         parent.setProperty(true);
     }
@@ -267,7 +267,7 @@ public class PathTrie {
                 part = pathComponents[i];
                 parent = parent.getChild(part);
                 components.add(part);
-                if (parent.getProperty()) {
+                if (parent.getProperty()) { // 通过这个 property 来进行设置是否是 parent 节点
                     lastindex = i-1;
                 }
             }
@@ -276,7 +276,7 @@ public class PathTrie {
             }
             i++;
         }
-        for (int j=0; j< (lastindex+1); j++) {
+        for (int j=0; j< (lastindex+1); j++) { // 将所有的 parent 节点拼接起来
             sb.append("/" + components.get(j));
         }
         return sb.toString();

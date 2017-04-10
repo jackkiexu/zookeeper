@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
+import org.apache.zookeeper.common.PathTrie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.CreateMode;
@@ -47,7 +48,7 @@ import org.junit.Test;
 public class ACLCountTest extends ZKTestCase implements Watcher {
     private static final Logger LOG = LoggerFactory.getLogger(ACLTest.class);
     private static final String HOSTPORT =
-        "127.0.0.1:" + PortAssignment.unique();
+            "127.0.0.1:" + PortAssignment.unique();
     private volatile CountDownLatch startSignal;
 
     /**
@@ -67,28 +68,28 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
     public void testAclCount() throws Exception {
         File tmpDir = ClientBase.createTmpDir();
         ClientBase.setupTestEnv();
-        // ´´½¨·şÎñ¶Ë
+        // åˆ›å»ºæœåŠ¡ç«¯
         ZooKeeperServer zks = new ZooKeeperServer(tmpDir, tmpDir, 30000000);
         SyncRequestProcessor.setSnapCount(1000);
         final int PORT = Integer.parseInt(HOSTPORT.split(":")[1]);
-        // ´´½¨ ·şÎñ¶ËÁ¬½ÓÆ÷
+        // åˆ›å»º æœåŠ¡ç«¯è¿æ¥å™¨
         ServerCnxnFactory f = ServerCnxnFactory.createFactory(PORT, -1);
-        // Æô¶¯·şÎñ¶Ë
+        // å¯åŠ¨æœåŠ¡ç«¯
         f.startup(zks);
         ZooKeeper zk;
 
         final ArrayList<ACL> CREATOR_ALL_AND_WORLD_READABLE =
-          new ArrayList<ACL>() { {
-            add(new ACL(ZooDefs.Perms.READ,ZooDefs.Ids.ANYONE_ID_UNSAFE));
-            add(new ACL(ZooDefs.Perms.ALL,ZooDefs.Ids.AUTH_IDS));
-            add(new ACL(ZooDefs.Perms.READ,ZooDefs.Ids.ANYONE_ID_UNSAFE));
-            add(new ACL(ZooDefs.Perms.ALL,ZooDefs.Ids.AUTH_IDS));
-        }};
+                new ArrayList<ACL>() { {
+                    add(new ACL(ZooDefs.Perms.READ,ZooDefs.Ids.ANYONE_ID_UNSAFE));
+                    add(new ACL(ZooDefs.Perms.ALL,ZooDefs.Ids.AUTH_IDS));
+                    add(new ACL(ZooDefs.Perms.READ,ZooDefs.Ids.ANYONE_ID_UNSAFE));
+                    add(new ACL(ZooDefs.Perms.ALL,ZooDefs.Ids.AUTH_IDS));
+                }};
 
         try {
             LOG.info("starting up the zookeeper server .. waiting");
             Assert.assertTrue("waiting for server being up", ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
-            // Æô¶¯¿Í»§¶Ë
+            // å¯åŠ¨å®¢æˆ·ç«¯
             zk = new ZooKeeper(HOSTPORT, CONNECTION_TIMEOUT, this);
 
             zk.addAuthInfo("digest", "pat:test".getBytes());
@@ -97,20 +98,20 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
             String path = "/path";
 
             try {
-              Assert.assertEquals(4,CREATOR_ALL_AND_WORLD_READABLE.size());
+                Assert.assertEquals(4,CREATOR_ALL_AND_WORLD_READABLE.size());
             }
             catch (Exception e) {
-              LOG.error("Something is fundamentally wrong with ArrayList's add() method. add()ing four times to an empty ArrayList should result in an ArrayList with 4 members.");
-              throw e;
+                LOG.error("Something is fundamentally wrong with ArrayList's add() method. add()ing four times to an empty ArrayList should result in an ArrayList with 4 members.");
+                throw e;
             }
-            // ´´½¨½Úµã (¸³ÖµÈ¨ÏŞ + ³Ö¾Ã»¯µÄ½Úµã)
+            // åˆ›å»ºèŠ‚ç‚¹ (èµ‹å€¼æƒé™ + æŒä¹…åŒ–çš„èŠ‚ç‚¹)
             zk.create(path,path.getBytes(),CREATOR_ALL_AND_WORLD_READABLE,CreateMode.PERSISTENT);
             List<ACL> acls = zk.getACL("/path", new Stat());
             Assert.assertEquals(2,acls.size());
         }
         catch (Exception e) {
-          // test failed somehow.
-          Assert.assertTrue(false);
+            // test failed somehow.
+            Assert.assertTrue(false);
         }
 
         f.shutdown();
@@ -125,7 +126,7 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
      */
     public void process(WatchedEvent event) {
         LOG.info("Event:" + event.getState() + " " + event.getType() + " "
-                 + event.getPath());
+                + event.getPath());
         if (event.getState() == KeeperState.SyncConnected) {
             if (startSignal != null && startSignal.getCount() > 0) {
                 LOG.info("startsignal.countDown()");
@@ -134,6 +135,23 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
                 LOG.warn("startsignal " + startSignal);
             }
         }
+    }
+
+    @Test
+    public void testPathTire(){
+        PathTrie pTrie = new PathTrie();
+        String path2 = "/zookeeper";
+        String path3 = "/zookeeper/quota";
+        String path4 = "/zookeeper/test";
+        String path5 = "/test";
+
+        pTrie.addPath(path2);
+        pTrie.addPath(path3);
+        pTrie.addPath(path4);
+        pTrie.addPath(path5);
+
+        pTrie.findMaxPrefix(path5);
+        pTrie.findMaxPrefix(path3);
     }
 
 }

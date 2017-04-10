@@ -52,10 +52,10 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     Channel parentChannel;
     ChannelGroup allChannels = new DefaultChannelGroup("zkServerCnxns");
     HashMap<InetAddress, Set<NettyServerCnxn>> ipMap =
-        new HashMap<InetAddress, Set<NettyServerCnxn>>( );
+            new HashMap<InetAddress, Set<NettyServerCnxn>>( );
     InetSocketAddress localAddress;
     int maxClientCnxns = 60;
-    
+
     /**
      * This is an inner class since we need to extend SimpleChannelHandler, but
      * NettyServerCnxnFactory already extends ServerCnxnFactory. By making it inner
@@ -66,7 +66,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception
+                throws Exception
         {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Channel closed " + e);
@@ -76,7 +76,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void channelConnected(ChannelHandlerContext ctx,
-                ChannelStateEvent e) throws Exception
+                                     ChannelStateEvent e) throws Exception
         {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Channel connected " + e);
@@ -90,7 +90,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void channelDisconnected(ChannelHandlerContext ctx,
-                ChannelStateEvent e) throws Exception
+                                        ChannelStateEvent e) throws Exception
         {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Channel disconnected " + e);
@@ -106,7 +106,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-            throws Exception
+                throws Exception
         {
             LOG.warn("Exception caught " + e, e.getCause());
             NettyServerCnxn cnxn = (NettyServerCnxn) ctx.getAttachment();
@@ -120,7 +120,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-            throws Exception
+                throws Exception
         {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("message received called " + e.getMessage());
@@ -173,7 +173,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                             + " buf 0x"
                             + ChannelBuffers.hexDump(buf));
                 }
-                
+
                 if (cnxn.throttled) {
                     LOG.debug("Received message while throttled");
                     // we are throttled, so we need to queue
@@ -213,7 +213,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("Before copy " + buf);
                             }
-                            cnxn.queuedBuffer = dynamicBuffer(buf.readableBytes()); 
+                            cnxn.queuedBuffer = dynamicBuffer(buf.readableBytes());
                             cnxn.queuedBuffer.writeBytes(buf);
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("Copy is " + cnxn.queuedBuffer);
@@ -229,17 +229,17 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         @Override
         public void writeComplete(ChannelHandlerContext ctx,
-                WriteCompletionEvent e) throws Exception
+                                  WriteCompletionEvent e) throws Exception
         {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("write complete " + e);
             }
         }
-        
+
     }
-    
+
     CnxnChannelHandler channelHandler = new CnxnChannelHandler();
-    
+
     NettyServerCnxnFactory() {
         bootstrap = new ServerBootstrap(
                 new NioServerSocketChannelFactory(
@@ -254,7 +254,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
         bootstrap.getPipeline().addLast("servercnxnfactory", channelHandler);
     }
-    
+
     @Override
     public void closeAll() {
         if (LOG.isDebugEnabled()) {
@@ -271,7 +271,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                 cnxn.close();
             } catch (Exception e) {
                 LOG.warn("Ignoring exception closing cnxn sessionid 0x"
-                                + Long.toHexString(cnxn.getSessionId()), e);
+                        + Long.toHexString(cnxn.getSessionId()), e);
             }
         }
         if (LOG.isDebugEnabled()) {
@@ -357,20 +357,22 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
             notifyAll();
         }
     }
-    
+
     @Override
     public void start() {
         LOG.info("binding to port " + localAddress);
         parentChannel = bootstrap.bind(localAddress);
     }
 
+    /**
+     * é€šè¿‡ ServerCnxnFactory çš„å¯åŠ¨å¸¦åŠ¨ ZooKeeperServer çš„å¯åŠ¨
+     */
     @Override
-    public void startup(ZooKeeperServer zks) throws IOException,
-            InterruptedException {
-        start();            // 1. ·şÎñ¶Ë¿ªÊ¼ÊÂ¼ş¼àÌı
-        zks.startdata();    // 2. ½«´ÅÅÌÉÏµÄÊı¾İ¼ÓÔØµ½ ÄÚ´æ
-        zks.startup();      // 3. ZooKeeperServer ¿ªÆô session ¼à¿Ø, ÊÂ¼şÁ´Â·´¦ÀíÆ÷(RequestProcessors), ×¢²á JMX
-        setZooKeeperServer(zks); // 4. ½« ZooKeeperServer Óë ServerCnxnFactory ×öÏà»¥ÒıÓÃ
+    public void startup(ZooKeeperServer zks) throws IOException, InterruptedException {
+        start();            // 1. æœåŠ¡ç«¯å¼€å§‹äº‹ä»¶ç›‘å¬
+        zks.startdata();    // 2. å°†ç£ç›˜ä¸Šçš„æ•°æ®åŠ è½½åˆ° å†…å­˜
+        zks.startup();      // 3. ZooKeeperServer å¼€å¯ session ç›‘æ§, äº‹ä»¶é“¾è·¯å¤„ç†å™¨(RequestProcessors), æ³¨å†Œ JMX
+        setZooKeeperServer(zks); // 4. å°† ZooKeeperServer ä¸ ServerCnxnFactory åšç›¸äº’å¼•ç”¨
     }
 
     @Override
@@ -388,8 +390,8 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
             cnxns.add(cnxn);
             synchronized (ipMap){
                 InetAddress addr =
-                    ((InetSocketAddress)cnxn.channel.getRemoteAddress())
-                        .getAddress();
+                        ((InetSocketAddress)cnxn.channel.getRemoteAddress())
+                                .getAddress();
                 Set<NettyServerCnxn> s = ipMap.get(addr);
                 if (s == null) {
                     s = new HashSet<NettyServerCnxn>();
