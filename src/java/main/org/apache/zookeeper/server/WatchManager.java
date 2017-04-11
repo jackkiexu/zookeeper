@@ -53,7 +53,7 @@ public class WatchManager {
     }
 
     public synchronized void addWatch(String path, Watcher watcher) {
-        HashSet<Watcher> list = watchTable.get(path);
+        HashSet<Watcher> list = watchTable.get(path);               // 1. path -> List<Watch> 的 一个 HashSet
         if (list == null) {
             // don't waste memory if there are few watches on a node
             // rehash when the 4th entry is added, doubling size thereafter
@@ -63,7 +63,7 @@ public class WatchManager {
         }
         list.add(watcher);
 
-        HashSet<String> paths = watch2Paths.get(watcher);
+        HashSet<String> paths = watch2Paths.get(watcher);           // 2. watcher -> path 的一个 HashSet
         if (paths == null) {
             // cnxns typically have many watches, so use default cap here
             paths = new HashSet<String>();

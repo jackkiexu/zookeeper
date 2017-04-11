@@ -63,7 +63,7 @@ public class DataTreeTest extends ZKTestCase {
      * For ZOOKEEPER-1755 - Test race condition when taking dumpEphemerals and
      * removing the session related ephemerals from DataTree structure
      */
-    @Test(timeout = 60000)
+    @Test(timeout = 600000000)
     public void testDumpEphemerals() throws Exception {
         int count = 1000;
         long session = 1000;
@@ -111,7 +111,7 @@ public class DataTreeTest extends ZKTestCase {
         }
     }
     
-    @Test(timeout = 60000)
+    @Test(timeout = 600000000)
     public void testRootWatchTriggered() throws Exception {
         class MyWatcher implements Watcher{
             boolean fired=false;

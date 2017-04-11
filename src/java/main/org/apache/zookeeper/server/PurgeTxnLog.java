@@ -81,7 +81,7 @@ public class PurgeTxnLog {
         long zxid = Util.getZxidFromName(snapShot.getName(),"snapshot");
         exc.addAll(Arrays.asList(txnLog.getSnapshotLogs(zxid)));
 
-        final Set<File> exclude=exc;
+        final Set<File> exclude = exc;
         class MyFileFilter implements FileFilter{
             private final String prefix;
             MyFileFilter(String prefix){
@@ -104,7 +104,7 @@ public class PurgeTxnLog {
             System.out.println("Removing file: "+
                 DateFormat.getDateTimeInstance().format(f.lastModified())+
                 "\t"+f.getPath());
-            if(!f.delete()){
+            if(!f.delete()){                                // 进行文件的删除
                 System.err.println("Failed to remove "+f.getPath());
             }
         }

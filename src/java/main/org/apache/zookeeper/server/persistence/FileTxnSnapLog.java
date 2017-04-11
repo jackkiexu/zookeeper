@@ -300,6 +300,7 @@ public class FileTxnSnapLog {
      * the most recent in front
      * @throws IOException
      */
+    // 根据 zxid 进行排序, 找到最近的 n 个 snapshot 文件
     public List<File> findNRecentSnapshots(int n) throws IOException {
         FileSnap snaplog = new FileSnap(snapDir);
         return snaplog.findNRecentSnapshots(n);

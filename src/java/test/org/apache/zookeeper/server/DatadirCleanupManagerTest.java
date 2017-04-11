@@ -55,6 +55,7 @@ public class DatadirCleanupManagerTest {
         Assert.assertEquals("Snapshot retain count is not set as configured",
                 3, purgeMgr.getSnapRetainCount());
         Assert.assertEquals("Purge task is not started", STARTED, purgeMgr.getPurgeTaskStatus());
+        Thread.sleep(100000000000l);
         purgeMgr.shutdown();
         Assert.assertEquals("Purge task is still running after shutdown", COMPLETED,
                 purgeMgr.getPurgeTaskStatus());

@@ -246,6 +246,9 @@ public class DataTree {
         nodes.put(path, node);
     }
 
+    /**
+     * 根据 path 返回对应的 node s
+     */
     public DataNode getNode(String path) {
         return nodes.get(path);
     }
@@ -552,8 +555,7 @@ public class DataTree {
      *            the current zxid
      * @throws KeeperException.NoNodeException
      */
-    public void deleteNode(String path, long zxid)
-            throws KeeperException.NoNodeException {
+    public void deleteNode(String path, long zxid) throws KeeperException.NoNodeException {
         int lastSlash = path.lastIndexOf('/');
         String parentName = path.substring(0, lastSlash);
         String childName = path.substring(lastSlash + 1);
@@ -690,8 +692,7 @@ public class DataTree {
         }
     }
 
-    public List<String> getChildren(String path, Stat stat, Watcher watcher)
-            throws KeeperException.NoNodeException {
+    public List<String> getChildren(String path, Stat stat, Watcher watcher) throws KeeperException.NoNodeException {
         DataNode n = nodes.get(path);
         if (n == null) {
             throw new KeeperException.NoNodeException();
@@ -1350,8 +1351,7 @@ public class DataTree {
       * @throws KeeperException.NoNodeException
       *     If znode not found.
       **/
-    public void setCversionPzxid(String path, int newCversion, long zxid)
-        throws KeeperException.NoNodeException {
+    public void setCversionPzxid(String path, int newCversion, long zxid) throws KeeperException.NoNodeException {
         if (path.endsWith("/")) {
            path = path.substring(0, path.length() - 1);
         }
