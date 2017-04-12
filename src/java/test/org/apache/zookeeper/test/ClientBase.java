@@ -25,14 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -75,6 +70,7 @@ public abstract class ClientBase extends ZKTestCase {
     protected int maxCnxns = 0;
     protected ServerCnxnFactory serverFactory = null;
     protected File tmpDir = null;
+    private static SimpleDateFormat formatter;
     
     long initialFdCount;
     
@@ -306,12 +302,24 @@ public abstract class ClientBase extends ZKTestCase {
         }
     }
 
+    public static String formatDate(Date aDate, String formatStr) {
+        formatter = new SimpleDateFormat(formatStr);
+        return formatter.format(aDate);
+    }
+
+    // 返回今天的字符串形式
+    public static String todayFormatDate(){
+        return formatDate(new Date(), "yyyy-MM-dd-HHmmss");
+    }
 
     public static File createTmpDir() throws IOException {
         return createTmpDir(BASETEST);
     }
     static File createTmpDir(File parentDir) throws IOException {
+        @Deprecated
         File tmpFile = File.createTempFile("test", ".junit", parentDir);
+        tmpFile = new File(parentDir.getCanonicalPath() + "\\" + todayFormatDate() +"\\");
+        if(!tmpFile.exists()) tmpFile.mkdirs();
         // don't delete tmpFile - this ensures we don't attempt to create
         // a tmpDir with a duplicate name
         File tmpDir = new File(tmpFile + ".dir");

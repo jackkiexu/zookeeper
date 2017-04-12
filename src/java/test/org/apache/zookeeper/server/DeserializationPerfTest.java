@@ -34,18 +34,24 @@ import org.junit.Test;
 public class DeserializationPerfTest extends ZKTestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(DeserializationPerfTest.class);
 
+    /**
+     * 创建指定形式的 DataTree
+     * @param depth 树的深度
+     * @param width 树的宽度
+     * @param len 每个节点数据的大小
+     */
     private static void deserializeTree(int depth, int width, int len)
             throws InterruptedException, IOException, KeeperException.NodeExistsException, KeeperException.NoNodeException {
         BinaryInputArchive ia;
         int count;
         {
-            DataTree tree = new DataTree();
+            DataTree tree = new DataTree();                                                      // 1. 创建指定样式的 DataTree
             SerializationPerfTest.createNodes(tree, "/", depth, tree.getNode("/").stat.getCversion(), width, new byte[len]);
             count = tree.getNodeCount();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             BinaryOutputArchive oa = BinaryOutputArchive.getArchive(baos);
-            tree.serialize(oa, "test");
+            tree.serialize(oa, "test");                                                         // 2. 对 DataTree 进行序列化
             baos.flush();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
@@ -56,7 +62,7 @@ public class DeserializationPerfTest extends ZKTestCase {
 
         System.gc();
         long start = System.nanoTime();
-        dserTree.deserialize(ia, "test");
+        dserTree.deserialize(ia, "test");                                                       // 3. 反序列化 DataTree
         long end = System.nanoTime();
         long durationms = (end - start) / 1000000L;
         long pernodeus = ((end - start) / 1000L) / count;

@@ -1,0 +1,47 @@
+[2017-04-12 14:58:13,873] INFO  main (ZKTestCase.java:50) - STARTING testInvalidSnapCount
+[2017-04-12 14:58:13,877] INFO  main (JUnit4ZKTestRunner.java:50) - RUNNING TEST METHOD testInvalidSnapCount
+[2017-04-12 14:58:17,994] INFO  main (FourLetterWordMain.java:43) - connecting to 127.0.0.1 3181
+[2017-04-12 14:58:18,063] INFO  Standalone server with clientPort:3181 (QuorumPeerConfig.java:103) - Reading configuration from: E:\zbworkspace\zookeeper\build\2017-04-12-145817.dir\zoo.cfg
+[2017-04-12 14:58:18,066] INFO  Standalone server with clientPort:3181 (ZooKeeperServerMain.java:95) - Starting server
+[2017-04-12 14:58:18,095] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:zookeeper.version=3.4.6--1, built on 04/01/2017 03:15 GMT
+[2017-04-12 14:58:18,095] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:host.name=TECH-XUJIANKANG.zibang.com
+[2017-04-12 14:58:18,096] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.version=1.8.0_111
+[2017-04-12 14:58:18,096] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.vendor=Oracle Corporation
+[2017-04-12 14:58:18,096] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.home=C:\job\jdk\jre
+[2017-04-12 14:58:18,096] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.class.path=D:\job\idea\idea14\IntelliJ IDEA 14.1.4\lib\idea_rt.jar;D:\job\idea\idea14\IntelliJ IDEA 14.1.4\plugins\junit\lib\junit-rt.jar;C:\job\jdk\jre\lib\charsets.jar;C:\job\jdk\jre\lib\deploy.jar;C:\job\jdk\jre\lib\javaws.jar;C:\job\jdk\jre\lib\jce.jar;C:\job\jdk\jre\lib\jfr.jar;C:\job\jdk\jre\lib\jfxswt.jar;C:\job\jdk\jre\lib\jsse.jar;C:\job\jdk\jre\lib\management-agent.jar;C:\job\jdk\jre\lib\plugin.jar;C:\job\jdk\jre\lib\resources.jar;C:\job\jdk\jre\lib\rt.jar;C:\job\jdk\jre\lib\ext\access-bridge-64.jar;C:\job\jdk\jre\lib\ext\cldrdata.jar;C:\job\jdk\jre\lib\ext\dnsns.jar;C:\job\jdk\jre\lib\ext\jaccess.jar;C:\job\jdk\jre\lib\ext\jfxrt.jar;C:\job\jdk\jre\lib\ext\localedata.jar;C:\job\jdk\jre\lib\ext\nashorn.jar;C:\job\jdk\jre\lib\ext\sunec.jar;C:\job\jdk\jre\lib\ext\sunjce_provider.jar;C:\job\jdk\jre\lib\ext\sunmscapi.jar;C:\job\jdk\jre\lib\ext\sunpkcs11.jar;C:\job\jdk\jre\lib\ext\zipfs.jar;E:\zbworkspace\zookeeper\.eclipse\classes-main;C:\Users\xujiankang\.ant\cache\org.slf4j\slf4j-api\jars\slf4j-api-1.6.1.jar;C:\Users\xujiankang\.ant\cache\org.slf4j\slf4j-log4j12\jars\slf4j-log4j12-1.6.1.jar;C:\Users\xujiankang\.ant\cache\log4j\log4j\bundles\log4j-1.2.16.jar;C:\Users\xujiankang\.ant\cache\jline\jline\jars\jline-0.9.94.jar;C:\Users\xujiankang\.ant\cache\io.netty\netty\jars\netty-3.7.0.Final.jar;C:\Users\xujiankang\.ant\cache\junit\junit\jars\junit-4.8.1.jar;C:\Users\xujiankang\.ant\cache\org.mockito\mockito-all\jars\mockito-all-1.8.2.jar;C:\Users\xujiankang\.ant\cache\checkstyle\checkstyle\jars\checkstyle-5.0.jar
+[2017-04-12 14:58:18,098] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.library.path=C:\job\jdk\bin;C:\windows\Sun\Java\bin;C:\windows\system32;C:\windows;C:\job\jdk\bin;C:\job\jdk\jre\bin;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\job\git\Git\bin;C:\job\gradle\gradle-3.4\bin;D:\job\svn\bin;C:\job\svn\bin;C:\job\ant\apache-ant-1.10.1\bin;.
+[2017-04-12 14:58:18,099] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.io.tmpdir=C:\Users\xujiankang\AppData\Local\Temp\
+[2017-04-12 14:58:18,100] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:java.compiler=<NA>
+[2017-04-12 14:58:18,100] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:os.name=Windows 7
+[2017-04-12 14:58:18,100] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:os.arch=amd64
+[2017-04-12 14:58:18,101] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:os.version=6.1
+[2017-04-12 14:58:18,102] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:user.name=xujiankang
+[2017-04-12 14:58:18,102] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:user.home=C:\Users\xujiankang
+[2017-04-12 14:58:18,102] INFO  Standalone server with clientPort:3181 (Environment.java:100) - Server environment:user.dir=E:\zbworkspace\zookeeper
+[2017-04-12 14:58:18,108] INFO  Standalone server with clientPort:3181 (ZooKeeperServer.java:766) - tickTime set to 2000
+[2017-04-12 14:58:18,108] INFO  Standalone server with clientPort:3181 (ZooKeeperServer.java:775) - minSessionTimeout set to -1
+[2017-04-12 14:58:18,108] INFO  Standalone server with clientPort:3181 (ZooKeeperServer.java:784) - maxSessionTimeout set to -1
+[2017-04-12 14:58:18,164] INFO  Standalone server with clientPort:3181 (NIOServerCnxnFactory.java:94) - binding to port 0.0.0.0/0.0.0.0:3181
+[2017-04-12 14:58:18,186] WARN  Standalone server with clientPort:3181 (ZooKeeperServer.java:705) - SnapCount should be 2 or more. Now, snapCount is reset to 2
+[2017-04-12 14:58:18,502] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:3181 (NIOServerCnxnFactory.java:199) - Accepted socket connection from /127.0.0.1:55824
+[2017-04-12 14:58:18,507] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:3181 (NIOServerCnxn.java:827) - Processing stat command from /127.0.0.1:55824
+[2017-04-12 14:58:18,511] INFO  Thread-1 (NIOServerCnxn.java:663) - Stat command output
+[2017-04-12 14:58:18,512] INFO  Thread-1 (NIOServerCnxn.java:1007) - Closed socket connection for client /127.0.0.1:55824 (no session established for client)
+[2017-04-12 14:58:18,513] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:3181 (NIOServerCnxnFactory.java:226) - NIOServerCnxn factory exited run method
+[2017-04-12 14:58:18,513] INFO  main (ZooKeeperServer.java:445) - shutting down
+[2017-04-12 14:58:18,513] INFO  Standalone server with clientPort:3181 (ZooKeeperServer.java:445) - shutting down
+[2017-04-12 14:58:18,514] INFO  main (SessionTrackerImpl.java:232) - Shutting down
+[2017-04-12 14:58:18,514] INFO  main (PrepRequestProcessor.java:761) - Shutting down
+[2017-04-12 14:58:18,514] INFO  Standalone server with clientPort:3181 (SessionTrackerImpl.java:232) - Shutting down
+[2017-04-12 14:58:18,515] INFO  ProcessThread(sid:0 cport:-1): (PrepRequestProcessor.java:143) - PrepRequestProcessor exited loop!
+[2017-04-12 14:58:18,515] INFO  main (SyncRequestProcessor.java:209) - Shutting down
+[2017-04-12 14:58:18,515] INFO  Standalone server with clientPort:3181 (PrepRequestProcessor.java:761) - Shutting down
+[2017-04-12 14:58:18,516] INFO  Standalone server with clientPort:3181 (SyncRequestProcessor.java:209) - Shutting down
+[2017-04-12 14:58:18,515] INFO  SyncThread:0 (SyncRequestProcessor.java:187) - SyncRequestProcessor exited!
+[2017-04-12 14:58:18,517] INFO  main (FinalRequestProcessor.java:415) - shutdown of request processor complete
+[2017-04-12 14:58:18,517] INFO  Standalone server with clientPort:3181 (FinalRequestProcessor.java:415) - shutdown of request processor complete
+[2017-04-12 14:58:18,519] INFO  main (JUnit4ZKTestRunner.java:55) - Memory used 17979
+[2017-04-12 14:58:18,519] INFO  main (JUnit4ZKTestRunner.java:60) - Number of threads 6
+[2017-04-12 14:58:18,519] INFO  main (JUnit4ZKTestRunner.java:65) - FINISHED TEST METHOD testInvalidSnapCount
+[2017-04-12 14:58:18,519] INFO  main (ZKTestCase.java:60) - SUCCEEDED testInvalidSnapCount
+[2017-04-12 14:58:18,519] INFO  main (ZKTestCase.java:55) - FINISHED testInvalidSnapCount

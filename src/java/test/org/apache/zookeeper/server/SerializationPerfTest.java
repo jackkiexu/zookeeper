@@ -40,9 +40,9 @@ public class SerializationPerfTest extends ZKTestCase {
     static int createNodes(DataTree tree, String path, int depth,
             int childcount, int parentCVersion, byte[] data) throws KeeperException.NodeExistsException, KeeperException.NoNodeException {
         path += "node" + depth;
-        tree.createNode(path, data, null, -1, ++parentCVersion, 1, 1);
+        tree.createNode(path, data, null, -1, ++parentCVersion, 1, 1); // 创建节点
 
-        if (--depth == 0) {
+        if (--depth == 0) { // 判断是否已经 DataTree 的深度满了
             return 1;
         }
 
@@ -50,12 +50,18 @@ public class SerializationPerfTest extends ZKTestCase {
 
         int count = 1;
         for (int i = 0; i < childcount; i++) {
-            count += createNodes(tree, path + i, depth, childcount, 1, data);
+            count += createNodes(tree, path + i, depth, childcount, 1, data); // depth 相同, 创建相同层的叶子节点的个数
         }
 
         return count;
     }
 
+    /**
+     * 创建指定形式的 DataTree
+     * @param depth 树的深度
+     * @param width 树的宽度
+     * @param len 每个节点数据的大小
+     */
     private static void serializeTree(int depth, int width, int len)
             throws InterruptedException, IOException, KeeperException.NodeExistsException, KeeperException.NoNodeException {
         DataTree tree = new DataTree();
@@ -84,7 +90,7 @@ public class SerializationPerfTest extends ZKTestCase {
     @Test
     public void testWideSerialize()
             throws InterruptedException, IOException, KeeperException.NodeExistsException, KeeperException.NoNodeException {
-        serializeTree(2, 10000, 20);
+        serializeTree(10, 1000, 10);
     }
 
     @Test
