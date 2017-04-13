@@ -33,6 +33,7 @@ import org.apache.zookeeper.test.ClientTest;
 import org.apache.zookeeper.test.QuorumUtil;
 import org.apache.zookeeper.test.QuorumUtil.PeerStruct;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -47,11 +48,14 @@ public class ZxidRolloverTest extends TestCase {
     private CountdownWatcher[] zkClientWatchers = new CountdownWatcher[3];
     private int idxLeader;
     private int idxFollower;
-    
+
     private ZooKeeper getClient(int idx) {
         return zkClients[idx-1];
     }
 
+    /**
+     * 下面额 setUp 是重写 父类的 setUp 方法, <- 其实就是起着 @Before 的作用s
+     */
     @Override
     protected void setUp() throws Exception {
         LOG.info("STARTING " + getName());

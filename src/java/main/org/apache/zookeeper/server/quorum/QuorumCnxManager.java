@@ -506,7 +506,7 @@ public class QuorumCnxManager {
                             .toString());
                     ss.bind(addr);
                     while (!shutdown) {
-                        Socket client = ss.accept();
+                        Socket client = ss.accept();  // 这里会阻塞, 直到有请求到达
                         setSockOpts(client);
                         LOG.info("Received connection request "
                                 + client.getRemoteSocketAddress());

@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.zookeeper.PortAssignment;
 import org.apache.zookeeper.KeeperException.Code;
@@ -61,7 +62,7 @@ public class PrepRequestProcessorTest extends ClientBase {
         PrepRequestProcessor processor = new PrepRequestProcessor(zks, new MyRequestProcessor());
         Request foo = new Request(null, 1l, 1, OpCode.create, ByteBuffer.allocate(3), null);
         processor.pRequest(foo);
-        testEnd.await(5, java.util.concurrent.TimeUnit.SECONDS);
+        testEnd.await(5, TimeUnit.MINUTES);
         f.shutdown();
         zks.shutdown();
     }

@@ -91,6 +91,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      */
     private ZKDatabase zkDb;
 
+    // 参加选举的 server
     public static class QuorumServer {
         public QuorumServer(long id, InetSocketAddress addr,
                 InetSocketAddress electionAddr) {

@@ -71,6 +71,8 @@ public class CnxManagerTest extends ZKTestCase {
                     new InetSocketAddress(PortAssignment.unique())));
             peerTmpdir[i] = ClientBase.createTmpDir();
         }
+
+        LOG.info("peerTmpdir:"+peerTmpdir);
     }
 
     ByteBuffer createMsg(int state, long leader, long zxid, long epoch){

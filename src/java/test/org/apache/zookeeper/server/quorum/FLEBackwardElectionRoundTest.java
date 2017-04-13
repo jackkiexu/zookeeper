@@ -134,7 +134,7 @@ public class FLEBackwardElectionRoundTest extends ZKTestCase {
         /*
          * Run another instance of leader election.
          */
-        thread.join(5000);
+        thread.join(50000000);
         thread = new FLETestUtils.LEThread(peer, 0);
         thread.start();
         
@@ -145,7 +145,7 @@ public class FLEBackwardElectionRoundTest extends ZKTestCase {
         cnxManagers[1].toSend(0l, msg);
         
         
-        thread.join(5000);
+        thread.join(50000000);
         
         if (!thread.isAlive()) {
             Assert.fail("Should not have joined");

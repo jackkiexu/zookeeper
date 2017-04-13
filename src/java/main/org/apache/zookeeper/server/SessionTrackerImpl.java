@@ -45,6 +45,11 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
     HashMap<Long, SessionImpl> sessionsById = new HashMap<Long, SessionImpl>();
 
     // 过期时间 一组即将要处理的 session
+    /**
+     * 真正执行过期检查时, 会通过一个线程, 每隔开一段时间 sleep 一会, 然后 通过下面的时间线来从 sessionSets 里面进行获取对应的需要 remove 的 SessionSet
+     * ----- SessionSet 1 -- SessionSet 2 -- SessionSet 3 ----
+     * -------- time 1 ------ time 2 ------ time 3 ------
+     */
     HashMap<Long, SessionSet> sessionSets = new HashMap<Long, SessionSet>();
 
     // sessionId 对应 timeout 时间 (这个对象真正放在 ZKDatabase 里面)
@@ -91,6 +96,11 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
 
     SessionExpirer expirer;
 
+    /**
+     * 获取 session 的过期时间 (这里很多 session 的真正超时时间会一样, 并且会被安排在对应的 HashSet 里面)
+     * @param time 这里的时间 time 是 : System.currentTimeMillis() + timeout
+     * @return (time / 全局的 expirationInterval + 1) * 全局的 expirationInterval
+     */
     private long roundToInterval(long time) {
         // We give a one interval grace period
         return (time / expirationInterval + 1) * expirationInterval;
@@ -245,7 +255,7 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
     }
 
     synchronized public void addSession(long id, int sessionTimeout) {
-        sessionsWithTimeout.put(id, sessionTimeout);
+        sessionsWithTimeout.put(id, sessionTimeout); // sessionId <-> sessionTimeout
         if (sessionsById.get(id) == null) { // 因为可能有重复请求, 所以加上这个判断
             SessionImpl s = new SessionImpl(id, sessionTimeout, 0); // 构建 session
             sessionsById.put(id, s);

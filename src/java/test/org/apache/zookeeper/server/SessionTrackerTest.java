@@ -88,7 +88,7 @@ public class SessionTrackerTest extends ZKTestCase {
      * Verify the session closure request has reached PrepRequestProcessor soon
      * after session expiration by the session tracker
      */
-    @Test(timeout = 20000)
+    @Test(timeout = 200000000)
     public void testCloseSessionRequestAfterSessionExpiry() throws Exception {
         ZooKeeperServer zks = setupSessionTracker();
 
@@ -110,8 +110,7 @@ public class SessionTrackerTest extends ZKTestCase {
         // Simulating close session request: removeSession() will be executed
         // while OpCode.closeSession
         sessionTrackerImpl.removeSession(sessionId);
-        SessionImpl actualSession = sessionTrackerImpl.sessionsById
-                .get(sessionId);
+        SessionImpl actualSession = sessionTrackerImpl.sessionsById.get(sessionId);
         Assert.assertNull("Session:" + sessionId
                 + " still exists after removal", actualSession);
     }

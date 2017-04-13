@@ -675,12 +675,12 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             }
         }
         try {
-            touch(si.cnxn);
-            boolean validpacket = Request.isValid(si.type); // У??????????
+            touch(si.cnxn); // close session 时, cnxn 是 null
+            boolean validpacket = Request.isValid(si.type);
             if (validpacket) {
-                firstProcessor.processRequest(si);  // ????????
+                firstProcessor.processRequest(si);
                 if (si.cnxn != null) {
-                    incInProcess(); // ????????? +1
+                    incInProcess();
                 }
             } else {
                 LOG.warn("Received packet at server of unknown type " + si.type);

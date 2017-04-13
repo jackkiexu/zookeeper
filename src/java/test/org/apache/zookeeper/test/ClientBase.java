@@ -309,7 +309,7 @@ public abstract class ClientBase extends ZKTestCase {
 
     // 返回今天的字符串形式
     public static String todayFormatDate(){
-        return formatDate(new Date(), "yyyy-MM-dd-HHmmss");
+        return formatDate(new Date(), "yyyy-MM-dd-HHmmssSSS");
     }
 
     public static File createTmpDir() throws IOException {
