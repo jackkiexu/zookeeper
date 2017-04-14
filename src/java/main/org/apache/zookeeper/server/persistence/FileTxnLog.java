@@ -180,9 +180,10 @@ public class FileTxnLog implements TxnLog {
     }
     
     /**
+     * 追加事物信息到事物日志里面
      * append an entry to the transaction log
-     * @param hdr the header of the transaction
-     * @param txn the transaction part of the entry
+     * @param hdr the header of the transaction 事务头
+     * @param txn the transaction part of the entry 事务体
      * returns true iff something appended, otw false 
      */
     public synchronized boolean append(TxnHeader hdr, Record txn)

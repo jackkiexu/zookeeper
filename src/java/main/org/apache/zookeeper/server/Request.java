@@ -67,8 +67,10 @@ public class Request {
 
     public final ServerCnxn cnxn;
 
+    // 请求事物头
     public TxnHeader hdr;
 
+    // 请求事务体, 后期会将其转化成具体类型 (根据 TxnHeader.type)
     public Record txn;
 
     public long zxid = -1;

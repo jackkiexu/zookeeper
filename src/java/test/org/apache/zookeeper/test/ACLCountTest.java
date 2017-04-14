@@ -154,4 +154,13 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
         pTrie.findMaxPrefix(path3);
     }
 
+
+    @Test
+    public void testStringBuilder(){
+        StringBuilder path = new StringBuilder("/zookeeper");
+        StringBuilder path2 = new StringBuilder("/zookeeper/quota");
+
+        System.out.println("path:" + path2.delete(11, Integer.MAX_VALUE));
+    }
+
 }

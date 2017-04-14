@@ -79,7 +79,7 @@ public class DataNode implements Record {
      *            the parent of this DataNode
      * @param data   这个节点上设置的 data 数据(是一个字节数组)
      *            the data to be set
-     * @param acl    这个节点上的 acl 值(权限控制)
+     * @param acl    这个节点上的 acl 值(权限控制), 这个 acl 对应的是 longKeyMap 里面的 key, 而对应的 Value 就是 具体的权限控制值
      *            the acls for this node
      * @param stat  节点的 stat 值
      *            the stat for this node.

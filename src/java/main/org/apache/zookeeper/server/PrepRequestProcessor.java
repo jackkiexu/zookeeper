@@ -316,23 +316,24 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
      * @param zxid
      * @param request
      * @param record
+     * @param deserialize 是否需要从 request.request 里面反序列化出 对应的 Record
      */
     @SuppressWarnings("unchecked")
     protected void pRequest2Txn(int type, long zxid, Request request, Record record, boolean deserialize)
         throws KeeperException, IOException, RequestProcessorException
     {
-        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,
+        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,                  // 1. 组装请求事物头 TxnHeader
                                     zks.getTime(), type);
 
         switch (type) {
             case OpCode.create:                
-                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
+                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());     //  进行校验 session
                 CreateRequest createRequest = (CreateRequest)record;   
                 if(deserialize)
-                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);
+                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);   // 从 request.request 里面发序列化出 createRequest
                 String path = createRequest.getPath();
                 int lastSlash = path.lastIndexOf('/');
-                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {
+                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {               // 校验 path 路径
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
                     throw new KeeperException.BadArgumentsException(path);
@@ -751,6 +752,11 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         return acl.size() > 0;
     }
 
+    /**
+     * 将需要处理的 request 丢到 队列 submittedRequests 里面,
+     * 1. PrepRequestProcessor 其实就是一个不断从 submittedRequests take 出数据, 并且交由 pRequest 来进行处理
+     * 2. pRequest 来决定请求 Request 是否需要 pRequest2Txn 来进行处理
+     */
     public void processRequest(Request request) {
         // request.addRQRec(">prep="+zks.outstandingChanges.size());
         submittedRequests.add(request);

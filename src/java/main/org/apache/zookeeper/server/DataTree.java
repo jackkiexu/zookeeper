@@ -1124,16 +1124,16 @@ public class DataTree {
     // 序列化 所有 DataNode
     void serializeNode(OutputArchive oa, StringBuilder path) throws IOException {
         String pathString = path.toString();
-        DataNode node = getNode(pathString);
+        DataNode node = getNode(pathString);                 // 1. 获取 path 对应的节点, 这个节点默认是 root 节点, 因为传来的 path 默认是 ""
         if (node == null) {
             return;
         }
         String children[] = null;
         synchronized (node) {
-            scount++;
+            scount++;                                       // 2. 序列化计数器 +1
             oa.writeString(pathString, "path");
-            oa.writeRecord(node, "node");                   // 单个 DataNode 进行序列化
-            Set<String> childs = node.getChildren();
+            oa.writeRecord(node, "node");                   // 3. 单个 DataNode 进行序列化(直接看 DataNode )
+            Set<String> childs = node.getChildren();         // 4. 获取 path 下面的子 path
             if (childs != null) {
                 children = childs.toArray(new String[childs.size()]);
             }
@@ -1145,13 +1145,13 @@ public class DataTree {
                 // since this is single buffer being resused
                 // we need
                 // to truncate the previous bytes of string.
-                path.delete(off, Integer.MAX_VALUE);
+                path.delete(off, Integer.MAX_VALUE);       // 5.
                 path.append(child);
-                serializeNode(oa, path);
+                serializeNode(oa, path); // 递归序列化
             }
         }
     }
-
+    // 这个 scount 里面可以表示现在序列化的次数, 但每次反序列化后 scount 就变成 0
     int scount;
 
     public boolean initialized = false;
@@ -1198,11 +1198,11 @@ public class DataTree {
     public void serialize(OutputArchive oa, String tag) throws IOException {
         scount = 0;
         serializeList(longKeyMap, oa);
-        serializeNode(oa, new StringBuilder(""));
+        serializeNode(oa, new StringBuilder("")); // 从根开始序列化, zookeeper DataTree 最上层就是 " " 与 "/", 两者都是对应 root 节点
         // / marks end of stream
         // we need to check if clear had been called in between the snapshot.
         if (root != null) {
-            oa.writeString("/", "path");
+            oa.writeString("/", "path"); // 这里的 '/' 是 zookeeper 反序列化 snapshot 文件时校验的一个点
         }
     }
 

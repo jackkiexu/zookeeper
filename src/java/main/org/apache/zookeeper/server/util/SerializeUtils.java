@@ -126,14 +126,24 @@ public class SerializeUtils {
         dt.deserialize(ia, "tree");                 // 3. 进行 DataTree 的反序列化
     }
 
+    /** DataTree 序列化内容
+     *      内容                         标签
+     *  sessionsWithTimeouts.size() <--> count
+     *      sessionId               <--> id
+     *      timeout                 <--> timeout
+     *      sessionId               <--> id
+     *      timeout                 <--> timeout
+     *       ......                 <--> ...
+     *       DataTree 序列化
+     */
     public static void serializeSnapshot(DataTree dt,OutputArchive oa, Map<Long, Integer> sessions) throws IOException {
         HashMap<Long, Integer> sessSnap = new HashMap<Long, Integer>(sessions);
-        oa.writeInt(sessSnap.size(), "count");                          // 先写入 session 的个数
-        for (Entry<Long, Integer> entry : sessSnap.entrySet()) {        // 写入每个 sessionId 与 timeout
+        oa.writeInt(sessSnap.size(), "count");                          // 1. 先写入 session 的个数
+        for (Entry<Long, Integer> entry : sessSnap.entrySet()) {        // 2. 写入每个 sessionId 与 timeout
             oa.writeLong(entry.getKey().longValue(), "id");
             oa.writeInt(entry.getValue().intValue(), "timeout");
         }
-        dt.serialize(oa, "tree");                                       // DataTree 进行序列化
+        dt.serialize(oa, "tree");                                       // 3. DataTree 进行序列化
     }
 
 }
