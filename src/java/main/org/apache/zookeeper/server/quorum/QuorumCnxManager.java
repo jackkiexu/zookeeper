@@ -233,7 +233,7 @@ public class QuorumCnxManager {
      * possible long value to lose the challenge.
      * 
      */
-    public boolean receiveConnection(Socket sock) {
+    public boolean receiveConnection(Socket sock) { // 接收 集群之间各个节点的相互的连接
         Long sid = null;
         
         try {
@@ -247,7 +247,7 @@ public class QuorumCnxManager {
                 byte[] b = new byte[num_remaining_bytes];
                 // remove the remainder of the message from din
                 int num_read = din.read(b);
-                if (num_read != num_remaining_bytes) {
+                if (num_read != num_remaining_bytes) {  // 数据没有读满, 进行日志记录
                     LOG.error("Read only " + num_read + " bytes out of " + num_remaining_bytes + " sent by server " + sid);
                 }
             }
@@ -506,7 +506,7 @@ public class QuorumCnxManager {
                 try {
                     ss = new ServerSocket();
                     ss.setReuseAddress(true);
-                    if (self.getQuorumListenOnAllIPs()) {
+                    if (self.getQuorumListenOnAllIPs()) { // 这里的默认值 quorumListenOnAllIPs 是 false
                         int port = self.quorumPeers.get(self.getId()).electionAddr.getPort();
                         addr = new InetSocketAddress(port);
                     } else {
@@ -518,7 +518,7 @@ public class QuorumCnxManager {
                     ss.bind(addr);
                     while (!shutdown) {
                         Socket client = ss.accept();  // 这里会阻塞, 直到有请求到达
-                        setSockOpts(client);
+                        setSockOpts(client);          // 设置 socket 的连接属性
                         LOG.info("Received connection request "
                                 + client.getRemoteSocketAddress());
                         receiveConnection(client);
