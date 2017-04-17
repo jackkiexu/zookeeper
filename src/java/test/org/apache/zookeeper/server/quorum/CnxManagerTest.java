@@ -57,18 +57,18 @@ public class CnxManagerTest extends ZKTestCase {
     public void setUp() throws Exception {
 
         this.count = 3;
-        this.peers = new HashMap<Long,QuorumServer>(count); 
+        this.peers = new HashMap<Long,QuorumServer>(count);
         peerTmpdir = new File[count];
         peerQuorumPort = new int[count];
         peerClientPort = new int[count];
-        
+
         for(int i = 0; i < count; i++) {
             peerQuorumPort[i] = PortAssignment.unique();
             peerClientPort[i] = PortAssignment.unique();
             peers.put(Long.valueOf(i),
                     new QuorumServer(i,
                             new InetSocketAddress(peerQuorumPort[i]),
-                    new InetSocketAddress(PortAssignment.unique())));
+                            new InetSocketAddress(PortAssignment.unique())));
             peerTmpdir[i] = ClientBase.createTmpDir();
         }
 
@@ -131,7 +131,14 @@ public class CnxManagerTest extends ZKTestCase {
         CnxManagerThread thread = new CnxManagerThread();
 
         thread.start();
-        
+        // QuorumPeer 法定的选举人
+        // peers 所有 zookeeper 里面参与选举 leader 的节点
+        // peerTmpdir 指 snap, 及 txn 日志的位置
+        // 3 指的是选举所使用的算法 (3 就是FastLeaderElection) (在 QuorumPeer 的 createElectionAlgorithm 里面决定所使用的方法)
+        // 1 就是在配置文件中配置的 myid, 用于区分集群中的每台服务器
+        // 1000 tickTime 心跳时间, 最少的超时时间就是 2 个心跳时间
+        // 2 initLimit 多少个 tickTime 时间内允许 集群中的其他 server 进行连接, 初始化数据
+        // 2 syncLimit 多少个 tickTime 时间内允许 follower/observer 进行同步数据
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 1000, 2, 2);
         QuorumCnxManager cnxManager = new QuorumCnxManager(peer);
         QuorumCnxManager.Listener listener = cnxManager.listener;
@@ -140,7 +147,9 @@ public class CnxManagerTest extends ZKTestCase {
         } else {
             LOG.error("Null listener when initializing cnx manager");
         }
-
+        // 构建一个 cnxManager, 并且在 QuorumPeer 之间发送 LOOKING 的消息, 说明自己在查找 Leader
+        // cnxManager 向 myid = 0 的机器发送 LOOKING 的请求
+        // zxid = -1, epoch = 1
         cnxManager.toSend(new Long(0), createMsg(ServerState.LOOKING.ordinal(), 1, -1, 1));
 
         Message m = null;
@@ -149,7 +158,7 @@ public class CnxManagerTest extends ZKTestCase {
             m = cnxManager.pollRecvQueue(3000, TimeUnit.MILLISECONDS);
             if(m == null) cnxManager.connectAll();
         }
-        
+
         Assert.assertTrue("Exceeded number of retries", numRetries <= THRESHOLD);
 
         thread.join(5000);
@@ -159,7 +168,7 @@ public class CnxManagerTest extends ZKTestCase {
             if(thread.failed)
                 Assert.fail("Did not receive expected message");
         }
-        
+
     }
 
     @Test
@@ -168,15 +177,15 @@ public class CnxManagerTest extends ZKTestCase {
         byte b = (byte) rand.nextInt();
         int deadPort = PortAssignment.unique();
         String deadAddress = new String("10.1.1." + b);
-            
+
         LOG.info("This is the dead address I'm trying: " + deadAddress);
-            
+
         peers.put(Long.valueOf(2),
                 new QuorumServer(2,
                         new InetSocketAddress(deadAddress, deadPort),
                         new InetSocketAddress(deadAddress, PortAssignment.unique())));
         peerTmpdir[2] = ClientBase.createTmpDir();
-    
+
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 1000, 2, 2);
         QuorumCnxManager cnxManager = new QuorumCnxManager(peer);
         QuorumCnxManager.Listener listener = cnxManager.listener;
@@ -189,21 +198,21 @@ public class CnxManagerTest extends ZKTestCase {
         long begin = System.currentTimeMillis();
         cnxManager.toSend(new Long(2), createMsg(ServerState.LOOKING.ordinal(), 1, -1, 1));
         long end = System.currentTimeMillis();
-            
+
         if((end - begin) > 6000) Assert.fail("Waited more than necessary");
-        
-    }       
-    
+
+    }
+
     /**
      * Tests a bug in QuorumCnxManager that causes a spin lock
      * when a negative value is sent. This test checks if the 
      * connection is being closed upon a message with negative
      * length.
-     * 
+     *
      * @throws Exception
      */
     @Test
-    public void testCnxManagerSpinLock() throws Exception {               
+    public void testCnxManagerSpinLock() throws Exception {
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 1000, 2, 2);
         QuorumCnxManager cnxManager = new QuorumCnxManager(peer);
         QuorumCnxManager.Listener listener = cnxManager.listener;
@@ -212,13 +221,13 @@ public class CnxManagerTest extends ZKTestCase {
         } else {
             LOG.error("Null listener when initializing cnx manager");
         }
-        
+
         int port = peers.get(peer.getId()).electionAddr.getPort();
         LOG.info("Election port: " + port);
         InetSocketAddress addr = new InetSocketAddress(port);
-        
+
         Thread.sleep(1000);
-        
+
         SocketChannel sc = SocketChannel.open();
         sc.socket().connect(peers.get(new Long(1)).electionAddr, 5000);
         
@@ -230,14 +239,14 @@ public class CnxManagerTest extends ZKTestCase {
         msgBuffer.putLong(new Long(2));
         msgBuffer.position(0);
         sc.write(msgBuffer);
-        
+
         msgBuffer = ByteBuffer.wrap(new byte[4]);
         msgBuffer.putInt(-20);
         msgBuffer.position(0);
         sc.write(msgBuffer);
-        
+
         Thread.sleep(1000);
-        
+
         try{
             /*
              * Write a number of times until it
@@ -253,7 +262,7 @@ public class CnxManagerTest extends ZKTestCase {
         }
         peer.shutdown();
         cnxManager.halt();
-    }   
+    }
 
     /*
      * Class used with testCnxFromFutureVersion
@@ -263,20 +272,20 @@ public class CnxManagerTest extends ZKTestCase {
         TestCnxManager(QuorumPeer self) {
             super(self);
         }
-        
+
         boolean senderWorkerMapContains(Long l){
             return senderWorkerMap.containsKey(l);
         }
-        
+
         long getSid(Message m){
             return m.sid;
         }
-        
+
         String getMsgString(Message m){
             return new String(m.buffer.array());
         }
     }
-    
+
     /**
      * Before 3.5.0 a server sends its id when connecting to another server.
      * Starting with 3.5.0 a server will send a protocol version, followed by
@@ -284,13 +293,13 @@ public class CnxManagerTest extends ZKTestCase {
      * the rest of the message. The test makes sure that a 3.4.6 server is able
      * to detect that a connection message has this new format, extract the id,
      * and skip the remainder of the message. 
-     * 
+     *
      * {@link https://issues.apache.org/jira/browse/ZOOKEEPER-1633}
-     * 
+     *
      * @throws Exception
      */
     @Test
-    public void testCnxFromFutureVersion() throws Exception {               
+    public void testCnxFromFutureVersion() throws Exception {
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 1000, 2, 2);
         TestCnxManager cnxManager = new TestCnxManager(peer);
         QuorumCnxManager.Listener listener = cnxManager.listener;
@@ -299,15 +308,15 @@ public class CnxManagerTest extends ZKTestCase {
         } else {
             Assert.fail("Null listener when initializing cnx manager");
         }
-        
+
         int port = peers.get(peer.getId()).electionAddr.getPort();
         LOG.info("Election port: " + port);
-        
+
         Thread.sleep(1000);
-        
+
         SocketChannel sc = SocketChannel.open();
         sc.socket().connect(peers.get(new Long(1)).electionAddr, 5000);
-        
+
         InetSocketAddress otherAddr = peers.get(new Long(2)).electionAddr;
         DataOutputStream dout = new DataOutputStream(sc.socket().getOutputStream());
         // protocol version - a negative number
@@ -321,12 +330,12 @@ public class CnxManagerTest extends ZKTestCase {
         dout.writeInt(addr_bytes.length);
         dout.write(addr_bytes);
         dout.flush();
-        
+
         Thread.sleep(1000);
-        
-        Assert.assertEquals("Server 1 got connection request from server 2", 
+
+        Assert.assertEquals("Server 1 got connection request from server 2",
                 true, cnxManager.senderWorkerMapContains(new Long(2)));
-      
+
         // send another message to make sure the connection message was processed
         // properly (mainly that its suffix was removed from the stream)
         String testStr = "this is a test message string";
@@ -334,7 +343,7 @@ public class CnxManagerTest extends ZKTestCase {
         dout.writeInt(testStr_bytes.length);
         dout.write(testStr_bytes);
         dout.flush();
-        
+
         Message m = null;
         int numRetries = 1;
         while((m == null) && (numRetries++ <= THRESHOLD)){
@@ -348,14 +357,14 @@ public class CnxManagerTest extends ZKTestCase {
 
         //Assert.assertEquals("Message sender should be 2", 2, m.sid);
         Assert.assertEquals("Message sender should be 2", 2, cnxManager.getSid(m));
-        Assert.assertEquals("Message from 2 doesn't match test sring", testStr, 
+        Assert.assertEquals("Message from 2 doesn't match test sring", testStr,
                 cnxManager.getMsgString(m));
-      
+
         peer.shutdown();
         cnxManager.halt();
-    }   
+    }
 
-    
+
     /*
      * Test if a receiveConnection is able to timeout on socket errors
      */
@@ -373,7 +382,7 @@ public class CnxManagerTest extends ZKTestCase {
         LOG.info("Election port: " + port);
         InetSocketAddress addr = new InetSocketAddress(port);
         Thread.sleep(1000);
-        
+
         Socket sock = new Socket();
         sock.connect(peers.get(new Long(1)).electionAddr, 5000);
         long begin = System.currentTimeMillis();
@@ -392,7 +401,7 @@ public class CnxManagerTest extends ZKTestCase {
         try {
             for (int sid = 0; sid < 3; sid++) {
                 QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[sid], peerTmpdir[sid],
-                                                 peerClientPort[sid], 3, sid, 1000, 2, 2);
+                        peerClientPort[sid], 3, sid, 1000, 2, 2);
                 LOG.info("Starting peer {}", peer.getId());
                 peer.start();
                 peerList.add(sid, peer);
@@ -413,7 +422,7 @@ public class CnxManagerTest extends ZKTestCase {
                     Assert.assertNull(failure, failure);
                     // Restart halted node and verify count
                     peer = new QuorumPeer(peers, peerTmpdir[myid], peerTmpdir[myid],
-                                            peerClientPort[myid], 3, myid, 1000, 2, 2);
+                            peerClientPort[myid], 3, myid, 1000, 2, 2);
                     LOG.info("Round {}, restarting peer {}"
                             + new Object[] { i, peer.getId() });
                     peer.start();
@@ -434,7 +443,7 @@ public class CnxManagerTest extends ZKTestCase {
      * @throws InterruptedException
      */
     public String verifyThreadCount(ArrayList<QuorumPeer> peerList, long ecnt)
-        throws InterruptedException
+            throws InterruptedException
     {
         String failure = null;
         for (int i = 0; i < 480; i++) {
@@ -454,8 +463,8 @@ public class CnxManagerTest extends ZKTestCase {
             long cnt = cnxManager.getThreadCount();
             if (cnt != ecnt) {
                 return new String(new Date()
-                    + " Incorrect number of Worker threads for sid=" + myid
-                    + " expected " + ecnt + " found " + cnt);
+                        + " Incorrect number of Worker threads for sid=" + myid
+                        + " expected " + ecnt + " found " + cnt);
             }
         }
         return null;

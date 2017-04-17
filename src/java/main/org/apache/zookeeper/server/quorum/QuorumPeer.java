@@ -75,6 +75,7 @@ import org.slf4j.LoggerFactory;
  *
  * The request for the current leader will consist solely of an xid: int xid;
  */
+//
 public class QuorumPeer extends Thread implements QuorumStats.Provider {
     private static final Logger LOG = LoggerFactory.getLogger(QuorumPeer.class);
 
@@ -113,14 +114,24 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             this.electionAddr = electionAddr;
             this.type = type;
         }
-        
+        // 用于 zookeeper 节点之间进行链接
         public InetSocketAddress addr;
-
+        // 进行选举 leader 时所使用的 地址
         public InetSocketAddress electionAddr;
-        
+        // 这里的 id 就是 配置文件里面的 myid
         public long id;
         
         public LearnerType type = LearnerType.PARTICIPANT;
+
+        @Override
+        public String toString() {
+            return "QuorumServer{" +
+                    "addr=" + addr +
+                    ", electionAddr=" + electionAddr +
+                    ", id=" + id +
+                    ", type=" + type +
+                    '}';
+        }
     }
 
     public enum ServerState {
@@ -851,6 +862,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      * A 'view' is a node's current opinion of the membership of the entire
      * ensemble.    
      */
+    // 集群中 QuorumServer 的集合
     public Map<Long,QuorumPeer.QuorumServer> getView() {
         return Collections.unmodifiableMap(this.quorumPeers);
     }
