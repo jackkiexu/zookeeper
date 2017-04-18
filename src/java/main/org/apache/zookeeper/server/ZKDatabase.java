@@ -208,6 +208,7 @@ public class ZKDatabase {
      * @return the last valid zxid on disk
      * @throws IOException
      */
+    // 加载 dataTree 及 sessionsWithTimeouts (这是一个 sessionId <--> timeout 的 map)
     public long loadDataBase() throws IOException {
         PlayBackListener listener=new PlayBackListener(){
             public void onTxnLoaded(TxnHeader hdr,Record txn){

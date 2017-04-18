@@ -138,7 +138,7 @@ public class FileTxnSnapLog {
      */
     public long restore(DataTree dt, Map<Long, Integer> sessions,  PlayBackListener listener) throws IOException {
 
-        snapLog.deserialize(dt, sessions);
+        snapLog.deserialize(dt, sessions); // 将对应的 sessions 与 DataTree 序列化出来
 
         FileTxnLog txnLog = new FileTxnLog(dataDir);
         TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);

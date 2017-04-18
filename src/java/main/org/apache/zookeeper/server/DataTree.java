@@ -792,6 +792,7 @@ public class DataTree {
 
     public volatile long lastProcessedZxid = 0;
 
+    // DataTree 处理事务请求
     public ProcessTxnResult processTxn(TxnHeader header, Record txn)
     {
         ProcessTxnResult rc = new ProcessTxnResult();

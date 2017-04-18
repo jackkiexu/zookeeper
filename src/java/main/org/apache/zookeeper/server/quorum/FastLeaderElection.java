@@ -210,7 +210,9 @@ public class FastLeaderElection implements Election {
         long peerEpoch;
     }
 
+    // 进行 Leader 选举的发送消息队列
     LinkedBlockingQueue<ToSend> sendqueue;
+    // 进行 Leader 选举的消息接收队列
     LinkedBlockingQueue<Notification> recvqueue;
 
     /**
@@ -422,7 +424,7 @@ public class FastLeaderElection implements Election {
             }
 
             public void run() {
-                while (!stop) {
+                while (!stop) {                         // 不断从消息发送的队列里面拿出数据来, 交给QuorumCnxManager 进行发送
                     try {
                         ToSend m = sendqueue.poll(3000, TimeUnit.MILLISECONDS);
                         if(m == null) continue;
@@ -441,11 +443,13 @@ public class FastLeaderElection implements Election {
              * @param m     message to send
              */
             void process(ToSend m) {
+                // 构建信息
                 ByteBuffer requestBuffer = buildMsg(m.state.ordinal(), 
                                                         m.leader,
                                                         m.zxid, 
                                                         m.electionEpoch, 
                                                         m.peerEpoch);
+                // 将消息交由 QuorumCnxManager 进行发送
                 manager.toSend(m.sid, requestBuffer);
             }
         }

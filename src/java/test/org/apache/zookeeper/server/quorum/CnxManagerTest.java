@@ -155,8 +155,11 @@ public class CnxManagerTest extends ZKTestCase {
         Message m = null;
         int numRetries = 1;
         while((m == null) && (numRetries++ <= THRESHOLD)){
+            // 获取 集群中发送过来的消息(这个消息是用于 leader 选举, cnxManager 控制连接集群中的其他节点)
             m = cnxManager.pollRecvQueue(3000, TimeUnit.MILLISECONDS);
-            if(m == null) cnxManager.connectAll();
+            if(m == null){                  // 等待 3 秒还没有收到任何消息, 则开始连接集群中的所有节点
+                cnxManager.connectAll();
+            }
         }
 
         Assert.assertTrue("Exceeded number of retries", numRetries <= THRESHOLD);
@@ -186,6 +189,14 @@ public class CnxManagerTest extends ZKTestCase {
                         new InetSocketAddress(deadAddress, PortAssignment.unique())));
         peerTmpdir[2] = ClientBase.createTmpDir();
 
+        // QuorumPeer 法定的选举人
+        // peers 所有 zookeeper 里面参与选举 leader 的节点
+        // peerTmpdir 指 snap, 及 txn 日志的位置
+        // 3 指的是选举所使用的算法 (3 就是FastLeaderElection) (在 QuorumPeer 的 createElectionAlgorithm 里面决定所使用的方法)
+        // 1 就是在配置文件中配置的 myid, 用于区分集群中的每台服务器
+        // 1000 tickTime 心跳时间, 最少的超时时间就是 2 个心跳时间
+        // 2 initLimit 多少个 tickTime 时间内允许 集群中的其他 server 进行连接, 初始化数据
+        // 2 syncLimit 多少个 tickTime 时间内允许 follower/observer 进行同步数据
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 1000, 2, 2);
         QuorumCnxManager cnxManager = new QuorumCnxManager(peer);
         QuorumCnxManager.Listener listener = cnxManager.listener;
@@ -236,16 +247,16 @@ public class CnxManagerTest extends ZKTestCase {
          */
         byte[] msgBytes = new byte[8];
         ByteBuffer msgBuffer = ByteBuffer.wrap(msgBytes);
-        msgBuffer.putLong(new Long(2));
+        msgBuffer.putLong(new Long(2)); // 这个值其实 myid, 发了这个消息后, 就会建立一个 SenderWork, ReceiverWork
         msgBuffer.position(0);
         sc.write(msgBuffer);
 
-        msgBuffer = ByteBuffer.wrap(new byte[4]);
+        msgBuffer = ByteBuffer.wrap(new byte[4]);   // 这个组装的数据就是发送给 RecvWorker, 而 RecvWorker 一开始读取的4个字节的数组会组装成 一个 int, 用来表示 发送的数据的长度, 当读取的是
         msgBuffer.putInt(-20);
         msgBuffer.position(0);
         sc.write(msgBuffer);
 
-        Thread.sleep(1000);
+        Thread.sleep(1000000);
 
         try{
             /*
@@ -368,6 +379,7 @@ public class CnxManagerTest extends ZKTestCase {
     /*
      * Test if a receiveConnection is able to timeout on socket errors
      */
+    // 测试 QuorumCnxManager 中 Listener 的 socket.accept 出来的 socket 的 sotimeout 时间
     @Test
     public void testSocketTimeout() throws Exception {
         QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[1], peerTmpdir[1], peerClientPort[1], 3, 1, 2000, 2, 2);
@@ -389,7 +401,11 @@ public class CnxManagerTest extends ZKTestCase {
         // Read without sending data. Verify timeout.
         cnxManager.receiveConnection(sock);
         long end = System.currentTimeMillis();
-        if((end - begin) > ((peer.getSyncLimit() * peer.getTickTime()) + 500)) Assert.fail("Waited more than necessary");
+        LOG.info("(end - begin):"+(end - begin));
+        LOG.info("((peer.getSyncLimit() * peer.getTickTime()) + 500):"+((peer.getSyncLimit() * peer.getTickTime()) + 500));
+        if((end - begin) > ((peer.getSyncLimit() * peer.getTickTime()) + 500)) {
+            Assert.fail("Waited more than necessary");
+        }
     }
 
     /*
@@ -399,6 +415,7 @@ public class CnxManagerTest extends ZKTestCase {
     public void testWorkerThreads() throws Exception {
         ArrayList<QuorumPeer> peerList = new ArrayList<QuorumPeer>();
         try {
+            // 启动 3 个  QuorumPeer, myid 分别为 0, 1, 2, 启动, 并且加入 peerList
             for (int sid = 0; sid < 3; sid++) {
                 QuorumPeer peer = new QuorumPeer(peers, peerTmpdir[sid], peerTmpdir[sid],
                         peerClientPort[sid], 3, sid, 1000, 2, 2);
@@ -407,11 +424,12 @@ public class CnxManagerTest extends ZKTestCase {
                 peerList.add(sid, peer);
             }
             String failure = verifyThreadCount(peerList, 4);
+            LOG.info("failure:"+failure);
             if (failure != null) {
                 Assert.fail(failure);
             }
             for (int myid = 0; myid < 3; myid++) {
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 1; i++) {
                     // halt one of the listeners and verify count
                     QuorumPeer peer = peerList.get(myid);
                     LOG.info("Round {}, halting peer {}", new Object[] { i,
@@ -446,10 +464,11 @@ public class CnxManagerTest extends ZKTestCase {
             throws InterruptedException
     {
         String failure = null;
-        for (int i = 0; i < 480; i++) {
+        for (int i = 0; i < 1; i++) {
             Thread.sleep(500);
 
             failure = _verifyThreadCount(peerList, ecnt);
+            LOG.info("failure:"+failure +", ecnt:"+ ecnt + ", peerList:"+peerList);
             if (failure == null) {
                 return null;
             }

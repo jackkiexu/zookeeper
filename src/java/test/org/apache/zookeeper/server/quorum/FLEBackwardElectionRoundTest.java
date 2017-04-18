@@ -103,7 +103,11 @@ public class FLEBackwardElectionRoundTest extends ZKTestCase {
         /*
          * Start server 0
          */
-
+        // 0 : myid 值
+        // 3 : 选举 leader 的算法
+        // 1000 : timeout
+        // 2 : initLimit
+        // 2 : syncLimit
         QuorumPeer peer = new QuorumPeer(peers, tmpdir[0], tmpdir[0], port[0], 3, 0, 1000, 2, 2);
         peer.startLeaderElection();
         FLETestUtils.LEThread thread = new FLETestUtils.LEThread(peer, 0);
@@ -117,7 +121,9 @@ public class FLEBackwardElectionRoundTest extends ZKTestCase {
         cnxManagers[0] = new QuorumCnxManager(mockPeer);
         QuorumCnxManager.Listener listener = cnxManagers[0].listener;
         listener.start();
-
+        // 0 : leader 值
+        // 0 : zxid 值
+        // 1 ; epoch 值
         ByteBuffer msg = FLETestUtils.createMsg(ServerState.FOLLOWING.ordinal(), 0, 0, 1);
         cnxManagers[0].toSend(0l, msg);
         
@@ -141,6 +147,7 @@ public class FLEBackwardElectionRoundTest extends ZKTestCase {
         /*
          * Send the same messages, this time should not make 0 the leader.
          */
+        // 下面的两个参数 0 都表示 myid
         cnxManagers[0].toSend(0l, msg);
         cnxManagers[1].toSend(0l, msg);
         

@@ -462,11 +462,11 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             zkDb.loadDataBase();
 
             // load the epochs
-            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;
-    		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);
+            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;      // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
+     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);       // 将 zxid 的高 32 位当做 epoch 值
             try {
-            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);
-                if (epochOfZxid > currentEpoch && updating.exists()) {
+            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);       // 从文件中加载 epoch 值
+                if (epochOfZxid > currentEpoch && updating.exists()) {            // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
                     LOG.info("{} found. The server was terminated after " +
                              "taking a snapshot but before updating current " +
                              "epoch. Setting current epoch to {}.",
@@ -491,7 +491,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + ", is older than the last zxid, " + lastProcessedZxid);
             }
             try {
-            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME);
+            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME); // 从文件中读取当前接收到的 epoch 值
             } catch(FileNotFoundException e) {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
@@ -598,7 +598,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      * @return the highest zxid for this host
      */
     public long getLastLoggedZxid() {
-        if (!zkDb.isInitialized()) {
+        if (!zkDb.isInitialized()) { // 若 zkDb 没有进行初始化, 则将会进行初始化
         	loadDataBase();
         }
         return zkDb.getDataTreeLastProcessedZxid();
@@ -1161,6 +1161,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     public QuorumCnxManager getQuorumCnxManager() {
         return qcm;
     }
+
+    // 从文件中读取对应的 epoch 的值 (name 指 snapDir 的子文件)
     private long readLongFromFile(String name) throws IOException {
     	File file = new File(logFactory.getSnapDir(), name);
 		BufferedReader br = new BufferedReader(new FileReader(file));
@@ -1218,7 +1220,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     }
 
     public long getCurrentEpoch() throws IOException {
-		if (currentEpoch == -1) {
+		if (currentEpoch == -1) { // 对, 你没看错, epoch 默认值是 -1, 若现在没有赋值过, 则将从文件中进行读取
 			currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);
 		}
 		return currentEpoch;
@@ -1230,13 +1232,15 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 		}
 		return acceptedEpoch;
 	}
-	
+
+    // 设置当前的 epoch 值, 并且将对应的值写到文件里面
 	public void setCurrentEpoch(long e) throws IOException {
 		currentEpoch = e;
 		writeLongToFile(CURRENT_EPOCH_FILENAME, e);
 		
 	}
-	
+
+    // 设置当前接收到的 epoch 值, 并且写到文件里面
 	public void setAcceptedEpoch(long e) throws IOException {
 		acceptedEpoch = e;
 		writeLongToFile(ACCEPTED_EPOCH_FILENAME, e);
