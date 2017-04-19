@@ -85,15 +85,15 @@ public class Vote {
         this.peerEpoch = peerEpoch;
         this.version = 0x0;
     }
-    
+    // 消息的版本号
     final private int version;
-    
+    // 推举的 LeaderId
     final private long id;
-    
+    // 被推举者的最大事务 id
     final private long zxid;
-    
+    // 推选者的选举周期
     final private long electionEpoch;
-    
+    // 被推选者的选举周期
     final private long peerEpoch;
     
     public int getVersion() {

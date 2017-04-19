@@ -268,9 +268,9 @@ public class FLECompatibilityTest extends ZKTestCase {
             super.shutdown();
         }
     }
-    
-    void populate()
-    throws Exception {
+
+    // 模拟集群中的各个节点
+    void populate() throws Exception {
         for (int i = 0; i < count; i++) {
             peers.put(Long.valueOf(i),
                     new QuorumServer(i,
@@ -281,11 +281,14 @@ public class FLECompatibilityTest extends ZKTestCase {
         }
     }
     
-    @Test(timeout=20000)
+    @Test(timeout=200000000)
     public void testBackwardCompatibility() 
     throws Exception {
         populate();
-        
+
+        // 3 Leader 选举使用的算法
+        // 0 指的是 myid 的值
+        // 1000 指 tickTime
         QuorumPeer peer = new QuorumPeer(peers, tmpdir[0], tmpdir[0], port[0], 3, 0, 1000, 2, 2);
         peer.setPeerState(ServerState.LOOKING);
         QuorumCnxManager mng = new QuorumCnxManager(peer);
@@ -294,8 +297,11 @@ public class FLECompatibilityTest extends ZKTestCase {
          * Check that it generates an internal notification correctly
          */
         MockFLEMessengerBackward fle = new MockFLEMessengerBackward(peer, mng);
+        // 2 指推举的 leader id
+        // 0x1 指 zxid (用于比较最高的 zxid 当选leadere)
         ByteBuffer buffer = FastLeaderElection.buildMsg(ServerState.LOOKING.ordinal(), 2, 0x1, 1, 1);
         fle.manager.recvQueue.add(new Message(buffer, 2));
+        // fle 里面会有一个线程 一直从 recvQueue 里面 poll 出数据进行操作
         Notification n = fle.recvqueue.take();
         Assert.assertTrue("Wrong state", n.state == ServerState.LOOKING);
         Assert.assertTrue("Wrong leader", n.leader == 2);

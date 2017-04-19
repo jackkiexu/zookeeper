@@ -251,7 +251,7 @@ public class QuorumHierarchical implements QuorumVerifier {
         }
   
         /*
-         * Check if all groups have majority
+         * Check if all groups have majority(多数)
          */
         int majGroupCounter = 0;
         for(long gid : expansion.keySet()) {

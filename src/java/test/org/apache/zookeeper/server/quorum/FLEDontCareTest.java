@@ -68,15 +68,18 @@ public class FLEDontCareTest {
     File tmpdir;
 
     @Before
-    public void setUp()
-    throws Exception {
+    public void setUp() throws Exception {
         tmpdir = ClientBase.createTmpDir();
         peers = new HashMap<Long,QuorumServer>();
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 5; i++) { // 新建 5 个 peers, 其中 myid 从  0, 1, 2, 3, 4
             peers.put(Long.valueOf(i),
                     new QuorumServer(Long.valueOf(i),
                             new InetSocketAddress("127.0.0.1", PortAssignment.unique())));
         }
+        // 第一个 3 Leader 选举使用的 算法
+        // 第二个 3 myid
+        // 1000 指 tickTime
+        //
         peer = new QuorumPeer(peers,
                 tmpdir,
                 tmpdir,
@@ -196,7 +199,9 @@ public class FLEDontCareTest {
          * Generates notifications emulating servers 1, 2, 4, and 5.
          * Server 5 is the elected leader.
          */
-
+        // 0x0 是消息的版本号
+        // 5 推举的 myid, 使这台机器成为 Leader
+        // 0xa 是
         genNotification( 0x0,
                             5,
                             ZxidUtils.makeZxid(15, 0),

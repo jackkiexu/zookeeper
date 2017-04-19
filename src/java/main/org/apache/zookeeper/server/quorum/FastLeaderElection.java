@@ -82,23 +82,26 @@ public class FastLeaderElection implements Election {
      * joined leader election or because it learned of another
      * peer with higher zxid or same zxid and higher server id
      */
-
+    // QuorumPeer 改变选举周期时的消息通知
     static public class Notification {
         /*
          * Format version, introduced in 3.4.6
          */
         
-        public final static int CURRENTVERSION = 0x1; 
+        public final static int CURRENTVERSION = 0x1;
+        // 消息的版本号
         int version;
                 
         /*
          * Proposed leader
          */
+        // 提议推举的 leader id, 也就是在配置文件配置的 myid
         long leader;
 
         /*
          * zxid of the proposed leader
          */
+        // 被 proposed 的 QuorumPeer 的最大的 zxid
         long zxid;
 
         /*
@@ -109,16 +112,19 @@ public class FastLeaderElection implements Election {
         /*
          * current state of sender
          */
+        // 当前 QuorumPeer 的状态 (LOOKING, FOLLOWING, LEADRING, OBSERVERING)
         QuorumPeer.ServerState state;
 
         /*
          * Address of sender
          */
+        // 当前 QuorumPeer 的 myid
         long sid;
 
         /*
          * epoch of the proposed leader
          */
+        // 被 proposed 的 QuorumPeer 的选举周期
         long peerEpoch;
         
         @Override
@@ -637,9 +643,8 @@ public class FastLeaderElection implements Election {
      *  @param l        Identifier of the vote received last
      *  @param zxid     zxid of the the vote received last
      */
-    protected boolean termPredicate(
-            HashMap<Long, Vote> votes,
-            Vote vote) {
+    // 最终决定是否 这一轮选举是否已经结束
+    protected boolean termPredicate(HashMap<Long, Vote> votes, Vote vote) {
 
         HashSet<Long> set = new HashSet<Long>();
 
@@ -667,6 +672,7 @@ public class FastLeaderElection implements Election {
      * @param   leader  leader id
      * @param   electionEpoch   epoch id
      */
+    // 检测是否已经当选 Leader
     protected boolean checkLeader(
             HashMap<Long, Vote> votes,
             long leader,

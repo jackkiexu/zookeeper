@@ -120,7 +120,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         public InetSocketAddress electionAddr;
         // 这里的 id 就是 配置文件里面的 myid
         public long id;
-        
+        // 这里的 type 默认都是参与者
         public LearnerType type = LearnerType.PARTICIPANT;
 
         @Override
@@ -551,6 +551,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      * @param peers
      * @return The number of followers in the map
      */
+    // 计算 集群中参与者的个数
     protected static int countParticipants(Map<Long,QuorumServer> peers) {
       int count = 0;
       for (QuorumServer q : peers.values()) {
