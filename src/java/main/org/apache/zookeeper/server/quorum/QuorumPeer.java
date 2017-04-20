@@ -375,6 +375,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         }
     }
 
+    // 一开始 QuorumPeer 默认值是 LOOKING
     private ServerState state = ServerState.LOOKING;
 
     public synchronized void setPeerState(ServerState newState){
@@ -658,6 +659,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         return le;
     }
 
+    // 返回 选举 Leader 的策略
     protected Election makeLEStrategy(){
         LOG.debug("Initializing leader election protocol...");
         if (getElectionType() == 0) {
@@ -730,7 +732,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case LOOKING:
                     LOG.info("LOOKING, and myid is " + myid);
 
-                    if (Boolean.getBoolean("readonlymode.enabled")) {
+                    if (Boolean.getBoolean("readonlymode.enabled")) { // 判断启动服务是否是 readOnly 模式
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
 
                         // Create read-only server but don't start it immediately

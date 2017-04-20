@@ -592,13 +592,11 @@ public class FastLeaderElection implements Election {
                     QuorumPeer.ServerState.LOOKING,
                     sid,
                     proposedEpoch);
-            if(LOG.isDebugEnabled()){
-                LOG.debug("Sending Notification: " + proposedLeader + " (n.leader), 0x"  +
-                      Long.toHexString(proposedZxid) + " (n.zxid), 0x" + Long.toHexString(logicalclock)  +
-                      " (n.round), " + sid + " (recipient), " + self.getId() +
-                      " (myid), 0x" + Long.toHexString(proposedEpoch) + " (n.peerEpoch)");
-            }
-            sendqueue.offer(notmsg);
+            LOG.info("Sending Notification: " + proposedLeader + " (n.leader), 0x"  +
+                    Long.toHexString(proposedZxid) + " (n.zxid), 0x" + Long.toHexString(logicalclock)  +
+                    " (n.round), " + sid + " (recipient), " + self.getId() +
+                    " (myid), 0x" + Long.toHexString(proposedEpoch) + " (n.peerEpoch)");
+            sendqueue.offer(notmsg);            // 有专门的 WorkerSender 进行消息的发送
         }
     }
 
@@ -727,9 +725,9 @@ public class FastLeaderElection implements Election {
                     + Long.toHexString(zxid) + " (newzxid), " + proposedLeader
                     + " (oldleader), 0x" + Long.toHexString(proposedZxid) + " (oldzxid)");
         }
-        proposedLeader = leader;
-        proposedZxid = zxid;
-        proposedEpoch = epoch;
+        proposedLeader = leader;    // 所推举的 myid
+        proposedZxid = zxid;        // 推举的 myid 对应的机器的 zxid
+        proposedEpoch = epoch;      // 此次选举的 epoch 值
     }
 
     synchronized Vote getVote(){
@@ -819,19 +817,17 @@ public class FastLeaderElection implements Election {
 
             synchronized(this){
                 logicalclock++;
-                updateProposal(getInitId(), getInitLastLoggedZxid(), getPeerEpoch());
+                updateProposal(getInitId(), getInitLastLoggedZxid(), getPeerEpoch()); // 获取对应的 myid, zxid, epoch 值
             }
 
-            LOG.info("New election. My id =  " + self.getId() +
-                    ", proposed zxid=0x" + Long.toHexString(proposedZxid));
-            sendNotifications();
+            LOG.info("New election. My id =  " + self.getId() + ", proposed zxid=0x" + Long.toHexString(proposedZxid));
+            sendNotifications();            // 先将进行 Leader 选举的信息发送出去
 
             /*
              * Loop in which we exchange notifications until we find a leader
              */
 
-            while ((self.getPeerState() == ServerState.LOOKING) &&
-                    (!stop)){
+            while ((self.getPeerState() == ServerState.LOOKING) && (!stop)){ // 若 QuorumPeer 还处于 LOOKING 状态, 则一直运行下面的 loop
                 /*
                  * Remove next notification from queue, times out after 2 times
                  * the termination time
@@ -847,7 +843,7 @@ public class FastLeaderElection implements Election {
                     if(manager.haveDelivered()){
                         sendNotifications();
                     } else {
-                        manager.connectAll();
+                        manager.connectAll();                                   // 开始连接集群中的各台机器, 连接成功后都会有对应的 SenderWorker ReceiverWorker 与之对应
                     }
 
                     /*
@@ -900,6 +896,7 @@ public class FastLeaderElection implements Election {
 
                         recvset.put(n.sid, new Vote(n.leader, n.zxid, n.electionEpoch, n.peerEpoch));
 
+                        // 判断这次选举是否结束
                         if (termPredicate(recvset,
                                 new Vote(proposedLeader, proposedZxid,
                                         logicalclock, proposedEpoch))) {
