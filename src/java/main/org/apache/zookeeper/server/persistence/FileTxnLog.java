@@ -160,8 +160,8 @@ public class FileTxnLog implements TxnLog {
      */
     public synchronized void rollLog() throws IOException {
         if (logStream != null) {
-            this.logStream.flush();
-            this.logStream = null;
+            this.logStream.flush(); // 将数据直接
+            this.logStream = null; // 因为每次进行 写 Txn 数据到 日志里面都会判断 logStream != null, 所以通过这种方式来新建 TxnLog
             oa = null;
         }
     }
@@ -186,8 +186,7 @@ public class FileTxnLog implements TxnLog {
      * @param txn the transaction part of the entry 事务体
      * returns true iff something appended, otw false 
      */
-    public synchronized boolean append(TxnHeader hdr, Record txn)
-        throws IOException
+    public synchronized boolean append(TxnHeader hdr, Record txn) throws IOException
     {
         if (hdr != null) {
             if (hdr.getZxid() <= lastZxidSeen) {
@@ -195,23 +194,22 @@ public class FileTxnLog implements TxnLog {
                         + " is <= " + lastZxidSeen + " for "
                         + hdr.getType());
             }
-            if (logStream==null) {
+            if (logStream==null) {  // 组装 成 logStream
                if(LOG.isInfoEnabled()){
                     LOG.info("Creating new log file: log." +  
                             Long.toHexString(hdr.getZxid()));
                }
                
-               logFileWrite = new File(logDir, ("log." + 
-                       Long.toHexString(hdr.getZxid())));
+               logFileWrite = new File(logDir, ("log." + Long.toHexString(hdr.getZxid())));
                fos = new FileOutputStream(logFileWrite);
-               logStream=new BufferedOutputStream(fos);
+               logStream = new BufferedOutputStream(fos);
                oa = BinaryOutputArchive.getArchive(logStream);
-               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId);
-               fhdr.serialize(oa, "fileheader");
+               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId); // 每个文件的文件头,
+               fhdr.serialize(oa, "fileheader");                               // 将 FileHeader 序列化到流里面
                // Make sure that the magic number is written before padding.
                logStream.flush();
                currentSize = fos.getChannel().position();
-               streamsToFlush.add(fos);
+               streamsToFlush.add(fos);                                       // 加入到 TxnFileStream 组里面
             }
             padFile(fos);
             byte[] buf = Util.marshallTxnEntry(hdr, txn);
@@ -219,9 +217,9 @@ public class FileTxnLog implements TxnLog {
                 throw new IOException("Faulty serialization for header " +
                         "and txn");
             }
-            Checksum crc = makeChecksumAlgorithm();
-            crc.update(buf, 0, buf.length);
-            oa.writeLong(crc.getValue(), "txnEntryCRC");
+            Checksum crc = makeChecksumAlgorithm();             // 获取计算数据流校验码的算法
+            crc.update(buf, 0, buf.length);                    // 计算数据完整性的校验码
+            oa.writeLong(crc.getValue(), "txnEntryCRC");     // 将校验码写入数据流
             Util.writeTxnBytes(oa, buf);
             
             return true;
@@ -234,6 +232,7 @@ public class FileTxnLog implements TxnLog {
      * @param out the outputstream to be padded
      * @throws IOException
      */
+    // 校验并且扩充文件的大小
     private void padFile(FileOutputStream out) throws IOException {
         currentSize = Util.padLogFile(out, currentSize, preAllocSize);
     }
@@ -318,6 +317,7 @@ public class FileTxnLog implements TxnLog {
      * commit the logs. make sure that evertyhing hits the
      * disk
      */
+    // 将 TxnLog 的 buffer 数据 flush 到磁盘上
     public synchronized void commit() throws IOException {
         if (logStream != null) {
             logStream.flush();
@@ -329,8 +329,7 @@ public class FileTxnLog implements TxnLog {
 
                 log.getChannel().force(false);
 
-                long syncElapsedMS =
-                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
+                long syncElapsedMS = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
                 if (syncElapsedMS > fsyncWarningThresholdMS) {
                     LOG.warn("fsync-ing the write ahead log in "
                             + Thread.currentThread().getName()

@@ -102,6 +102,7 @@ public class QuorumPeerMain {
         }
 
         // Start and schedule the the purge task
+        // 下面是一个进行定时清除 snapshot 文件的定时任务, 比较简单, 就是一个 Timer
         DatadirCleanupManager purgeMgr = new DatadirCleanupManager(config
                 .getDataDir(), config.getDataLogDir(), config
                 .getSnapRetainCount(), config.getPurgeInterval());
@@ -117,6 +118,7 @@ public class QuorumPeerMain {
         }
     }
 
+    // 根据 配置 QuorumPeerConfig 来启动  QuorumPeer
     public void runFromConfig(QuorumPeerConfig config) throws IOException {
       try {
           ManagedUtil.registerLog4jMBeans();
@@ -126,6 +128,7 @@ public class QuorumPeerMain {
   
       LOG.info("Starting quorum peer");
       try {
+          // 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
           ServerCnxnFactory cnxnFactory = ServerCnxnFactory.createFactory();
           cnxnFactory.configure(config.getClientPortAddress(),
                                 config.getMaxClientCnxns());
@@ -150,8 +153,8 @@ public class QuorumPeerMain {
           quorumPeer.setSyncEnabled(config.getSyncEnabled());
           quorumPeer.setQuorumListenOnAllIPs(config.getQuorumListenOnAllIPs());
   
-          quorumPeer.start();
-          quorumPeer.join();
+          quorumPeer.start(); // 开启服务
+          quorumPeer.join(); // 等到 上面的程序执行结束后, 再执行
       } catch (InterruptedException e) {
           // warn, but generally this is ok
           LOG.warn("Quorum Peer interrupted", e);

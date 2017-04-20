@@ -129,12 +129,12 @@ public class FastLeaderElection implements Election {
         
         @Override
         public String toString() {
-            return new String(Long.toHexString(version) + " (message format version), " 
-                    + leader + " (n.leader), 0x"
-                    + Long.toHexString(zxid) + " (n.zxid), 0x"
-                    + Long.toHexString(electionEpoch) + " (n.round), " + state
-                    + " (n.state), " + sid + " (n.sid), 0x"
-                    + Long.toHexString(peerEpoch) + " (n.peerEpoch) ");
+            return new String(Long.toHexString(version) + " is (message format version), "
+                    + leader + " is (n.leader), "
+                    + Long.toHexString(zxid) + " is (n.zxid),"
+                    + Long.toHexString(electionEpoch) + "  is (n.electionEpoch), " + state
+                    + " is (n.state), " + sid + " is (n.sid), "
+                    + Long.toHexString(peerEpoch) + " is (n.peerEpoch); |||| ");
         }
     }
     
@@ -435,7 +435,7 @@ public class FastLeaderElection implements Election {
                         ToSend m = sendqueue.poll(3000, TimeUnit.MILLISECONDS);
                         if(m == null) continue;
 
-                        process(m);
+                        process(m);                     //
                     } catch (InterruptedException e) {
                         break;
                     }

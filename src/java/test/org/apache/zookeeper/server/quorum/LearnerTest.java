@@ -106,23 +106,23 @@ public class LearnerTest extends ZKTestCase {
 			sl.zk.getZKDatabase().serializeSnapshot(oa);
 			oa.writeString("BenWasHere", "signature");
 			TxnHeader hdr = new TxnHeader(0, 0, 0, 0, ZooDefs.OpCode.create);
-			CreateTxn txn = new CreateTxn("/foo", new byte[0], new ArrayList<ACL>(), false, sl.zk.getZKDatabase().getNode("/").stat.getCversion());
+			CreateTxn txn = new CreateTxn("/foo", new byte[0], new ArrayList<ACL>(), false, sl.zk.getZKDatabase().getNode("/").stat.getCversion()); // 这里最后一个参数是 父节点的 cversion; false 表示 是否是临时节点
 	        ByteArrayOutputStream tbaos = new ByteArrayOutputStream();
 	        BinaryOutputArchive boa = BinaryOutputArchive.getArchive(tbaos);
-	        hdr.serialize(boa, "hdr");
-	        txn.serialize(boa, "txn");
+	        hdr.serialize(boa, "hdr"); // 将事务头进行序列化
+	        txn.serialize(boa, "txn"); // 将事务信息进行序列化
 	        tbaos.close();
-			qp = new QuorumPacket(Leader.PROPOSAL, 1, tbaos.toByteArray(), null);
-			oa.writeRecord(qp, null);
+			qp = new QuorumPacket(Leader.PROPOSAL, 1, tbaos.toByteArray(), null); // 新建一个 PROPOSAL, 1, 代表对应的 zxid
+			oa.writeRecord(qp, null); // 将 qp 的值进行序列化
 
 			// setup the messages to be streamed to follower
-			sl.leaderIs = BinaryInputArchive.getArchive(new ByteArrayInputStream(baos.toByteArray()));
+			sl.leaderIs = BinaryInputArchive.getArchive(new ByteArrayInputStream(baos.toByteArray())); // 将数据流分派给 Learner
 			
 			try {
 				sl.syncWithLeader(3);
 			} catch(EOFException e) {}
 			
-			sl.zk.shutdown();
+			sl.zk.shutdown();						// 关闭 ZKServer
 			sl = new SimpleLearner(ftsl);
 			Assert.assertEquals(startZxid, sl.zk.getLastProcessedZxid());
 		} finally {

@@ -96,6 +96,7 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
             + "\nserver.2=127.0.0.1:" + PortAssignment.unique()
             + ":" + PortAssignment.unique();
 
+        // 下面是模拟集群中有两台机器 q1, q2
         MainThread q1 = new MainThread(1, CLIENT_PORT_QP1, quorumCfgSection);
         MainThread q2 = new MainThread(2, CLIENT_PORT_QP2, quorumCfgSection);
         q1.start();

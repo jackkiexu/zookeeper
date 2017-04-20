@@ -244,13 +244,11 @@ public class FileTxnSnapLog {
      * serialized onto disk
      * @throws IOException
      */
-    public void save(DataTree dataTree,
-            ConcurrentHashMap<Long, Integer> sessionsWithTimeouts)
-        throws IOException {
+    // 将 DataTree 及 sessionsWithTimeouts 刷新到 snapshot 文件里面
+    public void save(DataTree dataTree, ConcurrentHashMap<Long, Integer> sessionsWithTimeouts) throws IOException {
         long lastZxid = dataTree.lastProcessedZxid;
-        File snapshotFile = new File(snapDir, Util.makeSnapshotName(lastZxid));
-        LOG.info("Snapshotting: 0x{} to {}", Long.toHexString(lastZxid),
-                snapshotFile);
+        File snapshotFile = new File(snapDir, Util.makeSnapshotName(lastZxid));     // 这时的 snapshot 文件 的名字中以 lastProcessedZxid 来做后缀
+        LOG.info("Snapshotting: 0x{} to {}", Long.toHexString(lastZxid), snapshotFile);
         snapLog.serialize(dataTree, sessionsWithTimeouts, snapshotFile);
         
     }

@@ -266,6 +266,7 @@ public class Leader {
     /**
      * This message type is sent by a follower after it has synced a proposal.
      */
+    // 在 Follower 已经有了一个 同步数据的 Proposal 后, 然后就会发送 ACK 进行响应
     final static int ACK = 3;
 
     /**

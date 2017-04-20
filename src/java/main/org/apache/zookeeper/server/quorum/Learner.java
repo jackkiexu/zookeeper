@@ -150,7 +150,7 @@ public class Learner {
      */
     void readPacket(QuorumPacket pp) throws IOException {
         synchronized (leaderIs) {
-            leaderIs.readRecord(pp, "packet");
+            leaderIs.readRecord(pp, "packet"); // 从 leaderIs 里面读取出 QuorumPacket 的值
         }
         long traceMask = ZooTrace.SERVER_PACKET_TRACE_MASK;
         if (pp.getType() == Leader.PING) {
@@ -216,8 +216,8 @@ public class Learner {
      * @throws ConnectException
      * @throws InterruptedException
      */
-    protected void connectToLeader(InetSocketAddress addr) 
-    throws IOException, ConnectException, InterruptedException {
+    protected void connectToLeader(InetSocketAddress addr) throws IOException, ConnectException, InterruptedException {
+
         sock = new Socket();        
         sock.setSoTimeout(self.tickTime * self.initLimit);
         for (int tries = 0; tries < 5; tries++) {
@@ -310,25 +310,26 @@ public class Learner {
      * @throws IOException
      * @throws InterruptedException
      */
+    // 根据 InputStream 里面的数据流 来进行同步数据
     protected void syncWithLeader(long newLeaderZxid) throws IOException, InterruptedException{
         QuorumPacket ack = new QuorumPacket(Leader.ACK, 0, null, null);
         QuorumPacket qp = new QuorumPacket();
         long newEpoch = ZxidUtils.getEpochFromZxid(newLeaderZxid);
         
-        readPacket(qp);   
+        readPacket(qp);   // 从 对应的 InputStream 读取出一个 QuorumPacket
         LinkedList<Long> packetsCommitted = new LinkedList<Long>();
         LinkedList<PacketInFlight> packetsNotCommitted = new LinkedList<PacketInFlight>();
         synchronized (zk) {
             if (qp.getType() == Leader.DIFF) {
                 LOG.info("Getting a diff from the leader 0x" + Long.toHexString(qp.getZxid()));                
             }
-            else if (qp.getType() == Leader.SNAP) {
+            else if (qp.getType() == Leader.SNAP) {                         // 收到的信息是 snap,
                 LOG.info("Getting a snapshot from leader");
                 // The leader is going to dump the database
                 // clear our own database and read
                 zk.getZKDatabase().clear();
-                zk.getZKDatabase().deserializeSnapshot(leaderIs);
-                String signature = leaderIs.readString("signature");
+                zk.getZKDatabase().deserializeSnapshot(leaderIs);           // 从 InputStream 里面 反序列化出 DataTree
+                String signature = leaderIs.readString("signature");      // 看了一个 读取 tag "signature" 代表的一个 String 对象
                 if (!signature.equals("BenWasHere")) {
                     LOG.error("Missing signature. Got " + signature);
                     throw new IOException("Missing signature");                   
@@ -352,8 +353,8 @@ public class Learner {
                 System.exit(13);
 
             }
-            zk.getZKDatabase().setlastProcessedZxid(qp.getZxid());
-            zk.createSessionTracker();            
+            zk.getZKDatabase().setlastProcessedZxid(qp.getZxid());          // 因为这里的 ZKDatatree 是从 Leader 的 SnapShot 的 InputStream 里面获取的, 所以调用这里通过 set 进行赋值
+            zk.createSessionTracker();                                      // Learner 创建对应的 SessionTracker
             
             long lastQueued = 0;
 
@@ -369,7 +370,7 @@ public class Learner {
                 case Leader.PROPOSAL:
                     PacketInFlight pif = new PacketInFlight();
                     pif.hdr = new TxnHeader();
-                    pif.rec = SerializeUtils.deserializeTxn(qp.getData(), pif.hdr);
+                    pif.rec = SerializeUtils.deserializeTxn(qp.getData(), pif.hdr);         // 反序列化对应的 请求事务体
                     if (pif.hdr.getZxid() != lastQueued + 1) {
                     LOG.warn("Got zxid 0x"
                             + Long.toHexString(pif.hdr.getZxid())

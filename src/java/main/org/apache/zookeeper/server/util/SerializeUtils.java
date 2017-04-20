@@ -53,7 +53,7 @@ public class SerializeUtils {
         final ByteArrayInputStream bais = new ByteArrayInputStream(txnBytes);
         InputArchive ia = BinaryInputArchive.getArchive(bais);
 
-        hdr.deserialize(ia, "hdr");
+        hdr.deserialize(ia, "hdr"); // 反序列化出 TxnHeader
         bais.mark(bais.available());
         Record txn = null;
         switch (hdr.getType()) {

@@ -80,6 +80,7 @@ public class QuorumPeerConfig {
      * Minimum snapshot retain count.
      * @see org.apache.zookeeper.server.PurgeTxnLog#purge(File, File, int)
      */
+    // 最小的 snapshot 保存的文件数
     private final int MIN_SNAP_RETAIN_COUNT = 3;
 
     @SuppressWarnings("serial")
@@ -97,6 +98,7 @@ public class QuorumPeerConfig {
      * @param path the patch of the configuration file
      * @throws ConfigException error processing configuration
      */
+    // 解析指定目录下面的的文件
     public void parse(String path) throws ConfigException {
         File configFile = new File(path);
 
@@ -130,8 +132,8 @@ public class QuorumPeerConfig {
      * @throws IOException
      * @throws ConfigException
      */
-    public void parseProperties(Properties zkProp)
-    throws IOException, ConfigException {
+    // 下面就是解析 配置文件中的属性
+    public void parseProperties(Properties zkProp) throws IOException, ConfigException {
         int clientPort = 0;
         String clientPortAddress = null;
         for (Entry<Object, Object> entry : zkProp.entrySet()) {

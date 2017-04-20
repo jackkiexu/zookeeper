@@ -449,14 +449,15 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     
     @Override
     public synchronized void start() {
-        loadDataBase();
-        cnxnFactory.start();        
-        startLeaderElection();
+        loadDataBase();             // 从SnapShot，TxnFile 加载数据到 DataTree
+        cnxnFactory.start();      // 开启服务端的 端口监听
+        startLeaderElection();      // 开启 Leader 选举线程
         super.start();
     }
 
+    // 经过下面的操作, 就会存在 currentEpoch, acceptEpoch 文件, 并且 DataTree 文件也会进行加载
     private void loadDataBase() {
-        File updating = new File(getTxnFactory().getSnapDir(),
+        File updating = new File(getTxnFactory().getSnapDir(),                      // 在 snap shot 文件目录下面有对应的 updateEpoch 文件
                                  UPDATING_EPOCH_FILENAME);
 		try {
             zkDb.loadDataBase();
@@ -465,7 +466,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;      // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
      		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);       // 将 zxid 的高 32 位当做 epoch 值
             try {
-            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);       // 从文件中加载 epoch 值
+            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);       // 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
                 if (epochOfZxid > currentEpoch && updating.exists()) {            // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
                     LOG.info("{} found. The server was terminated after " +
                              "taking a snapshot but before updating current " +
@@ -481,7 +482,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	currentEpoch = epochOfZxid;
+            	currentEpoch = epochOfZxid;                                     // 遇到的是 currentEpoch 文件不存在, 直接运行到这里了
             	LOG.info(CURRENT_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        currentEpoch);
@@ -496,11 +497,11 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	acceptedEpoch = epochOfZxid;
+            	acceptedEpoch = epochOfZxid;                                     // 当从 acceptEpoch 文件里面读取数据失败时, 就直接运行这边的代码
             	LOG.info(ACCEPTED_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        acceptedEpoch);
-            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);
+            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);     // 将 acceptEpoch 值直接写入到对应的文件里面
             }
             if (acceptedEpoch < currentEpoch) {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + " is less than the accepted epoch, " + ZxidUtils.zxidToString(acceptedEpoch));
@@ -517,6 +518,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         responder.running = false;
         responder.interrupt();
     }
+
+    // 开启 leader 的选举操作
     synchronized public void startLeaderElection() {
     	try {
     		currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());
@@ -598,6 +601,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      * 
      * @return the highest zxid for this host
      */
+    // 获取本机处理过的最大的 zxid
     public long getLastLoggedZxid() {
         if (!zkDb.isInitialized()) { // 若 zkDb 没有进行初始化, 则将会进行初始化
         	loadDataBase();
@@ -724,7 +728,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             while (running) {
                 switch (getPeerState()) {
                 case LOOKING:
-                    LOG.info("LOOKING");
+                    LOG.info("LOOKING, and myid is " + myid);
 
                     if (Boolean.getBoolean("readonlymode.enabled")) {
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
@@ -781,7 +785,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     break;
                 case OBSERVING:
                     try {
-                        LOG.info("OBSERVING");
+                        LOG.info("OBSERVING, and myid is " + myid);
                         setObserver(makeObserver(logFactory));
                         observer.observeLeader();
                     } catch (Exception e) {
@@ -794,7 +798,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     break;
                 case FOLLOWING:
                     try {
-                        LOG.info("FOLLOWING");
+                        LOG.info("FOLLOWING, and myid is " + myid);
                         setFollower(makeFollower(logFactory));
                         follower.followLeader();
                     } catch (Exception e) {
@@ -806,7 +810,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     }
                     break;
                 case LEADING:
-                    LOG.info("LEADING");
+                    LOG.info("LEADING, and myid is " + myid);
                     try {
                         setLeader(makeLeader(logFactory));
                         leader.lead();
@@ -1194,6 +1198,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 	 * @param value the long value to write to the named file
 	 * @throws IOException if the file cannot be written atomically
 	 */
+    // 将 currentEpoch 值写入到对应的文件里面(文件不存在, 也会进行新建)
     private void writeLongToFile(String name, long value) throws IOException {
         File file = new File(logFactory.getSnapDir(), name);
         AtomicFileOutputStream out = new AtomicFileOutputStream(file);

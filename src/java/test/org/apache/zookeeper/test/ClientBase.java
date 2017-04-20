@@ -230,7 +230,7 @@ public abstract class ClientBase extends ZKTestCase {
             try {
                 // if there are multiple hostports, just take the first one
                 HostPort hpobj = parseHostPortList(hp).get(0);
-                String result = send4LetterWord(hpobj.host, hpobj.port, "stat");
+                String result = send4LetterWord(hpobj.host, hpobj.port, "stat"); // 发送 命令给 zookeeper 服务器, 并返回结果
                 if (result.startsWith("Zookeeper version:") &&
                         !result.contains("READ-ONLY")) {
                     return true;

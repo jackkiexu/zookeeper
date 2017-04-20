@@ -289,6 +289,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
+    // take snapshot
     public void takeSnapshot(){
 
         try {
@@ -440,7 +441,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return running;
     }
 
-    // zookeeper ???????
+    // zookeeper 服务端进行关闭
     public void shutdown() {
         LOG.info("shutting down");
 

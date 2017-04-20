@@ -215,13 +215,12 @@ public class Util {
      * padding was done.
      * @throws IOException
      */
-    public static long padLogFile(FileOutputStream f,long currentSize,
-            long preAllocSize) throws IOException{
-        long position = f.getChannel().position();
+    public static long padLogFile(FileOutputStream f,long currentSize, long preAllocSize) throws IOException{
+        long position = f.getChannel().position();                      // 获取数据流现在的位置
         if (position + 4096 >= currentSize) {
             currentSize = currentSize + preAllocSize;
             fill.position(0);
-            f.getChannel().write(fill, currentSize-fill.remaining());
+            f.getChannel().write(fill, currentSize-fill.remaining());   // 这一步就是扩充 f 的大小, 直接到  (currentSize-fill.remaining()), 并且 这些扩充空间的内容不会指定
         }
         return currentSize;
     }
@@ -258,8 +257,8 @@ public class Util {
      * @return serialized transaction record
      * @throws IOException
      */
-    public static byte[] marshallTxnEntry(TxnHeader hdr, Record txn)
-            throws IOException {
+    // 整理编排 请求头与请求体, 先将对应的数据进行序列化, 然后返回对应的字节数组
+    public static byte[] marshallTxnEntry(TxnHeader hdr, Record txn) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         OutputArchive boa = BinaryOutputArchive.getArchive(baos);
 
@@ -279,7 +278,7 @@ public class Util {
      */
     public static void writeTxnBytes(OutputArchive oa, byte[] bytes)
             throws IOException {
-        oa.writeBuffer(bytes, "txnEntry");
+        oa.writeBuffer(bytes, "txnEntry"); // 将数据流写入 OutputStream
         oa.writeByte((byte) 0x42, "EOR"); // 'B'
     }
     

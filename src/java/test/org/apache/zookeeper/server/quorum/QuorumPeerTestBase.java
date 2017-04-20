@@ -111,7 +111,7 @@ public class QuorumPeerTestBase extends ZKTestCase implements Watcher {
             String args[] = new String[1];
             args[0] = confFile.toString();
             try {
-                main.initializeAndRun(args);
+                main.initializeAndRun(args);        // 根据配置文件, 进行启动 QuorumPeer 实例
             } catch (Exception e) {
                 // test will still fail even though we just log/ignore
                 LOG.error("unexpected exception in run", e);

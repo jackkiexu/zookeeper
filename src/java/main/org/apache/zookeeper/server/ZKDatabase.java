@@ -451,10 +451,11 @@ public class ZKDatabase {
      * @param ia the input archive you want to deserialize from
      * @throws IOException
      */
+    // 从 InputStream 里面 反序列化出 对应的 DataTree 与 sessionsWithTimeouts
     public void deserializeSnapshot(InputArchive ia) throws IOException {
         clear();
         SerializeUtils.deserializeSnapshot(getDataTree(),ia,getSessionWithTimeOuts());
-        initialized = true;
+        initialized = true; // 反序列化后表明 ZKDatabase 初始化成功
     }   
     
     /**
@@ -463,8 +464,8 @@ public class ZKDatabase {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void serializeSnapshot(OutputArchive oa) throws IOException,
-    InterruptedException {
+    // 将 DataTree 序列化到 数据流 oa 里面, 包括 sessionsWithTimeouts
+    public void serializeSnapshot(OutputArchive oa) throws IOException, InterruptedException {
         SerializeUtils.serializeSnapshot(getDataTree(), oa, getSessionWithTimeOuts());
     }
 

@@ -59,6 +59,9 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
      * disk. Basically this is the list of SyncItems whose callbacks will be
      * invoked after flush returns successfully.
      */
+    /**
+     * 已经写到文件缓存中, 还没有 flush 到磁盘里的 Request , 当 toFlush 超过一定的阈值, 将进行 flash
+     */
     private final LinkedList<Request> toFlush = new LinkedList<Request>();
     private final Random r = new Random(System.nanoTime());
     /**
@@ -137,9 +140,9 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                 }
                 if (si != null) {
                     // track the number of records written to the log
-                    if (zks.getZKDatabase().append(si)) {
+                    if (zks.getZKDatabase().append(si)) {                                   // 最加数据到 txnLog 文件里面
                         logCount++;
-                        if (logCount > (snapCount / 2 + randRoll)) {
+                        if (logCount > (snapCount / 2 + randRoll)) {                        // 日志 roll 阈值
                             randRoll = r.nextInt(snapCount/2);
                             // roll the log
                             zks.getZKDatabase().rollLog();
@@ -147,7 +150,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                             if (snapInProcess != null && snapInProcess.isAlive()) {
                                 LOG.warn("Too busy to snap, skipping");
                             } else {
-                                snapInProcess = new Thread("Snapshot Thread") {
+                                snapInProcess = new Thread("Snapshot Thread") {         // 开启一个线程, 进行 take snapshot
                                         public void run() {
                                             try {
                                                 zks.takeSnapshot();
@@ -174,7 +177,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                         continue;
                     }
                     toFlush.add(si);
-                    if (toFlush.size() > 1000) {
+                    if (toFlush.size() > 1000) {                                // Request 超过阈值, 将进行刷新到磁盘
                         flush(toFlush);
                     }
                 }
@@ -187,8 +190,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
         LOG.info("SyncRequestProcessor exited!");
     }
 
-    private void flush(LinkedList<Request> toFlush)
-        throws IOException, RequestProcessorException
+    private void flush(LinkedList<Request> toFlush) throws IOException, RequestProcessorException
     {
         if (toFlush.isEmpty())
             return;

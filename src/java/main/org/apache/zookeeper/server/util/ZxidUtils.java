@@ -19,6 +19,7 @@
 package org.apache.zookeeper.server.util;
 
 public class ZxidUtils {
+	// 每个 zxid 里面 高 32位是 正真的 epoch 值, 而低 32 位是 正真的 zxid
 	static public long getEpochFromZxid(long zxid) {
 		return zxid >> 32L;
 	}

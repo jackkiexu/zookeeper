@@ -231,11 +231,11 @@ public class FileSnap implements SnapShot {
             CheckedOutputStream crcOut = new CheckedOutputStream(sessOS, new Adler32());
             //CheckedOutputStream cout = new CheckedOutputStream()
             OutputArchive oa = BinaryOutputArchive.getArchive(crcOut);
-            FileHeader header = new FileHeader(SNAP_MAGIC, VERSION, dbId);
+            FileHeader header = new FileHeader(SNAP_MAGIC, VERSION, dbId);              // snapshot 的文件头
             serialize(dt,sessions,oa, header);
             long val = crcOut.getChecksum().getValue();
-            oa.writeLong(val, "val");
-            oa.writeString("/", "path");
+            oa.writeLong(val, "val");                                                       // 这个是检测文件完整性的校验值
+            oa.writeString("/", "path");                                                    // 因为在进行 take snap shot 时, 可能进程被 kill, 所以用于校验文件的完整性
             sessOS.flush();
             crcOut.close();
             sessOS.close();
