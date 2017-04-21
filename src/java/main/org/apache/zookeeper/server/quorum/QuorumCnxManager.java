@@ -142,6 +142,14 @@ public class QuorumCnxManager {
         ByteBuffer buffer;
         // 这里的 sid 其实就是 myid
         long sid;
+
+        @Override
+        public String toString() {
+            return "Message{" +
+                    "buffer=" + buffer +
+                    ", sid=" + sid +
+                    '}';
+        }
     }
 
     public QuorumCnxManager(QuorumPeer self) {

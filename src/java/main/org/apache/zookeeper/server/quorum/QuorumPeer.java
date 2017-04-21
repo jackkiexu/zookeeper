@@ -453,7 +453,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         loadDataBase();             // 从SnapShot，TxnFile 加载数据到 DataTree
         cnxnFactory.start();      // 开启服务端的 端口监听
         startLeaderElection();      // 开启 Leader 选举线程
-        super.start();
+        super.start();             // 这一步 开启 Thread.run() 方法
     }
 
     // 经过下面的操作, 就会存在 currentEpoch, acceptEpoch 文件, 并且 DataTree 文件也会进行加载
@@ -699,7 +699,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         try {
             jmxQuorumBean = new QuorumBean(this);
             MBeanRegistry.getInstance().register(jmxQuorumBean, null);
-            for(QuorumServer s: getView().values()){
+            for(QuorumServer s: getView().values()){                            // 将 QuorumPeer 包裹成 RemotePeerBean 注册 JMX 服务
                 ZKMBeanInfo p;
                 if (getId() == s.id) {
                     p = jmxLocalPeerBean = new LocalPeerBean(this);
@@ -732,7 +732,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case LOOKING:
                     LOG.info("LOOKING, and myid is " + myid);
 
-                    if (Boolean.getBoolean("readonlymode.enabled")) { // 判断启动服务是否是 readOnly 模式
+                    if (Boolean.getBoolean("readonlymode.enabled")) {                       // 判断启动服务是否是 readOnly 模式
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
 
                         // Create read-only server but don't start it immediately
@@ -879,8 +879,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      * PeerType=PARTICIPANT.     
      */
     public Map<Long,QuorumPeer.QuorumServer> getVotingView() {
-        Map<Long,QuorumPeer.QuorumServer> ret = 
-            new HashMap<Long, QuorumPeer.QuorumServer>();
+        Map<Long,QuorumPeer.QuorumServer> ret = new HashMap<Long, QuorumPeer.QuorumServer>();
         Map<Long,QuorumPeer.QuorumServer> view = getView();
         for (QuorumServer server : view.values()) {            
             if (server.type == LearnerType.PARTICIPANT) {

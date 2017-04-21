@@ -46,7 +46,7 @@ public class SessionTrackerTest extends ZKTestCase {
      * Verify the create session call in the Leader.FinalRequestProcessor after
      * the session expiration.
      */
-    @Test(timeout = 20000)
+    @Test(timeout = 999999999)
     public void testAddSessionAfterSessionExpiry() throws Exception {
         ZooKeeperServer zks = setupSessionTracker();
 
@@ -88,7 +88,7 @@ public class SessionTrackerTest extends ZKTestCase {
      * Verify the session closure request has reached PrepRequestProcessor soon
      * after session expiration by the session tracker
      */
-    @Test(timeout = 200000000)
+    @Test(timeout = 99999999)
     public void testCloseSessionRequestAfterSessionExpiry() throws Exception {
         ZooKeeperServer zks = setupSessionTracker();
 

@@ -140,7 +140,7 @@ public class Vote {
          * {@see https://issues.apache.org/jira/browse/ZOOKEEPER-1805}
          */
         if ((state == ServerState.LOOKING) ||
-                (other.state == ServerState.LOOKING)) {
+                (other.state == ServerState.LOOKING)) {     // 一般都会运行这个 if 判断里面的代码, 也就是 myid, zxid, electionEpoch, peerEpoch
             return (id == other.id
                     && zxid == other.zxid
                     && electionEpoch == other.electionEpoch
@@ -160,10 +160,15 @@ public class Vote {
         return (int) (id & zxid);
     }
 
+    @Override
     public String toString() {
-        return String.format("(%d, %s, %s)",
-                                id,
-                                Long.toHexString(zxid),
-                                Long.toHexString(peerEpoch));
+        return "Vote{" +
+                "version=" + version +
+                ", id=" + id +
+                ", zxid=" + zxid +
+                ", electionEpoch=" + electionEpoch +
+                ", peerEpoch=" + peerEpoch +
+                ", state=" + state +
+                '}';
     }
 }
