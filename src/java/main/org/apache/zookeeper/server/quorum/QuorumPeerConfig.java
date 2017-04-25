@@ -42,13 +42,18 @@ import org.apache.zookeeper.server.quorum.flexible.QuorumHierarchical;
 import org.apache.zookeeper.server.quorum.flexible.QuorumMaj;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 
+// QuorumPeer 的配置文件
 public class QuorumPeerConfig {
     private static final Logger LOG = LoggerFactory.getLogger(QuorumPeerConfig.class);
 
     protected InetSocketAddress clientPortAddress;
+    // zookeeper 事务日志文件目录
     protected String dataDir;
+    // zookeeper snapshot 文件目录
     protected String dataLogDir;
+    //
     protected int tickTime = ZooKeeperServer.DEFAULT_TICK_TIME;
+    // 最大的 client 连接数
     protected int maxClientCnxns = 60;
     /** defaults to -1 if not set explicitly */
     protected int minSessionTimeout = -1;
@@ -57,23 +62,26 @@ public class QuorumPeerConfig {
 
     protected int initLimit;
     protected int syncLimit;
+    // 默认的 Leader 选举算法
     protected int electionAlg = 3;
+    // Leader 选举的 端口号
     protected int electionPort = 2182;
     protected boolean quorumListenOnAllIPs = false;
-    protected final HashMap<Long,QuorumServer> servers =
-        new HashMap<Long, QuorumServer>();
-    protected final HashMap<Long,QuorumServer> observers =
-        new HashMap<Long, QuorumServer>();
+    protected final HashMap<Long,QuorumServer> servers = new HashMap<Long, QuorumServer>();
+    protected final HashMap<Long,QuorumServer> observers = new HashMap<Long, QuorumServer>();
 
     protected long serverId;
     protected HashMap<Long, Long> serverWeight = new HashMap<Long, Long>();
     protected HashMap<Long, Long> serverGroup = new HashMap<Long, Long>();
     protected int numGroups = 0;
+    // Leader 的选举过半认可 QuorumMaj
     protected QuorumVerifier quorumVerifier;
+    // snapshot 文件的默认保存文件个数
     protected int snapRetainCount = 3;
+    // snapshot 文件每隔过少时间进行文件清理 (默认单位是小时)
     protected int purgeInterval = 0;
     protected boolean syncEnabled = true;
-
+    // 在 zookeeper 里面 Leader, Follower 都是 Leader 选举的参与者, 还有一种角色 OBSERVER, 它比 FOLLOWER 只是少了一个 Leader 选举的功能
     protected LearnerType peerType = LearnerType.PARTICIPANT;
     
     /**

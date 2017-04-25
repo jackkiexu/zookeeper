@@ -48,8 +48,7 @@ public class ACLRootTest extends ClientBase {
                 // expected
             }
             try {
-                zk.create("/apps", null, Ids.CREATOR_ALL_ACL,
-                        CreateMode.PERSISTENT);
+                zk.create("/apps", null, Ids.CREATOR_ALL_ACL, CreateMode.PERSISTENT);
                 Assert.fail("validate auth");
             } catch (KeeperException.InvalidACLException e) {
                 // expected

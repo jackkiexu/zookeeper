@@ -47,10 +47,8 @@ public class ProviderRegistry {
                 if (k.startsWith("zookeeper.authProvider.")) {
                     String className = System.getProperty(k);
                     try {
-                        Class<?> c = ZooKeeperServer.class.getClassLoader()
-                                .loadClass(className);
-                        AuthenticationProvider ap = (AuthenticationProvider) c
-                                .newInstance();
+                        Class<?> c = ZooKeeperServer.class.getClassLoader().loadClass(className);
+                        AuthenticationProvider ap = (AuthenticationProvider) c.newInstance();
                         authenticationProviders.put(ap.getScheme(), ap);
                     } catch (Exception e) {
                         LOG.warn("Problems loading " + className,e);

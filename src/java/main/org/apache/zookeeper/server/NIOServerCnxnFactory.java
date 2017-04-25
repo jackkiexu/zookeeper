@@ -117,10 +117,10 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
 
     @Override
     public void startup(ZooKeeperServer zks) throws IOException, InterruptedException {
-        start();
-        zks.startdata();
-        zks.startup();
-        setZooKeeperServer(zks);
+        start();                        // 开启 Server 端的 端口时间监听
+        zks.startdata();                // 初始化 ZKDatabase, 这里涉及从 FileSnapshotLog, FileTxnLog 中读取数据
+        zks.startup();                  // 开启 SessionTracer, RequestProcessor, JMX 事件注册
+        setZooKeeperServer(zks);        // 设置关联的 ZooKeeperServer
     }
 
     @Override
@@ -155,8 +155,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
         }
     }
 
-    protected NIOServerCnxn createConnection(SocketChannel sock,
-            SelectionKey sk) throws IOException {
+    protected NIOServerCnxn createConnection(SocketChannel sock, SelectionKey sk) throws IOException {
         return new NIOServerCnxn(zkServer, sock, sk, this);
     }
 
@@ -186,26 +185,24 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
                         selected);
                 Collections.shuffle(selectedList);
                 for (SelectionKey k : selectedList) {
-                    if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {
+                    if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {                                   // 针对客户端额连接请求处理, 就是创建对应的 NIOServerCnxn
                         SocketChannel sc = ((ServerSocketChannel) k
                                 .channel()).accept();
                         InetAddress ia = sc.socket().getInetAddress();
                         int cnxncount = getClientCnxnCount(ia);
-                        if (maxClientCnxns > 0 && cnxncount >= maxClientCnxns){
+                        if (maxClientCnxns > 0 && cnxncount >= maxClientCnxns){                       // 每个 Server 可以连接的 client 端的个数都是受限的, 超过了, 就进行关闭, 默认 60 个
                             LOG.warn("Too many connections from " + ia
                                      + " - max is " + maxClientCnxns );
                             sc.close();
-                        } else {
-                            LOG.info("Accepted socket connection from "
-                                     + sc.socket().getRemoteSocketAddress());
-                            sc.configureBlocking(false);
-                            SelectionKey sk = sc.register(selector,
-                                    SelectionKey.OP_READ);
+                        } else {                                                                          // 封装创建 NIOServerCnxn
+                            LOG.info("Accepted socket connection from " + sc.socket().getRemoteSocketAddress());
+                            sc.configureBlocking(false);                                                  // 设置 IO 模式为 nio
+                            SelectionKey sk = sc.register(selector, SelectionKey.OP_READ);              // 这里有个注意点, 只有当需要写数据时, 再 register SelectionKey.OP_WRITE
                             NIOServerCnxn cnxn = createConnection(sc, sk);
                             sk.attach(cnxn);
                             addCnxn(cnxn);
                         }
-                    } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {
+                    } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {  // 针对客户端的 读写时间处理
                         NIOServerCnxn c = (NIOServerCnxn) k.attachment();
                         c.doIO(k);
                     } else {

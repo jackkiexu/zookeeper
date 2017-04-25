@@ -523,7 +523,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     // 开启 leader 的选举操作
     synchronized public void startLeaderElection() {
     	try {
-    		currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());
+    		currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());  // 生成投给自己的选票
     	} catch(IOException e) {
     		RuntimeException re = new RuntimeException(e.getMessage());
     		re.setStackTrace(e.getStackTrace());
@@ -538,7 +538,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         if (myQuorumAddr == null) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
         }
-        if (electionType == 0) {
+        if (electionType == 0) {                                            // 现在默认的选举算法是 FastLeaderElection
             try {
                 udpSocket = new DatagramSocket(myQuorumAddr.getPort());
                 responder = new ResponderThread();

@@ -1381,16 +1381,15 @@ public class ZooKeeper {
      * @throws org.apache.zookeeper.KeeperException.InvalidACLException If the acl is invalide.
      * @throws IllegalArgumentException if an invalid path is specified
      */
-    public Stat setACL(final String path, List<ACL> acl, int version)
-        throws KeeperException, InterruptedException
+    public Stat setACL(final String path, List<ACL> acl, int version) throws KeeperException, InterruptedException
     {
         final String clientPath = path;
-        PathUtils.validatePath(clientPath);
+        PathUtils.validatePath(clientPath);                     // 校验 path 的合法性
 
-        final String serverPath = prependChroot(clientPath);
+        final String serverPath = prependChroot(clientPath);   // 增加这个 session 的 chroot
 
         RequestHeader h = new RequestHeader();
-        h.setType(ZooDefs.OpCode.setACL);
+        h.setType(ZooDefs.OpCode.setACL);                      // 在数据包头部设置消息的类别
         SetACLRequest request = new SetACLRequest();
         request.setPath(serverPath);
         if (acl != null && acl.size() == 0) {
@@ -1399,12 +1398,11 @@ public class ZooKeeper {
         request.setAcl(acl);
         request.setVersion(version);
         SetACLResponse response = new SetACLResponse();
-        ReplyHeader r = cnxn.submitRequest(h, request, response, null);
+        ReplyHeader r = cnxn.submitRequest(h, request, response, null);     // 将 消息提交给 cnxn 里面的发送队列, 进行发送
         if (r.getErr() != 0) {
-            throw KeeperException.create(KeeperException.Code.get(r.getErr()),
-                    clientPath);
+            throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
-        return response.getStat();
+        return response.getStat();                                          // 返回处理结果
     }
 
     /**

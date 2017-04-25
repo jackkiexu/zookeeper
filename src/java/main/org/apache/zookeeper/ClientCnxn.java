@@ -1163,8 +1163,22 @@ public class ClientCnxn {
             BufferedReader br = null;
             try {
                 sock = new Socket(addr.getHostName(), addr.getPort());
+                /**
+                 * socket 端口进行关闭时, 是否等待底层的数据包都发送完才进行返回
+                 * 下面的 false 表示默认, 在进行close时程序会立刻返回, 而底层的数据包, 系统会将发送给对方
+                 * http://blog.csdn.net/factor2000/article/details/3929816
+                 * http://blog.csdn.net/woshisap/article/details/6576719
+                 */
                 sock.setSoLinger(false, -1);
+                /**
+                 * 非常重要的一个设置, 当设置了 1000 毫秒后, 在InputStream 上调用 read() 方法会进行 block 一段时间(1000毫秒)
+                 * 若超时的话, SocketTimeoutException 会报出来
+                 */
                 sock.setSoTimeout(1000);
+                /**
+                 * 禁用 Nagle’s Algorithm (合并小的 TCP 包, 避免过多小 TCP 包头浪费带宽)
+                 * http://jerrypeng.me/2013/08/mythical-40ms-delay-and-tcp-nodelay/
+                 */
                 sock.setTcpNoDelay(true);
                 sock.getOutputStream().write("isro".getBytes());
                 sock.getOutputStream().flush();
@@ -1362,9 +1376,9 @@ public class ClientCnxn {
             Record response, WatchRegistration watchRegistration)
             throws InterruptedException {
         ReplyHeader r = new ReplyHeader();
-        Packet packet = queuePacket(h, r, request, response, null, null, null,
+        Packet packet = queuePacket(h, r, request, response, null, null, null,  // 将消息放入消息发送队列
                     null, watchRegistration);
-        synchronized (packet) {
+        synchronized (packet) {         // 这里是一个同步的设置, 通过 packet.finished 来判断消息是否已经被处理过了, 其实完全可以用 Future 来实现, 或自己基于 CountDownLatch 来实现
             while (!packet.finished) {
                 packet.wait();
             }

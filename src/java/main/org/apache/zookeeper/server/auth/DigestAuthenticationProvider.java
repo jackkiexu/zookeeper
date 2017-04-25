@@ -88,16 +88,13 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
         return i == 62 ? '+' : '/';
     }
 
-    static public String generateDigest(String idPassword)
-            throws NoSuchAlgorithmException {
+    static public String generateDigest(String idPassword) throws NoSuchAlgorithmException {
         String parts[] = idPassword.split(":", 2);
-        byte digest[] = MessageDigest.getInstance("SHA1").digest(
-                idPassword.getBytes());
+        byte digest[] = MessageDigest.getInstance("SHA1").digest(idPassword.getBytes());
         return parts[0] + ":" + base64Encode(digest);
     }
 
-    public KeeperException.Code 
-        handleAuthentication(ServerCnxn cnxn, byte[] authData)
+    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData)
     {
         String id = new String(authData);
         try {

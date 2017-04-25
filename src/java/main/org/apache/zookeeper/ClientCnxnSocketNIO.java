@@ -361,7 +361,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     void doTransport(int waitTimeOut, List<Packet> pendingQueue, LinkedList<Packet> outgoingQueue,
                      ClientCnxn cnxn)
             throws IOException, InterruptedException {
-        selector.select(waitTimeOut);
+        selector.select(waitTimeOut);                           // 此处若在 selector 上没有事件, 则会进行相应时间的 sleep
         Set<SelectionKey> selected;
         synchronized (this) {
             selected = selector.selectedKeys();
