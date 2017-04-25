@@ -26,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
 import org.apache.zookeeper.common.PathTrie;
+import org.apache.zookeeper.server.SessionTrackerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.CreateMode;
@@ -161,6 +162,13 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
         StringBuilder path2 = new StringBuilder("/zookeeper/quota");
 
         System.out.println("path:" + path2.delete(11, Integer.MAX_VALUE));
+    }
+
+
+    @Test
+    public void initializeNextSession(){
+        long sessionId = SessionTrackerImpl.initializeNextSession(9l);
+        LOG.info("sessionId:"+sessionId);
     }
 
 }

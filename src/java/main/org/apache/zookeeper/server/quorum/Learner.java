@@ -111,15 +111,12 @@ public class Learner {
         dos.writeLong(clientId);
         dos.writeInt(timeout);
         dos.close();
-        QuorumPacket qp = new QuorumPacket(Leader.REVALIDATE, -1, baos
-                .toByteArray(), null);
+        QuorumPacket qp = new QuorumPacket(Leader.REVALIDATE, -1, baos.toByteArray(), null);
         pendingRevalidations.put(clientId, cnxn);
-        if (LOG.isTraceEnabled()) {
-            ZooTrace.logTraceMessage(LOG,
-                                     ZooTrace.SESSION_TRACE_MASK,
-                                     "To validate session 0x"
-                                     + Long.toHexString(clientId));
-        }
+        ZooTrace.logTraceMessage(LOG,
+                ZooTrace.SESSION_TRACE_MASK,
+                "To validate session 0x"
+                        + Long.toHexString(clientId));
         writePacket(qp, true);
     }     
     

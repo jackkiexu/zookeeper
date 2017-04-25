@@ -337,7 +337,7 @@ public class FileTxnSnapLog {
      * roll the transaction logs
      * @throws IOException 
      */
-    public void rollLog() throws IOException {
+    public void rollLog() throws IOException {          // 事务日志文件重新生成, 这里将 logStream == null 来判断是否需要重新生成 新的文件
         txnLog.rollLog();
     }
     

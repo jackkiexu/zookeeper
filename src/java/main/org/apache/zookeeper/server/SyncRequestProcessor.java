@@ -177,7 +177,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                         continue;
                     }
                     toFlush.add(si);
-                    if (toFlush.size() > 1000) {                                // Request 超过阈值, 将进行刷新到磁盘
+                    if (toFlush.size() > 1000) {                                             // 将要刷新到 磁盘上的 Request 的数量 超过阈值, 将进行刷新到磁盘
                         flush(toFlush);
                     }
                 }
@@ -190,16 +190,19 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
         LOG.info("SyncRequestProcessor exited!");
     }
 
+    /**
+     * 事务请求 刷到磁盘上, 这里的 flush 其实就是 ZKDatabase.commit()
+     */
     private void flush(LinkedList<Request> toFlush) throws IOException, RequestProcessorException
     {
         if (toFlush.isEmpty())
             return;
 
-        zks.getZKDatabase().commit();
+        zks.getZKDatabase().commit();                       // 进行数据刷新到磁盘
         while (!toFlush.isEmpty()) {
-            Request i = toFlush.remove();
+            Request i = toFlush.remove();                   // 从 toFlush 里面删除数据
             if (nextProcessor != null) {
-                nextProcessor.processRequest(i);
+                nextProcessor.processRequest(i);          // 将 事务请求 Request 交给 下一个 RequestProcessor
             }
         }
         if (nextProcessor != null && nextProcessor instanceof Flushable) {

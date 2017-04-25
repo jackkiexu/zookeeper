@@ -91,7 +91,9 @@ public class ObserverZooKeeperServer extends LearnerZooKeeperServer {
     
     /**
      * Set up the request processors for an Observer:
-     * firstProcesor->commitProcessor->finalProcessor
+     * Observer 的 RequestProcessor 处理链 (两条)
+     * 1. ObserverRequestProcessor --> CommitProcessor -> FinalRequestProcessor
+     * 2. SyncRequestProcessor
      */
     @Override
     protected void setupRequestProcessors() {      
@@ -99,8 +101,7 @@ public class ObserverZooKeeperServer extends LearnerZooKeeperServer {
         // Observers to, for example, remove the disk sync requirements.
         // Currently, they behave almost exactly the same as followers.
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
-        commitProcessor = new CommitProcessor(finalProcessor,
-                Long.toString(getServerId()), true);
+        commitProcessor = new CommitProcessor(finalProcessor, Long.toString(getServerId()), true);
         commitProcessor.start();
         firstProcessor = new ObserverRequestProcessor(this, commitProcessor);
         ((ObserverRequestProcessor) firstProcessor).start();

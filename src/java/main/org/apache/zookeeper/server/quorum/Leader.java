@@ -302,7 +302,8 @@ public class Leader {
     ConcurrentLinkedQueue<Proposal> toBeApplied = new ConcurrentLinkedQueue<Proposal>();
 
     Proposal newLeaderProposal = new Proposal();
-    
+
+    // 一个 Leader 用于监听端口, 其他 Learner 连接上来进行消息发送
     class LearnerCnxAcceptor extends Thread{
         private volatile boolean stop = false;
         
@@ -311,12 +312,12 @@ public class Leader {
             try {
                 while (!stop) {
                     try{
-                        Socket s = ss.accept();
+                        Socket s = ss.accept();                                     // Leader 在指定的端口进行监听
                         // start with the initLimit, once the ack is processed
                         // in LearnerHandler switch to the syncLimit
                         s.setSoTimeout(self.tickTime * self.initLimit);
                         s.setTcpNoDelay(nodelay);
-                        LearnerHandler fh = new LearnerHandler(s, Leader.this);
+                        LearnerHandler fh = new LearnerHandler(s, Leader.this);   // 每个连接上来的 Follower/Observer 都需要一个 LearnerHandler 与进行处理
                         fh.start();
                     } catch (SocketException e) {
                         if (stop) {
@@ -853,6 +854,8 @@ public class Leader {
 
     private HashSet<Long> connectingFollowers = new HashSet<Long>();
     public long getEpochToPropose(long sid, long lastAcceptedEpoch) throws InterruptedException, IOException {
+        LOG.info("getEpochToPropose myid:" + sid + ", lastAcceptedEpoch:"+lastAcceptedEpoch +", connectingFollowers:" + connectingFollowers
+        + ", waitingForNewEpoch:"+waitingForNewEpoch +", epoch:"+epoch);
         synchronized(connectingFollowers) {
             if (!waitingForNewEpoch) {
                 return epoch;
@@ -862,10 +865,10 @@ public class Leader {
             }
             connectingFollowers.add(sid);
             QuorumVerifier verifier = self.getQuorumVerifier();
-            if (connectingFollowers.contains(self.getId()) && 
+            if (connectingFollowers.contains(self.getId()) &&       // 自己已经投票, 并且 投票中已经满足过半的原则
                                             verifier.containsQuorum(connectingFollowers)) {
                 waitingForNewEpoch = false;
-                self.setAcceptedEpoch(epoch);
+                self.setAcceptedEpoch(epoch);                         //
                 connectingFollowers.notifyAll();
             } else {
                 long start = System.currentTimeMillis();
@@ -879,6 +882,8 @@ public class Leader {
                     throw new InterruptedException("Timeout while waiting for epoch from quorum");        
                 }
             }
+            LOG.info("getEpochToPropose myid:" + sid + ", lastAcceptedEpoch:"+lastAcceptedEpoch +", connectingFollowers:" + connectingFollowers
+                    + ", waitingForNewEpoch:"+waitingForNewEpoch +", epoch:"+epoch);
             return epoch;
         }
     }

@@ -83,11 +83,12 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         public boolean isClosing() { return isClosing; }
     }
 
+    // 根据 QuorumPeer 的 myid 来生成 sessionId
     public static long initializeNextSession(long id) {
-        long nextSid = 0;
-        nextSid = (System.currentTimeMillis() << 24) >>> 8;
-        nextSid =  nextSid | (id <<56);
-        return nextSid;
+        long nextSid = 0;                                      // long 是 64 位
+        nextSid = (System.currentTimeMillis() << 24) >>> 8;     // 将当前时间戳的最前面 8 为至0, 此时末尾的 16 也是0
+        nextSid =  nextSid | (id <<56);                         // 将 myid 的数据补到 前面的时间戳上, 从这里也可以看出, myid 只是使用其最低的 8 位, 也就是 127, 超过了 127 个节点就可能出现 不同 QuorumPeer 的 SessionId 相同
+        return nextSid;                                        // 将 初始 sessionId 返回
     }
 
     static class SessionSet {
@@ -103,7 +104,7 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
      */
     private long roundToInterval(long time) {
         // We give a one interval grace period
-        return (time / expirationInterval + 1) * expirationInterval;
+        return (time / expirationInterval + 1) * expirationInterval;        // 计算这个 SessionImpl 的最近一个 超时时间(每个超时时间对应一个 Bucket)
     }
 
     public SessionTrackerImpl(SessionExpirer expirer,
@@ -180,13 +181,12 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
 
     // 更新 session 的过期时间
     synchronized public boolean touchSession(long sessionId, int timeout) {
-        if (LOG.isTraceEnabled()) {
-            ZooTrace.logTraceMessage(LOG,
-                    ZooTrace.CLIENT_PING_TRACE_MASK,
-                    "SessionTrackerImpl --- Touch session: 0x"
-                            + Long.toHexString(sessionId) + " with timeout " + timeout);
-        }
-        SessionImpl s = sessionsById.get(sessionId); // 从 sessionsById 获取 session
+        ZooTrace.logTraceMessage(LOG,
+                ZooTrace.CLIENT_PING_TRACE_MASK,
+                "SessionTrackerImpl --- Touch session: 0x"
+                        + Long.toHexString(sessionId) + " with timeout " + timeout);
+
+        SessionImpl s = sessionsById.get(sessionId);                            // 从 sessionsById 获取 session, sessionsById 是一个 SessionId <-> SessionImpl 的 map
         // Return false, if the session doesn't exists or marked as closing
         if (s == null || s.isClosing()) {
             return false;
@@ -196,17 +196,17 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
             // Nothing needs to be done
             return true;
         }
-        SessionSet set = sessionSets.get(s.tickTime);
+        SessionSet set = sessionSets.get(s.tickTime);                         // 这里的 SessionSet 就是一个 timeout 对应额 Bucket, 将有一个线程, 在超时时间点检查这个 SessionSet
         if (set != null) {
             set.sessions.remove(s);
         }
-        s.tickTime = expireTime;                    // 下面的步骤就是将 session 以 expireTime 为单位放入 sessionSets 中
+        s.tickTime = expireTime;                                               // 下面的步骤就是将 session 以 tickTime 为单位放入 sessionSets 中
         set = sessionSets.get(s.tickTime);
         if (set == null) {
             set = new SessionSet();
             sessionSets.put(expireTime, set);
         }
-        set.sessions.add(s);
+        set.sessions.add(s);                                                   // 将 SessionImpl 放入对应的 SessionSets 里面
         return true;
     }
 
@@ -254,16 +254,14 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
         return nextSessionId++;
     }
 
-    synchronized public void addSession(long id, int sessionTimeout) {
-        sessionsWithTimeout.put(id, sessionTimeout); // sessionId <-> sessionTimeout
-        if (sessionsById.get(id) == null) { // 因为可能有重复请求, 所以加上这个判断
-            SessionImpl s = new SessionImpl(id, sessionTimeout, 0); // 构建 session
-            sessionsById.put(id, s);
-            if (LOG.isTraceEnabled()) {
-                ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
-                        "SessionTrackerImpl --- Adding session 0x"
-                                + Long.toHexString(id) + " " + sessionTimeout);
-            }
+    synchronized public void addSession(long id, int sessionTimeout) {              // 这里的 sessionid 在集群中每个 QuorumPeer 上都不会出现相同, 详情见 (SessionTrackerImpl.initializeNextSession)
+        sessionsWithTimeout.put(id, sessionTimeout);                                  // 一个普通的 sessionId <-> sessionTimeout, 但其会在 takeSnapshot 时进行持久化
+        if (sessionsById.get(id) == null) {                                           // 因为可能有重复请求, 所以加上这个判断
+            SessionImpl s = new SessionImpl(id, sessionTimeout, 0);                      // 构建 session
+            sessionsById.put(id, s);                                                   // 放入一个 sessionId <-> SessionImpl 的 Map 中去
+            ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
+                    "SessionTrackerImpl --- Adding session 0x"
+                            + Long.toHexString(id) + " " + sessionTimeout);
         } else {
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,

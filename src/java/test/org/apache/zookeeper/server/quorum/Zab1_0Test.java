@@ -136,6 +136,7 @@ public class Zab1_0Test {
             if (onlyGetEpochToPropose) {
 	            try {
 	            	epoch = leader.getEpochToPropose(followerSid, 0);
+
 	            } catch (Exception e) {
 	            }
             } else {	            
@@ -158,7 +159,7 @@ public class Zab1_0Test {
             leader = createLeader(tmpDir, peer);
             peer.leader = leader;
             peer.setAcceptedEpoch(5);
-            
+            // Leader.myid = 0 Follower1.myid = 1 Follower.myid = 2
             FollowerMockThread f1 = new FollowerMockThread(1, leader, true);
             FollowerMockThread f2 = new FollowerMockThread(2, leader, true);
             f1.start();

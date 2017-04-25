@@ -297,11 +297,9 @@ public class LearnerHandler extends Thread {
     @Override
     public void run() {
         try {
-            tickOfNextAckDeadline = leader.self.tick
-                    + leader.self.initLimit + leader.self.syncLimit;
+            tickOfNextAckDeadline = leader.self.tick + leader.self.initLimit + leader.self.syncLimit;
 
-            ia = BinaryInputArchive.getArchive(new BufferedInputStream(sock
-                    .getInputStream()));
+            ia = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));
             bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
             oa = BinaryOutputArchive.getArchive(bufferedOutput);
 

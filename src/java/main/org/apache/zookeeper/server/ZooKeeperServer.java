@@ -367,10 +367,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         long id = cnxn.getSessionId();
         int to = cnxn.getSessionTimeout();
-        if (!sessionTracker.touchSession(id, to)) {
-            throw new MissingSessionException(
-                    "No session with sessionid 0x" + Long.toHexString(id)
-                    + " exists, probably expired and removed");
+        if (!sessionTracker.touchSession(id, to)) {                             // 这里的touchSession 就是验证 Session 是否存活, 不存活返回 false, 存活 返回 true, 并且更新 SessionImpl 到新的 超时 bucket 里面 (SessionSet里面)
+            throw new MissingSessionException("No session with sessionid 0x" + Long.toHexString(id) + " exists, probably expired and removed"); // session 已经超时, 进行报异常返回
         }
     }
 
@@ -548,16 +546,16 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 && Arrays.equals(passwd, generatePasswd(sessionId));
     }
 
-    // ????????? session
+    // 创建 session
     long createSession(ServerCnxn cnxn, byte passwd[], int timeout) {
-        long sessionId = sessionTracker.createSession(timeout);     // sessionTracker????????? session, ????洢??????? map ??, ???? sessionid
+        long sessionId = sessionTracker.createSession(timeout);     // 创建 会话 Session, 生成 SessionImpl 放入对应的 sessionsById, sessionsWithTimeout, sessionSets 里面, 返回 sessionid
         Random r = new Random(sessionId ^ superSecret);
-        r.nextBytes(passwd);                                           // ???????????????(????????????????????, ???????????ε??????? passwd ????????)
+        r.nextBytes(passwd);                                           // 生成一个随机的 byte[] passwd
         ByteBuffer to = ByteBuffer.allocate(4);
         to.putInt(timeout);
         cnxn.setSessionId(sessionId);
         submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null); // ?????? session ????
-        return sessionId;
+        return sessionId;                                             // 返回此回话对应的 sessionId
     }
 
     /**
@@ -581,8 +579,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         finishSessionInit(cnxn, rc);
     }
 
-    public void reopenSession(ServerCnxn cnxn, long sessionId, byte[] passwd,
-            int sessionTimeout) throws IOException {
+    public void reopenSession(ServerCnxn cnxn, long sessionId, byte[] passwd, int sessionTimeout) throws IOException {
         if (!checkPasswd(sessionId, passwd)) {
             finishSessionInit(cnxn, false);
         } else {
@@ -654,14 +651,13 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
      * @param xid
      * @param bb
      */
-    private void submitRequest(ServerCnxn cnxn, long sessionId, int type,
-            int xid, ByteBuffer bb, List<Id> authInfo) {
+    private void submitRequest(ServerCnxn cnxn, long sessionId, int type, int xid, ByteBuffer bb, List<Id> authInfo) {
         Request si = new Request(cnxn, sessionId, xid, type, bb, authInfo);
         submitRequest(si);
     }
     
     public void submitRequest(Request si) {
-        if (firstProcessor == null) {
+        if (firstProcessor == null) {                             // PreRequestProcessor
             synchronized (this) {
                 try {
                     while (!running) {
@@ -676,7 +672,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             }
         }
         try {
-            touch(si.cnxn); // close session 时, cnxn 是 null
+            touch(si.cnxn);                                         // 再次 更新 Session 的 timeout
             boolean validpacket = Request.isValid(si.type);
             if (validpacket) {
                 firstProcessor.processRequest(si);
@@ -818,12 +814,10 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         BinaryInputArchive bia = BinaryInputArchive.getArchive(new ByteBufferInputStream(incomingBuffer));
         ConnectRequest connReq = new ConnectRequest();
         connReq.deserialize(bia, "connect");
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Session establishment request from client "
-                    + cnxn.getRemoteSocketAddress()
-                    + " client's lastZxid is 0x"
-                    + Long.toHexString(connReq.getLastZxidSeen()));
-        }
+        LOG.info("Session establishment request from client "
+                + cnxn.getRemoteSocketAddress()
+                + " client's lastZxid is 0x"
+                + Long.toHexString(connReq.getLastZxidSeen()));
         boolean readOnly = false;
         try {
             readOnly = bia.readBool("readOnly");
@@ -841,7 +835,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             LOG.info(msg);
             throw new CloseRequestException(msg);
         }
-        if (connReq.getLastZxidSeen() > zkDb.dataTree.lastProcessedZxid) {
+        if (connReq.getLastZxidSeen() > zkDb.dataTree.lastProcessedZxid) {              // 客户端发来的 lastZxid 都大于服务端, 说明当前的 QuorumPeer 可能还没有恢复过来
             String msg = "Refusing session request for client "
                 + cnxn.getRemoteSocketAddress()
                 + " as it has seen zxid 0x"
@@ -863,22 +857,19 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (sessionTimeout > maxSessionTimeout) {
             sessionTimeout = maxSessionTimeout;
         }
-        cnxn.setSessionTimeout(sessionTimeout);
+        cnxn.setSessionTimeout(sessionTimeout);                                             // cnxn 设置 timeout
         // We don't want to receive any packets until we are sure that the
         // session is setup
-        cnxn.disableRecv();
+        cnxn.disableRecv();                                                                 // 将当前 Session 对应的 SelectorKey 设置成 不关注 OP_READ 事件, 为啥呢, 我们需要等待 create 事件成功后再处理其他的事件
         long sessionId = connReq.getSessionId();
         if (sessionId != 0) {
             long clientSessionId = connReq.getSessionId();
-            LOG.info("Client attempting to renew session 0x"
-                    + Long.toHexString(clientSessionId)
-                    + " at " + cnxn.getRemoteSocketAddress());
+            LOG.info("Client attempting to renew session 0x" + Long.toHexString(clientSessionId) + " at " + cnxn.getRemoteSocketAddress());
             serverCnxnFactory.closeSession(sessionId);
             cnxn.setSessionId(sessionId);
             reopenSession(cnxn, sessionId, passwd, sessionTimeout);
         } else {
-            LOG.info("Client attempting to establish new session at "
-                    + cnxn.getRemoteSocketAddress());
+            LOG.info("Client attempting to establish new session at " + cnxn.getRemoteSocketAddress());
             createSession(cnxn, passwd, sessionTimeout);
         }
     }
@@ -998,23 +989,24 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         // wrap SASL response token to client inside a Response object.
         return new SetSASLResponse(responseToken);
     }
-    
+
+    /**
+     * 在调用到这里之前一定经过了 事务日志/向集群发送 Proposal,并且得到 ACK
+     * 这里就是更新内存里面的数据 (ZKDatabase)
+     */
     public ProcessTxnResult processTxn(TxnHeader hdr, Record txn) {
         ProcessTxnResult rc;
         int opCode = hdr.getType();
         long sessionId = hdr.getClientId();
         rc = getZKDatabase().processTxn(hdr, txn);
-        if (opCode == OpCode.createSession) {
+        if (opCode == OpCode.createSession) {                           // 若是 session 创建的话, 则进行 addSession 操作
             if (txn instanceof CreateSessionTxn) {
                 CreateSessionTxn cst = (CreateSessionTxn) txn;
-                sessionTracker.addSession(sessionId, cst
-                        .getTimeOut());
+                sessionTracker.addSession(sessionId, cst.getTimeOut());
             } else {
-                LOG.warn("*****>>>>> Got "
-                        + txn.getClass() + " "
-                        + txn.toString());
+                LOG.warn("*****>>>>> Got " + txn.getClass() + " " + txn.toString());
             }
-        } else if (opCode == OpCode.closeSession) {
+        } else if (opCode == OpCode.closeSession) {                    // 关闭 Session
             sessionTracker.removeSession(sessionId);
         }
         return rc;

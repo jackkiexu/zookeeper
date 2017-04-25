@@ -98,7 +98,7 @@ public class Request {
      *                the type of the packet
      * @return true if a valid packet, false if not
      */
-    static boolean isValid(int type) {
+    static boolean isValid(int type) {                          // 校验 请求的类型是否合法
         // make sure this is always synchronized with Zoodefs!!
         switch (type) {
         case OpCode.notification:

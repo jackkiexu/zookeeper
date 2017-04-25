@@ -326,7 +326,7 @@ public class ZKDatabase {
      * @return the result of processing the transaction on this
      * datatree/zkdatabase
      */
-    public ProcessTxnResult processTxn(TxnHeader hdr, Record txn) {
+    public ProcessTxnResult processTxn(TxnHeader hdr, Record txn) {  // ZKDatabase 处理事务请求
         return dataTree.processTxn(hdr, txn);
     }
 
@@ -474,7 +474,7 @@ public class ZKDatabase {
      * @param si the request to append
      * @return true if the append was succesfull and false if not
      */
-    public boolean append(Request si) throws IOException {
+    public boolean append(Request si) throws IOException {                          // 追加事务日志
         return this.snapLog.append(si);
     }
 
