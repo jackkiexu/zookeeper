@@ -801,8 +801,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case FOLLOWING:
                     try {
                         LOG.info("FOLLOWING, and myid is " + myid);
-                        setFollower(makeFollower(logFactory));
-                        follower.followLeader();
+                        setFollower(makeFollower(logFactory));              // 初始化 follower
+                        follower.followLeader();                            // follower 在此等待
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);
                     } finally {
@@ -814,8 +814,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case LEADING:
                     LOG.info("LEADING, and myid is " + myid);
                     try {
-                        setLeader(makeLeader(logFactory));
-                        leader.lead();
+                        setLeader(makeLeader(logFactory));                  // 初始化 Leader 对象
+                        leader.lead();                                       // Leader 线程阻塞在这里
                         setLeader(null);
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);

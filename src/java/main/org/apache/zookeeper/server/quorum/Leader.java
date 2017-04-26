@@ -180,6 +180,7 @@ public class Leader {
     
     ServerSocket ss;
 
+    // 初始化 Leader, 并监听对应额端口
     Leader(QuorumPeer self,LeaderZooKeeperServer zk) throws IOException {
         this.self = self;
         try {
@@ -315,8 +316,8 @@ public class Leader {
                         Socket s = ss.accept();                                     // Leader 在指定的端口进行监听
                         // start with the initLimit, once the ack is processed
                         // in LearnerHandler switch to the syncLimit
-                        s.setSoTimeout(self.tickTime * self.initLimit);
-                        s.setTcpNoDelay(nodelay);
+                        s.setSoTimeout(self.tickTime * self.initLimit);        // 这里的 soTimeout 影响的是 InputStream.read 方法, 读取数据时, 超过这个时间, 就会出现异常
+                        s.setTcpNoDelay(nodelay);                                 // 设置不适用 合并小的数据包, 重而减少带宽的算法
                         LearnerHandler fh = new LearnerHandler(s, Leader.this);   // 每个连接上来的 Follower/Observer 都需要一个 LearnerHandler 与进行处理
                         fh.start();
                     } catch (SocketException e) {
@@ -366,17 +367,17 @@ public class Leader {
 
         try {
             self.tick = 0;
-            zk.loadData();
+            zk.loadData();                                                                                  // 从 snapshot, txn log 里面进行数据的恢复
             
-            leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());
+            leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());   // 生成 Leader 的状态信息
 
             // Start thread that waits for connection requests from 
             // new followers.
-            cnxAcceptor = new LearnerCnxAcceptor();
+            cnxAcceptor = new LearnerCnxAcceptor();                                                       // LearnerCnxAcceptor 它会监听在对应端口, 一有 follower 连接上, 就开启一个 LearnerHandler 来处理对应的事件
             cnxAcceptor.start();
             
             readyToStart = true;
-            long epoch = getEpochToPropose(self.getId(), self.getAcceptedEpoch());
+            long epoch = getEpochToPropose(self.getId(), self.getAcceptedEpoch());                        // 等待足够多de Follower进来, 代表自己确实是 leader, 此处 lead 线程可能在 while 循环处等待
             
             zk.setZxid(ZxidUtils.makeZxid(epoch, 0));
             
@@ -384,7 +385,7 @@ public class Leader {
                 lastProposed = zk.getZxid();
             }
             
-            newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(),
+            newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(),                    // 构建一个 NEWLEADER 的数据包
                     null, null);
 
 
@@ -393,7 +394,7 @@ public class Leader {
                         + Long.toHexString(newLeaderProposal.packet.getZxid()));
             }
             
-            waitForEpochAck(self.getId(), leaderStateSummary);
+            waitForEpochAck(self.getId(), leaderStateSummary);                                        // 等待投票满足过半ed原则
             self.setCurrentEpoch(epoch);
 
             // We have to get at least a majority of servers in sync with
@@ -578,12 +579,12 @@ public class Leader {
             return;
         }
         
-        p.ackSet.add(sid);
+        p.ackSet.add(sid);                                                                  // 将 follower 的 myid 加入结果列表
         if (LOG.isDebugEnabled()) {
             LOG.debug("Count for zxid: 0x{} is {}",
                     Long.toHexString(zxid), p.ackSet.size());
         }
-        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){             
+        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){                            // 判断是否票数够了
             if (zxid != lastCommitted+1) {
                 LOG.warn("Commiting zxid 0x{} from {} not first!",
                         Long.toHexString(zxid), followerAddr);
@@ -853,6 +854,7 @@ public class Leader {
     }
 
     private HashSet<Long> connectingFollowers = new HashSet<Long>();
+
     public long getEpochToPropose(long sid, long lastAcceptedEpoch) throws InterruptedException, IOException {
         LOG.info("getEpochToPropose myid:" + sid + ", lastAcceptedEpoch:"+lastAcceptedEpoch +", connectingFollowers:" + connectingFollowers
         + ", waitingForNewEpoch:"+waitingForNewEpoch +", epoch:"+epoch);
@@ -863,22 +865,22 @@ public class Leader {
             if (lastAcceptedEpoch >= epoch) {
                 epoch = lastAcceptedEpoch+1;
             }
-            connectingFollowers.add(sid);
+            connectingFollowers.add(sid);                           // 将自己加入到 connectingFollowers, 后续会判断 connectingFollowers.contains
             QuorumVerifier verifier = self.getQuorumVerifier();
-            if (connectingFollowers.contains(self.getId()) &&       // 自己已经投票, 并且 投票中已经满足过半的原则
+            if (connectingFollowers.contains(self.getId()) &&      // 自己已经投票, 并且 投票中已经满足过半的原则, 然后就进行唤醒下面代码中的 wait 等待 (connectingFollowers.wait(end - cur))
                                             verifier.containsQuorum(connectingFollowers)) {
                 waitingForNewEpoch = false;
-                self.setAcceptedEpoch(epoch);                         //
+                self.setAcceptedEpoch(epoch);
                 connectingFollowers.notifyAll();
-            } else {
+            } else {                                                  // 当过半原则没满足时, 则进行相应的等待
                 long start = System.currentTimeMillis();
                 long cur = start;
                 long end = start + self.getInitLimit()*self.getTickTime();
-                while(waitingForNewEpoch && cur < end) {
+                while(waitingForNewEpoch && cur < end) {            // QuorumPeer 将在此处进行等待, 为的是 Leader 选举的过半原则
                     connectingFollowers.wait(end - cur);
                     cur = System.currentTimeMillis();
                 }
-                if (waitingForNewEpoch) {
+                if (waitingForNewEpoch) {                           // 超时, 重新发起选举, 在 QuorumPeer.run.while (running) {} 里面 一直进行选举
                     throw new InterruptedException("Timeout while waiting for epoch from quorum");        
                 }
             }
@@ -903,9 +905,9 @@ public class Leader {
                                                     + leaderStateSummary.getLastZxid()
                                                     + " (last zxid)");
                 }
-                electingFollowers.add(id);
+                electingFollowers.add(id);                                  // 将返回 Leader.ACKEPOCH 的 myid 加入到 集合 electingFollowers 里面
             }
-            QuorumVerifier verifier = self.getQuorumVerifier();
+            QuorumVerifier verifier = self.getQuorumVerifier();               // 判断是否满足过半的原则(并且自己已经参与其中), 不然额话就进行相应时间的等待, 等待超时的话, 就进行下一轮的 Leader 选举
             if (electingFollowers.contains(self.getId()) && verifier.containsQuorum(electingFollowers)) {
                 electionFinished = true;
                 electingFollowers.notifyAll();
@@ -943,6 +945,7 @@ public class Leader {
     /**
      * Start up Leader ZooKeeper server and initialize zxid to the new epoch
      */
+    // 启动 zookeeper serrver 并 通过 zxid 赋值 epoch
     private synchronized void startZkServer() {
         // Update lastCommitted and Db's zxid to a value representing the new epoch
         lastCommitted = zk.getZxid();

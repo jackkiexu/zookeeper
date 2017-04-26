@@ -65,9 +65,9 @@ public class Follower extends Learner{
         self.end_fle = 0;
         fzk.registerJMX(new FollowerBean(this, zk), self.jmxLocalPeerBean);
         try {
-            InetSocketAddress addr = findLeader();            
+            InetSocketAddress addr = findLeader();                                  // 找到 Leader 的地址
             try {
-                connectToLeader(addr);
+                connectToLeader(addr);                                              // 连接 Leader
                 long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);
 
                 //check to see if the leader zxid is lower than ours
@@ -78,9 +78,9 @@ public class Follower extends Learner{
                             + " is less than our accepted epoch " + ZxidUtils.zxidToString(self.getAcceptedEpoch()));
                     throw new IOException("Error: Epoch of leader is lower");
                 }
-                syncWithLeader(newEpochZxid);                
+                syncWithLeader(newEpochZxid);                                       // 与 leader 进行数据同步
                 QuorumPacket qp = new QuorumPacket();
-                while (self.isRunning()) {
+                while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理
                     readPacket(qp);
                     processPacket(qp);
                 }
@@ -107,10 +107,10 @@ public class Follower extends Learner{
      */
     protected void processPacket(QuorumPacket qp) throws IOException{
         switch (qp.getType()) {
-        case Leader.PING:            
+        case Leader.PING:                                                       // PING 包, 写会 session 数据
             ping(qp);            
             break;
-        case Leader.PROPOSAL:            
+        case Leader.PROPOSAL:                                                  // Proposal 包, 投票处理
             TxnHeader hdr = new TxnHeader();
             Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);
             if (hdr.getZxid() != lastQueued + 1) {
@@ -122,7 +122,7 @@ public class Follower extends Learner{
             lastQueued = hdr.getZxid();
             fzk.logRequest(hdr, txn);
             break;
-        case Leader.COMMIT:
+        case Leader.COMMIT:                                                    // 投票处理
             fzk.commit(qp.getZxid());
             break;
         case Leader.UPTODATE:
