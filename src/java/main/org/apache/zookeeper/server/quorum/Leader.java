@@ -462,7 +462,7 @@ public class Leader {
                 // lock on the followers when we use it.
                 syncedSet.add(self.getId());
 
-                for (LearnerHandler f : getLearners()) {
+                for (LearnerHandler f : getLearners()) {                                            // 检查每个 follower 是否存活
                     // Synced set is used to check we have a supporting quorum, so only
                     // PARTICIPANT, not OBSERVER, learners should be used
                     if (f.synced() && f.getLearnerType() == LearnerType.PARTICIPANT) {
@@ -471,7 +471,7 @@ public class Leader {
                     f.ping();
                 }
 
-              if (!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)) {
+              if (!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)) {               // 如果有 follower 挂掉导致投票不通过, 则退出 lead 流程, 重新选举
                 //if (!tickSkip && syncedCount < self.quorumPeers.size() / 2) {
                     // Lost quorum, shutdown
                     shutdown("Not sufficient followers synced, only synced with sids: [ "

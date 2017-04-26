@@ -465,7 +465,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 
             // load the epochs
             long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;      // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
-     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);       // 将 zxid 的高 32 位当做 epoch 值
+     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);       // 将 zxid 的高 32 位当做 epoch 值, 低 32 位才是 zxid
             try {
             	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);       // 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
                 if (epochOfZxid > currentEpoch && updating.exists()) {            // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
@@ -529,7 +529,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     		re.setStackTrace(e.getStackTrace());
     		throw re;
     	}
-        for (QuorumServer p : getView().values()) {
+        for (QuorumServer p : getView().values()) {                                 // 获取集群里面的所有的机器
             if (p.id == myid) {
                 myQuorumAddr = p.addr;
                 break;
@@ -643,9 +643,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         case 2:
             le = new AuthFastLeaderElection(this, true);
             break;
-        case 3:
+        case 3:                                                                  // 默认的 leader 选举的算法
             qcm = new QuorumCnxManager(this);
-            QuorumCnxManager.Listener listener = qcm.listener;
+            QuorumCnxManager.Listener listener = qcm.listener;                  // 等待集群中的其他的机器进行连接
             if(listener != null){
                 listener.start();
                 le = new FastLeaderElection(this, qcm);
@@ -729,7 +729,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
              */
             while (running) {
                 switch (getPeerState()) {
-                case LOOKING:
+                case LOOKING:                                                                // QuorumPeer 是 LOOKING 状态, 正在寻找 Leader 机器
                     LOG.info("LOOKING, and myid is " + myid);
 
                     if (Boolean.getBoolean("readonlymode.enabled")) {                       // 判断启动服务是否是 readOnly 模式
@@ -765,7 +765,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                         try {
                             roZkMgr.start();
                             setBCVote(null);
-                            setCurrentVote(makeLEStrategy().lookForLeader());
+                            setCurrentVote(makeLEStrategy().lookForLeader());                       // 选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception",e);
                             setPeerState(ServerState.LOOKING);

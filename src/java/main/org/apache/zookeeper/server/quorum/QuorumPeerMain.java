@@ -128,7 +128,7 @@ public class QuorumPeerMain {
   
       LOG.info("Starting quorum peer");
       try {
-          // 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
+                                                                                        // 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
           ServerCnxnFactory cnxnFactory = ServerCnxnFactory.createFactory();
           cnxnFactory.configure(config.getClientPortAddress(),
                                 config.getMaxClientCnxns());
@@ -138,7 +138,7 @@ public class QuorumPeerMain {
           quorumPeer.setTxnFactory(new FileTxnSnapLog(
                       new File(config.getDataLogDir()),
                       new File(config.getDataDir())));
-          quorumPeer.setQuorumPeers(config.getServers());
+          quorumPeer.setQuorumPeers(config.getServers());                            // 集群中所有机器
           quorumPeer.setElectionType(config.getElectionAlg());
           quorumPeer.setMyid(config.getServerId());
           quorumPeer.setTickTime(config.getTickTime());
@@ -146,15 +146,15 @@ public class QuorumPeerMain {
           quorumPeer.setMaxSessionTimeout(config.getMaxSessionTimeout());
           quorumPeer.setInitLimit(config.getInitLimit());
           quorumPeer.setSyncLimit(config.getSyncLimit());
-          quorumPeer.setQuorumVerifier(config.getQuorumVerifier());
+          quorumPeer.setQuorumVerifier(config.getQuorumVerifier());                 // 投票方法, 默认超过半数就通过
           quorumPeer.setCnxnFactory(cnxnFactory);
           quorumPeer.setZKDatabase(new ZKDatabase(quorumPeer.getTxnFactory()));
           quorumPeer.setLearnerType(config.getPeerType());
           quorumPeer.setSyncEnabled(config.getSyncEnabled());
           quorumPeer.setQuorumListenOnAllIPs(config.getQuorumListenOnAllIPs());
   
-          quorumPeer.start(); // 开启服务
-          quorumPeer.join(); // 等到 上面的程序执行结束后, 再执行
+          quorumPeer.start();                                                       // 开启服务
+          quorumPeer.join();                                                        // 等到 上面的程序执行结束后, 再执行
       } catch (InterruptedException e) {
           // warn, but generally this is ok
           LOG.warn("Quorum Peer interrupted", e);
