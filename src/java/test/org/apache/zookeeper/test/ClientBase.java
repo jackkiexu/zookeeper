@@ -231,6 +231,7 @@ public abstract class ClientBase extends ZKTestCase {
                 // if there are multiple hostports, just take the first one
                 HostPort hpobj = parseHostPortList(hp).get(0);
                 String result = send4LetterWord(hpobj.host, hpobj.port, "stat"); // 发送 命令给 zookeeper 服务器, 并返回结果
+                LOG.info("result:"+result);
                 if (result.startsWith("Zookeeper version:") &&
                         !result.contains("READ-ONLY")) {
                     return true;
@@ -318,7 +319,7 @@ public abstract class ClientBase extends ZKTestCase {
     static File createTmpDir(File parentDir) throws IOException {
         @Deprecated
         File tmpFile = File.createTempFile("test", ".junit", parentDir);
-        tmpFile = new File(parentDir.getCanonicalPath() + "\\" + todayFormatDate() +"\\");
+        tmpFile = new File(parentDir.getCanonicalPath() + File.separatorChar + todayFormatDate() + File.separatorChar);
         if(!tmpFile.exists()) tmpFile.mkdirs();
         // don't delete tmpFile - this ensures we don't attempt to create
         // a tmpDir with a duplicate name

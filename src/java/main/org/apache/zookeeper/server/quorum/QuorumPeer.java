@@ -114,7 +114,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             this.electionAddr = electionAddr;
             this.type = type;
         }
-        // 用于 zookeeper 节点之间进行链接
+        // 这个是当 leader 确定下来时, follower/observer 进行连接 leader 的接口 (比如数据同步等, 具体还要看 LearnerHandler)
         public InetSocketAddress addr;
         // 进行选举 leader 时所使用的 地址
         public InetSocketAddress electionAddr;
@@ -387,7 +387,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     }
 
     DatagramSocket udpSocket;
-
+    // 这个是当 leader 确定下来时, follower/observer 进行连接 leader 的接口
     private InetSocketAddress myQuorumAddr;
 
     public InetSocketAddress getQuorumAddress(){

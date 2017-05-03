@@ -120,6 +120,7 @@ public class QuorumPeerMain {
 
     // 根据 配置 QuorumPeerConfig 来启动  QuorumPeer
     public void runFromConfig(QuorumPeerConfig config) throws IOException {
+        LOG.info("QuorumPeerConfig : " + config);
       try {
           ManagedUtil.registerLog4jMBeans();
       } catch (JMException e) {

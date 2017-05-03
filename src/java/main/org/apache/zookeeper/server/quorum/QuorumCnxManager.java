@@ -503,6 +503,7 @@ public class QuorumCnxManager {
 
     /**
      * Thread to listen on some port
+     * 这里的 Listener 会监听在  Leader 选举的端口
      */
     public class Listener extends Thread {
 

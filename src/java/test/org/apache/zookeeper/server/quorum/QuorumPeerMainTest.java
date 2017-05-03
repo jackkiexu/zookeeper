@@ -101,6 +101,9 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
         MainThread q1 = new MainThread(1, CLIENT_PORT_QP1, quorumCfgSection);
         MainThread q2 = new MainThread(2, CLIENT_PORT_QP2, quorumCfgSection);
         q1.start();
+
+        Thread.sleep(10 * 1000);
+
         q2.start();
 
         Assert.assertTrue("waiting for server 1 being up",

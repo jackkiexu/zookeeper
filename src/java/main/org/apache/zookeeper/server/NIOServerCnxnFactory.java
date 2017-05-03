@@ -35,6 +35,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 这个是监听在 11211 端口, 来获取客户端的请求(CURD)
+ */
 public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(NIOServerCnxnFactory.class);
 
@@ -171,7 +174,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     }
 
     /**
-     * 锟斤拷锟斤拷锟绞憋拷锟斤拷锟斤拷
+     * QuorumPeerMain.runFromConfig -> QuorumPeer.start -> cnxnFactory.start 从而启动
      */
     public void run() {
         while (!ss.socket().isClosed()) {

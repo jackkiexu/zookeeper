@@ -432,4 +432,34 @@ public class QuorumPeerConfig {
     public Boolean getQuorumListenOnAllIPs() {
         return quorumListenOnAllIPs;
     }
+
+    @Override
+    public String toString() {
+        return "QuorumPeerConfig{" +
+                "clientPortAddress=" + clientPortAddress +
+                ", dataDir='" + dataDir + '\'' +
+                ", dataLogDir='" + dataLogDir + '\'' +
+                ", tickTime=" + tickTime +
+                ", maxClientCnxns=" + maxClientCnxns +
+                ", minSessionTimeout=" + minSessionTimeout +
+                ", maxSessionTimeout=" + maxSessionTimeout +
+                ", initLimit=" + initLimit +
+                ", syncLimit=" + syncLimit +
+                ", electionAlg=" + electionAlg +
+                ", electionPort=" + electionPort +
+                ", quorumListenOnAllIPs=" + quorumListenOnAllIPs +
+                ", servers=" + servers +
+                ", observers=" + observers +
+                ", serverId=" + serverId +
+                ", serverWeight=" + serverWeight +
+                ", serverGroup=" + serverGroup +
+                ", numGroups=" + numGroups +
+                ", quorumVerifier=" + quorumVerifier +
+                ", snapRetainCount=" + snapRetainCount +
+                ", purgeInterval=" + purgeInterval +
+                ", syncEnabled=" + syncEnabled +
+                ", peerType=" + peerType +
+                ", MIN_SNAP_RETAIN_COUNT=" + MIN_SNAP_RETAIN_COUNT +
+                '}';
+    }
 }

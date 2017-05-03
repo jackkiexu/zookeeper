@@ -48,7 +48,7 @@ public class FourLetterWordMain {
             outstream.write(cmd.getBytes());
             outstream.flush();
             // this replicates NC - close the output stream before reading
-            sock.shutdownOutput();
+            sock.shutdownOutput();                          // 关闭 TCP 底层的输出数据流, 与之对应的还有关闭输出流
 
             reader =
                     new BufferedReader(
