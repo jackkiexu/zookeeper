@@ -88,6 +88,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     LinkedBlockingQueue<Request> pendingTxns = new LinkedBlockingQueue<Request>();
 
     public void logRequest(TxnHeader hdr, Record txn) {
+        LOG.info("hdr:" + hdr + ", txn:" + txn);
         Request request = new Request(null, hdr.getClientId(), hdr.getCxid(),
                 hdr.getType(), null, null);
         request.hdr = hdr;

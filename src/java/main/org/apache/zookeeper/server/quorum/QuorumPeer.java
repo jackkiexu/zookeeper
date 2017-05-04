@@ -1260,13 +1260,16 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
      */
     protected void updateElectionVote(long newEpoch) {
         Vote currentVote = getCurrentVote();
+        LOG.info("currentVote:" + currentVote);
         setBCVote(currentVote);
         if (currentVote != null) {
-            setCurrentVote(new Vote(currentVote.getId(),
-                currentVote.getZxid(),
-                currentVote.getElectionEpoch(),
-                newEpoch,
-                currentVote.getState()));
+            Vote vote = new Vote(currentVote.getId(),
+                    currentVote.getZxid(),
+                    currentVote.getElectionEpoch(),
+                    newEpoch,
+                    currentVote.getState());
+            LOG.info("vote:" + vote);
+            setCurrentVote(vote);
         }
     }
 

@@ -69,7 +69,11 @@ public class Leader {
 
         @Override
         public String toString() {
-            return packet.getType() + ", " + packet.getZxid() + ", " + request;
+            return "Proposal{" +
+                    "packet=" + packet +
+                    ", ackSet=" + ackSet +
+                    ", request=" + request +
+                    '}';
         }
     }
 
@@ -541,6 +545,7 @@ public class Leader {
      * @param followerAddr
      */
     synchronized public void processAck(long sid, long zxid, SocketAddress followerAddr) {
+        LOG.info("sid:" + sid + ", zxid:" + zxid + ", followerAddr:" + followerAddr);
         if (LOG.isTraceEnabled()) {
             LOG.trace("Ack zxid: 0x{}", Long.toHexString(zxid));
             for (Proposal p : outstandingProposals.values()) {
@@ -551,6 +556,7 @@ public class Leader {
             LOG.trace("outstanding proposals all");
         }
 
+        LOG.info("(zxid & 0xffffffffL) == 0 :" + ((zxid & 0xffffffffL) == 0));
         if ((zxid & 0xffffffffL) == 0) {
             /*
              * We no longer process NEWLEADER ack by this method. However,
@@ -559,13 +565,15 @@ public class Leader {
              */
             return;
         }
-    
+
+        LOG.info("outstandingProposals :" + outstandingProposals);
         if (outstandingProposals.size() == 0) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("outstanding is 0");
             }
             return;
         }
+        LOG.info("lastCommitted :" + lastCommitted + ", zxid:" + zxid);
         if (lastCommitted >= zxid) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("proposal has already been committed, pzxid: 0x{} zxid: 0x{}",
@@ -575,26 +583,33 @@ public class Leader {
             return;
         }
         Proposal p = outstandingProposals.get(zxid);
+        LOG.info("p:" + p);
         if (p == null) {
             LOG.warn("Trying to commit future proposal: zxid 0x{} from {}",
                     Long.toHexString(zxid), followerAddr);
             return;
         }
-        
+        LOG.info("p:" + p + ", sid:" + sid);
         p.ackSet.add(sid);                                                                  // 将 follower 的 myid 加入结果列表
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Count for zxid: 0x{} is {}",
-                    Long.toHexString(zxid), p.ackSet.size());
+            LOG.debug("Count for zxid: 0x{} is {}", Long.toHexString(zxid), p.ackSet.size());
         }
+
+        LOG.info("self.getQuorumVerifier().containsQuorum(p.ackSet):" + self.getQuorumVerifier().containsQuorum(p.ackSet));
         if (self.getQuorumVerifier().containsQuorum(p.ackSet)){                            // 判断是否票数够了, 则启动  leader 的 server
+
+            LOG.info("zxid:" + zxid + ", lastCommitted:" + lastCommitted);
             if (zxid != lastCommitted+1) {
                 LOG.warn("Commiting zxid 0x{} from {} not first!",
                         Long.toHexString(zxid), followerAddr);
                 LOG.warn("First is 0x{}", Long.toHexString(lastCommitted + 1));
             }
+
+            LOG.info("outstandingProposals:" + outstandingProposals);
             outstandingProposals.remove(zxid);
             if (p.request != null) {
                 toBeApplied.add(p);
+                LOG.info("toBeApplied:" + toBeApplied);
             }
 
             if (p.request == null) {
@@ -603,6 +618,8 @@ public class Leader {
             commit(zxid);
             inform(p);
             zk.commitProcessor.commit(p.request);
+
+            LOG.info("pendingSyncs :" + pendingSyncs);
             if(pendingSyncs.containsKey(zxid)){
                 for(LearnerSyncRequest r: pendingSyncs.remove(zxid)) {
                     sendSync(r);
@@ -700,17 +717,17 @@ public class Leader {
             lastCommitted = zxid;
         }
         QuorumPacket qp = new QuorumPacket(Leader.COMMIT, zxid, null, null);
+        LOG.info("qp:" + qp);
         sendPacket(qp);
     }
     
     /**
      * Create an inform packet and send it to all observers.
-     * @param zxid
      * @param proposal
      */
     public void inform(Proposal proposal) {   
-        QuorumPacket qp = new QuorumPacket(Leader.INFORM, proposal.request.zxid, 
-                                            proposal.packet.getData(), null);
+        QuorumPacket qp = new QuorumPacket(Leader.INFORM, proposal.request.zxid, proposal.packet.getData(), null);
+        LOG.info("qp:" + qp);
         sendObserverPacket(qp);
     }
 
@@ -802,12 +819,12 @@ public class Leader {
     /**
      * Sends a sync message to the appropriate server
      * 
-     * @param f
      * @param r
      */
             
     public void sendSync(LearnerSyncRequest r){
         QuorumPacket qp = new QuorumPacket(Leader.SYNC, 0, null, null);
+        LOG.info("qp:" + qp);
         r.fh.queuePacket(qp);
     }
                 
@@ -818,11 +835,12 @@ public class Leader {
      * @param handler handler of the follower
      * @return last proposed zxid
      */
-    synchronized public long startForwarding(LearnerHandler handler,
-            long lastSeenZxid) {
+    synchronized public long startForwarding(LearnerHandler handler, long lastSeenZxid) {
         // Queue up any outstanding requests enabling the receipt of
         // new requests
+        LOG.info("lastProposed :" + lastProposed +", lastSeenZxid:" + lastSeenZxid);
         if (lastProposed > lastSeenZxid) {
+            LOG.info("toBeApplied :" + toBeApplied);
             for (Proposal p : toBeApplied) {
                 if (p.packet.getZxid() <= lastSeenZxid) {
                     continue;
@@ -830,12 +848,13 @@ public class Leader {
                 handler.queuePacket(p.packet);
                 // Since the proposal has been committed we need to send the
                 // commit message also
-                QuorumPacket qp = new QuorumPacket(Leader.COMMIT, p.packet
-                        .getZxid(), null, null);
+                QuorumPacket qp = new QuorumPacket(Leader.COMMIT, p.packet.getZxid(), null, null);
+                LOG.info("qp :" + qp);
                 handler.queuePacket(qp);
             }
             // Only participant need to get outstanding proposals
             if (handler.getLearnerType() == LearnerType.PARTICIPANT) {
+                LOG.info("outstandingProposals : " + outstandingProposals);
                 List<Long>zxids = new ArrayList<Long>(outstandingProposals.keySet());
                 Collections.sort(zxids);
                 for (Long zxid: zxids) {
@@ -895,21 +914,31 @@ public class Leader {
     private HashSet<Long> electingFollowers = new HashSet<Long>();
     private boolean electionFinished = false;
     public void waitForEpochAck(long id, StateSummary ss) throws IOException, InterruptedException {
+        LOG.info("waitForEpochAck :" + id + ", ss :" + ss + ", electingFollowers:" + electingFollowers + ", electionFinished:" + electionFinished);
+        LOG.info("electingFollowers:" + electingFollowers);
+        LOG.info("electionFinished:" + electionFinished);
+
         synchronized(electingFollowers) {
             if (electionFinished) {
                 return;
             }
             if (ss.getCurrentEpoch() != -1) {
-                if (ss.isMoreRecentThan(leaderStateSummary)) {
+                LOG.info("leaderStateSummary:" + leaderStateSummary);
+
+                boolean isMoreRecentThan = ss.isMoreRecentThan(leaderStateSummary);
+                LOG.info("isMoreRecentThan :" + isMoreRecentThan + ", ss:"+ ss +", leaderStateSummary:" + leaderStateSummary);
+                if (isMoreRecentThan) {
                     throw new IOException("Follower is ahead of the leader, leader summary: " 
                                                     + leaderStateSummary.getCurrentEpoch()
                                                     + " (current epoch), "
                                                     + leaderStateSummary.getLastZxid()
                                                     + " (last zxid)");
                 }
-                electingFollowers.add(id);                                  // 将返回 Leader.ACKEPOCH 的 myid 加入到 集合 electingFollowers 里面
+                electingFollowers.add(id);                                    // 将返回 Leader.ACKEPOCH 的 myid 加入到 集合 electingFollowers 里面
+
             }
             QuorumVerifier verifier = self.getQuorumVerifier();               // 判断是否满足过半的原则(并且自己已经参与其中), 不然额话就进行相应时间的等待, 等待超时的话, 就进行下一轮的 Leader 选举
+
             if (electingFollowers.contains(self.getId()) && verifier.containsQuorum(electingFollowers)) {
                 electionFinished = true;
                 electingFollowers.notifyAll();

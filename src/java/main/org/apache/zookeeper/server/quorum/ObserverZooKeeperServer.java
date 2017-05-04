@@ -81,7 +81,8 @@ public class ObserverZooKeeperServer extends LearnerZooKeeperServer {
      *      
      * @param request
      */
-    public void commitRequest(Request request) {     
+    public void commitRequest(Request request) {
+        LOG.info("request:" + request + ", syncRequestProcessorEnabled:" + syncRequestProcessorEnabled);
         if (syncRequestProcessorEnabled) {
             // Write to txnlog and take periodic snapshot
             syncProcessor.processRequest(request);

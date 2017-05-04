@@ -151,6 +151,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
     }
 
     synchronized public void commit(Request request) {
+        LOG.info("request:" + request + ", finished :" + finished);
         if (!finished) {
             if (request == null) {
                 LOG.warn("Committed a null!",

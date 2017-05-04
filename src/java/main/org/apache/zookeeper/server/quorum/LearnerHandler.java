@@ -31,6 +31,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -111,10 +112,12 @@ public class LearnerHandler extends Thread {
         private long nextTime = 0;
 
         public synchronized void start() {
+            LOG.info("SyncLimitCheck started = true");
             started = true;
         }
 
         public synchronized void updateProposal(long zxid, long time) {
+            LOG.info("zxid :" + zxid + ", time:" + time);
             if (!started) {
                 return;
             }
@@ -128,6 +131,7 @@ public class LearnerHandler extends Thread {
         }
 
         public synchronized void updateAck(long zxid) {
+            LOG.info("currentZxid : " + currentZxid + ", zxid:" + zxid);
              if (currentZxid == zxid) {
                  currentTime = nextTime;
                  currentZxid = nextZxid;
@@ -197,15 +201,17 @@ public class LearnerHandler extends Thread {
             try {
                 QuorumPacket p;
                 p = queuedPackets.poll();
+                LOG.info(" P :" + p);
                 if (p == null) {
                     bufferedOutput.flush();
                     p = queuedPackets.take();
                 }
-
+                LOG.info("p == proposalOfDeath :" + (p == proposalOfDeath));
                 if (p == proposalOfDeath) {
                     // Packet of death!
                     break;
                 }
+                LOG.info("p.getType() : " + p);
                 if (p.getType() == Leader.PING) {
                     traceMask = ZooTrace.SERVER_PING_TRACE_MASK;
                 }
@@ -302,19 +308,26 @@ public class LearnerHandler extends Thread {
     public void run() {
         try {
             tickOfNextAckDeadline = leader.self.tick + leader.self.initLimit + leader.self.syncLimit;
+            LOG.info("tickOfNextAckDeadline : " + tickOfNextAckDeadline);
 
             ia = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));
             bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
             oa = BinaryOutputArchive.getArchive(bufferedOutput);
             // 等待 Follower 发来数据包
             QuorumPacket qp = new QuorumPacket();
+            long a1 = System.currentTimeMillis();
             ia.readRecord(qp, "packet");
+            LOG.info("System.currentTimeMillis() - a1 : " + (System.currentTimeMillis() - a1));
+            LOG.info("qp:" + qp);
+
             if(qp.getType() != Leader.FOLLOWERINFO && qp.getType() != Leader.OBSERVERINFO){
             	LOG.error("First packet " + qp.toString()
                         + " is not FOLLOWERINFO or OBSERVERINFO!");
                 return;
             }
             byte learnerInfoData[] = qp.getData();                                                      // 读取参与者发来的数据
+
+            LOG.info("learnerInfoData :" + Arrays.asList(learnerInfoData));
             if (learnerInfoData != null) {
             	if (learnerInfoData.length == 8) {
             		ByteBuffer bbsid = ByteBuffer.wrap(learnerInfoData);
@@ -337,12 +350,16 @@ public class LearnerHandler extends Thread {
             }            
             
             long lastAcceptedEpoch = ZxidUtils.getEpochFromZxid(qp.getZxid());                       // 与之连接的 Learner 现在的 Leader 选举 轮次
-            
+
+            LOG.info("qp : " + qp + ", lastAcceptedEpoch : " + lastAcceptedEpoch);
+
             long peerLastZxid;
             StateSummary ss = null;
             long zxid = qp.getZxid();
             long newEpoch = leader.getEpochToPropose(this.getSid(), lastAcceptedEpoch);            // 将 Learner 的投票信息加入到 connectingFollowers 里面, 判断 Leader 选举是否结束
-            
+
+            LOG.info("qp : " + qp + ", newEpoch : " + newEpoch);
+
             if (this.getVersion() < 0x10000) {
                 // we are going to have to extrapolate the epoch information
                 long epoch = ZxidUtils.getEpochFromZxid(zxid);
@@ -353,10 +370,14 @@ public class LearnerHandler extends Thread {
                 byte ver[] = new byte[4];
                 ByteBuffer.wrap(ver).putInt(0x10000);
                 QuorumPacket newEpochPacket = new QuorumPacket(Leader.LEADERINFO, ZxidUtils.makeZxid(newEpoch, 0), ver, null);
+                LOG.info("newEpochPacket:" + newEpochPacket);
                 oa.writeRecord(newEpochPacket, "packet");
                 bufferedOutput.flush();
                 QuorumPacket ackEpochPacket = new QuorumPacket();
                 ia.readRecord(ackEpochPacket, "packet");                                          // 这一步就是 read 与 集群中的参与者发来的数据信息, 这里的 InputStream 就是 sock.getInputStream()
+
+                LOG.info("ackEpochPacket:" +ackEpochPacket);
+
                 if (ackEpochPacket.getType() != Leader.ACKEPOCH) {
                     LOG.error(ackEpochPacket.toString()
                             + " is not ACKEPOCH");
@@ -364,9 +385,12 @@ public class LearnerHandler extends Thread {
 				}
                 ByteBuffer bbepoch = ByteBuffer.wrap(ackEpochPacket.getData());
                 ss = new StateSummary(bbepoch.getInt(), ackEpochPacket.getZxid());
+                LOG.info("ss : " + ss);
                 leader.waitForEpochAck(this.getSid(), ss);
+
             }
             peerLastZxid = ss.getLastZxid();
+            LOG.info("peerLastZxid : " + peerLastZxid);
             
             /* the default to send to the follower */
             int packetToSend = Leader.SNAP;                                                     // 默认的发送一个 SNAP 的数据包
@@ -384,17 +408,22 @@ public class LearnerHandler extends Thread {
                 rl.lock();        
                 final long maxCommittedLog = leader.zk.getZKDatabase().getmaxCommittedLog();
                 final long minCommittedLog = leader.zk.getZKDatabase().getminCommittedLog();
-                LOG.info("Synchronizing with Follower sid: " + sid
-                        +" maxCommittedLog=0x"+Long.toHexString(maxCommittedLog)
-                        +" minCommittedLog=0x"+Long.toHexString(minCommittedLog)
-                        +" peerLastZxid=0x"+Long.toHexString(peerLastZxid));
+
+                LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
+                                        + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
+                                        + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
+                );
 
                 LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 查看是否还有需要的投票
                 LOG.info("proposals:"+proposals);
                 if (proposals.size() != 0) {                                                            // 处理这些还需要的投票
                     LOG.debug("proposal size is {}", proposals.size());                             // 如果 follower 还没有处理这个事务, 有可能是 down后又恢复了, 则继续处理
-                    if ((maxCommittedLog >= peerLastZxid)
-                            && (minCommittedLog <= peerLastZxid)) {
+
+                    if ((maxCommittedLog >= peerLastZxid) && (minCommittedLog <= peerLastZxid)) {
+                        LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
+                                + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
+                                + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
+                        );
                         LOG.debug("Sending proposals to follower");
 
                         // as we look through proposals, this variable keeps track of previous
@@ -441,6 +470,12 @@ public class LearnerHandler extends Thread {
                                 Long.toHexString(maxCommittedLog),
                                 Long.toHexString(updates));
 
+                        LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
+                                + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
+                                + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
+                                + ", updates : " + Long.toHexString(updates)
+                        );
+
                         packetToSend = Leader.TRUNC;
                         zxidToSend = maxCommittedLog;
                         updates = zxidToSend;
@@ -454,6 +489,12 @@ public class LearnerHandler extends Thread {
                     LOG.debug("committedLog is empty but leader and follower "
                             + "are in sync, zxid=0x{}",
                             Long.toHexString(peerLastZxid));
+
+                    LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
+                            + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
+                            + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
+                    );
+
                     packetToSend = Leader.DIFF;
                     zxidToSend = peerLastZxid;
                 } else {
@@ -463,13 +504,14 @@ public class LearnerHandler extends Thread {
 
                 LOG.info("Sending " + Leader.getPacketType(packetToSend));
                 leaderLastZxid = leader.startForwarding(this, updates);
+                LOG.info("leaderLastZxid : " + leaderLastZxid);
 
             } finally {
                 rl.unlock();
             }
-
-             QuorumPacket newLeaderQP = new QuorumPacket(Leader.NEWLEADER,                          // 发送 NEWLEADER 数据包
-                    ZxidUtils.makeZxid(newEpoch, 0), null, null);
+                                                                                                 // 发送 NEWLEADER 数据包
+             QuorumPacket newLeaderQP = new QuorumPacket(Leader.NEWLEADER, ZxidUtils.makeZxid(newEpoch, 0), null, null);
+             LOG.info("newLeaderQP:" + newLeaderQP);
              if (getVersion() < 0x10000) {
                 oa.writeRecord(newLeaderQP, "packet");
             } else {
@@ -477,10 +519,13 @@ public class LearnerHandler extends Thread {
             }
             bufferedOutput.flush();
             //Need to set the zxidToSend to the latest zxid
+            LOG.info("packetToSend : " + packetToSend);
             if (packetToSend == Leader.SNAP) {
                 zxidToSend = leader.zk.getZKDatabase().getDataTreeLastProcessedZxid();
             }
-            oa.writeRecord(new QuorumPacket(packetToSend, zxidToSend, null, null), "packet");
+            QuorumPacket quorumPackett2 = new QuorumPacket(packetToSend, zxidToSend, null, null);
+            LOG.info("quorumPackett2 : " + quorumPackett2);
+            oa.writeRecord(quorumPackett2, "packet");
             bufferedOutput.flush();
             
             /* if we are not truncating or sending a diff just send a snapshot */
@@ -492,7 +537,9 @@ public class LearnerHandler extends Thread {
                         + "sent zxid of db as 0x" 
                         + Long.toHexString(zxidToSend));
                 // Dump data to peer
+                LOG.info("将 Leader 的数据 序列化到数据流 oa 里面");
                 leader.zk.getZKDatabase().serializeSnapshot(oa);
+                LOG.info("将 Leader 的数据 序列化到数据流 oa 里面 OK ");
                 oa.writeString("BenWasHere", "signature");
             }
             bufferedOutput.flush();
@@ -500,8 +547,7 @@ public class LearnerHandler extends Thread {
             // Start sending packets                                                                    // 启动一个线程进行数据包的发送
             new Thread() {
                 public void run() {
-                    Thread.currentThread().setName(
-                            "Sender-" + sock.getRemoteSocketAddress());
+                    Thread.currentThread().setName("Sender-" + sock.getRemoteSocketAddress());
                     try {
                         sendPackets();
                     } catch (InterruptedException e) {
@@ -517,11 +563,15 @@ public class LearnerHandler extends Thread {
              */
             qp = new QuorumPacket();
             ia.readRecord(qp, "packet");                                                             // 读取 Follower 发来的数据包
+            LOG.info("qp:" + qp);
+
+
             if(qp.getType() != Leader.ACK){
                 LOG.error("Next packet was supposed to be an ACK");
                 return;
             }
             LOG.info("Received NEWLEADER-ACK message from " + getSid());
+            LOG.info("getSid():" + getSid() + ", qp.getZxid():" + qp.getZxid() + ", getLearnerType():" + getLearnerType());
             leader.waitForNewLeaderAck(getSid(), qp.getZxid(), getLearnerType());
 
             syncLimitCheck.start();
@@ -537,7 +587,9 @@ public class LearnerHandler extends Thread {
                     leader.zk.wait(20);
                 }
             }
-            // Mutation packets will be queued during the serialize,
+            LOG.info("leader.zk.isRunning() :" + leader.zk.isRunning());
+
+            // Mutation(突变) packets will be queued during the serialize,
             // so we need to mark when the peer can actually start
             // using the data
             //
@@ -546,6 +598,7 @@ public class LearnerHandler extends Thread {
             while (true) {
                 qp = new QuorumPacket();
                 ia.readRecord(qp, "packet");
+                LOG.info("qp:" + qp);
 
                 long traceMask = ZooTrace.SERVER_PACKET_TRACE_MASK;
                 if (qp.getType() == Leader.PING) {
@@ -555,13 +608,14 @@ public class LearnerHandler extends Thread {
                     ZooTrace.logQuorumPacket(LOG, traceMask, 'i', qp);
                 }
                 tickOfNextAckDeadline = leader.self.tick + leader.self.syncLimit;
-
+                LOG.info("tickOfNextAckDeadline :" + tickOfNextAckDeadline);
 
                 ByteBuffer bb;
                 long sessionId;
                 int cxid;
                 int type;
 
+                LOG.info("qp.getType() : " + qp);
                 switch (qp.getType()) {
                 case Leader.ACK:                                                                              // ACK 包看看之前的投票是否结束
                     if (this.learnerType == LearnerType.OBSERVER) {

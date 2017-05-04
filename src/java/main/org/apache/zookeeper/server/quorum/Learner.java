@@ -58,6 +58,14 @@ public class Learner {
     static class PacketInFlight {
         TxnHeader hdr;
         Record rec;
+
+        @Override
+        public String toString() {
+            return "PacketInFlight{" +
+                    "hdr=" + hdr +
+                    ", rec=" + rec +
+                    '}';
+        }
     }
     QuorumPeer self;
     LearnerZooKeeperServer zk;
@@ -149,6 +157,7 @@ public class Learner {
         synchronized (leaderIs) {
             leaderIs.readRecord(pp, "packet"); // 从 leaderIs 里面读取出 QuorumPacket 的值
         }
+        LOG.info("pp:" + pp);
         long traceMask = ZooTrace.SERVER_PACKET_TRACE_MASK;
         if (pp.getType() == Leader.PING) {
             traceMask = ZooTrace.SERVER_PING_TRACE_MASK;
@@ -180,8 +189,8 @@ public class Learner {
             oa.write(b);
         }
         oa.close();
-        QuorumPacket qp = new QuorumPacket(Leader.REQUEST, -1, baos
-                .toByteArray(), request.authInfo);
+        QuorumPacket qp = new QuorumPacket(Leader.REQUEST, -1, baos.toByteArray(), request.authInfo);
+
         writePacket(qp, true);
     }
     
@@ -251,6 +260,8 @@ public class Learner {
      * @throws IOException
      */
     protected long registerWithLeader(int pktType) throws IOException{
+
+        LOG.info("registerWithLeader:" + pktType);
         /*
          * Send follower info, including last zxid and sid
          */
@@ -263,19 +274,29 @@ public class Learner {
          * Add sid to payload
          */
         LearnerInfo li = new LearnerInfo(self.getId(), 0x10000);
+        LOG.info("li:" + li);
+
         ByteArrayOutputStream bsid = new ByteArrayOutputStream();
         BinaryOutputArchive boa = BinaryOutputArchive.getArchive(bsid);
         boa.writeRecord(li, "LearnerInfo");
         qp.setData(bsid.toByteArray());
+        LOG.info("qp:" + qp);
         
         writePacket(qp, true);                                                  // 发送 learnerInfo 数据包
         readPacket(qp);                                                          // 读取 leader 返回的数据
+
+        LOG.info("qp:" + qp);
         final long newEpoch = ZxidUtils.getEpochFromZxid(qp.getZxid());
+
+        LOG.info("newEpoch:" + newEpoch);
 		if (qp.getType() == Leader.LEADERINFO) {
         	// we are connected to a 1.0 server so accept the new epoch and read the next packet
         	leaderProtocolVersion = ByteBuffer.wrap(qp.getData()).getInt();
+            LOG.info("leaderProtocolVersion:" + leaderProtocolVersion);
         	byte epochBytes[] = new byte[4];
         	final ByteBuffer wrappedEpochBytes = ByteBuffer.wrap(epochBytes);
+
+            LOG.info("newEpoch:" + newEpoch + ", self.getAcceptedEpoch():" + self.getAcceptedEpoch());
         	if (newEpoch > self.getAcceptedEpoch()) {                           // 将自己的 epoch 值写给 对方
         		wrappedEpochBytes.putInt((int)self.getCurrentEpoch());
         		self.setAcceptedEpoch(newEpoch);
@@ -289,9 +310,13 @@ public class Learner {
         		throw new IOException("Leaders epoch, " + newEpoch + " is less than accepted epoch, " + self.getAcceptedEpoch());
         	}                                                                   // 在 接收到 Leader.LEADERINFO 的消息后, 进行回复 Leader.ACKEPOCH 的消息, 并且加上 lastLargestZxid 值
         	QuorumPacket ackNewEpoch = new QuorumPacket(Leader.ACKEPOCH, lastLoggedZxid, epochBytes, null);
+
+            LOG.info("ackNewEpoch:" + ackNewEpoch);
         	writePacket(ackNewEpoch, true);                                     // 将选举的信息发送给对方
             return ZxidUtils.makeZxid(newEpoch, 0);
         } else {
+
+            LOG.info("newEpoch :" + newEpoch + ", self.getAcceptedEpoch():" + self.getAcceptedEpoch());
         	if (newEpoch > self.getAcceptedEpoch()) {
         		self.setAcceptedEpoch(newEpoch);
         	}
@@ -311,6 +336,7 @@ public class Learner {
      */
     // 根据 InputStream 里面的数据流 来进行同步数据
     protected void syncWithLeader(long newLeaderZxid) throws IOException, InterruptedException{
+        LOG.info("syncWithLeader:" + newLeaderZxid);
         QuorumPacket ack = new QuorumPacket(Leader.ACK, 0, null, null);
         QuorumPacket qp = new QuorumPacket();
         long newEpoch = ZxidUtils.getEpochFromZxid(newLeaderZxid);
@@ -318,6 +344,8 @@ public class Learner {
         readPacket(qp);                                                       // 从 对应的 InputStream 读取出一个 QuorumPacket
         LinkedList<Long> packetsCommitted = new LinkedList<Long>();
         LinkedList<PacketInFlight> packetsNotCommitted = new LinkedList<PacketInFlight>();
+        LOG.info("qp:" + qp);
+
         synchronized (zk) {
             if (qp.getType() == Leader.DIFF) {                              // DIFF 数据包
                 LOG.info("Getting a diff from the leader 0x" + Long.toHexString(qp.getZxid()));                
@@ -328,16 +356,16 @@ public class Learner {
                 // clear our own database and read
                 zk.getZKDatabase().clear();
                 zk.getZKDatabase().deserializeSnapshot(leaderIs);           // 从 InputStream 里面 反序列化出 DataTree
-                String signature = leaderIs.readString("signature");      // 看了一个 读取 tag "signature" 代表的一个 String 对象
+                String signature = leaderIs.readString("signature");        // 看了一个 读取 tag "signature" 代表的一个 String 对象
                 if (!signature.equals("BenWasHere")) {
                     LOG.error("Missing signature. Got " + signature);
                     throw new IOException("Missing signature");                   
                 }
             } else if (qp.getType() == Leader.TRUNC) {                     // 回滚到对应的事务
                 //we need to truncate the log to the lastzxid of the leader
-                LOG.warn("Truncating log to get in sync with the leader 0x"
-                        + Long.toHexString(qp.getZxid()));
+                LOG.warn("Truncating log to get in sync with the leader 0x" + Long.toHexString(qp.getZxid()));
                 boolean truncated=zk.getZKDatabase().truncateLog(qp.getZxid());
+                LOG.info("truncated:" + truncated + ", qp.getZxid():" + qp.getZxid());
                 if (!truncated) {
                     // not able to truncate the log
                     LOG.error("Not able to truncate the log "
@@ -365,11 +393,15 @@ public class Learner {
             outerLoop:
             while (self.isRunning()) {                                     // 同步完数据后, 准备执行投票
                 readPacket(qp);
+
+                LOG.info("qp:" + qp);
+
                 switch(qp.getType()) {
                 case Leader.PROPOSAL:                                     // 将投票信息加入到 待处理列表
                     PacketInFlight pif = new PacketInFlight();
                     pif.hdr = new TxnHeader();
                     pif.rec = SerializeUtils.deserializeTxn(qp.getData(), pif.hdr);         // 反序列化对应的 请求事务体
+                    LOG.info("pif:" + pif);
                     if (pif.hdr.getZxid() != lastQueued + 1) {
                     LOG.warn("Got zxid 0x"
                             + Long.toHexString(pif.hdr.getZxid())
@@ -380,6 +412,7 @@ public class Learner {
                     packetsNotCommitted.add(pif);
                     break;
                 case Leader.COMMIT:                                        // commit 则将事务提交给 Server 处理
+                    LOG.info("snapshotTaken :" + snapshotTaken);
                     if (!snapshotTaken) {
                         pif = packetsNotCommitted.peekFirst();
                         if (pif.hdr.getZxid() != qp.getZxid()) {
@@ -400,6 +433,7 @@ public class Learner {
                     PacketInFlight packet = new PacketInFlight();
                     packet.hdr = new TxnHeader();
                     packet.rec = SerializeUtils.deserializeTxn(qp.getData(), packet.hdr);
+                    LOG.info("packet:" + packet);
                     // Log warning message if txn comes out-of-order
                     if (packet.hdr.getZxid() != lastQueued + 1) {
                         LOG.warn("Got zxid 0x"
@@ -408,6 +442,7 @@ public class Learner {
                                 + Long.toHexString(lastQueued + 1));
                     }
                     lastQueued = packet.hdr.getZxid();
+                    LOG.info("snapshotTaken : " + snapshotTaken);
                     if (!snapshotTaken) {
                         // Apply to db directly if we haven't taken the snapshot
                         zk.processTxn(packet.hdr, packet.rec);
@@ -417,6 +452,7 @@ public class Learner {
                     }
                     break;
                 case Leader.UPTODATE:                                               // UPTODATE 数据包, 说明同步数据成功, 退出循环
+                    LOG.info("snapshotTaken : " + snapshotTaken + ", newEpoch:" + newEpoch);
                     if (!snapshotTaken) { // true for the pre v1.0 case
                         zk.takeSnapshot();
                         self.setCurrentEpoch(newEpoch);
@@ -424,6 +460,7 @@ public class Learner {
                     self.cnxnFactory.setZooKeeperServer(zk);                
                     break outerLoop;
                 case Leader.NEWLEADER: // it will be NEWLEADER in v1.0              // 说明之前残留的投票已经处理完, 则将内存中的数据写入文件, 并发送 ACK 包
+                    LOG.info("newEpoch:" + newEpoch);
                     // Create updatingEpoch file and remove it after current
                     // epoch is set. QuorumPeer.loadDataBase() uses this file to
                     // detect the case where the server was terminated after
@@ -447,6 +484,8 @@ public class Learner {
             }
         }
         ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));
+
+        LOG.info("ack:" + ack);
         writePacket(ack, true);
         sock.setSoTimeout(self.tickTime * self.syncLimit);                                  // 设置 InputStream.read 的超时时间
         zk.startup();                                                                           // 启动 zookeeper server
@@ -462,9 +501,13 @@ public class Learner {
         // We need to log the stuff that came in between the snapshot and the uptodate
         if (zk instanceof FollowerZooKeeperServer) {
             FollowerZooKeeperServer fzk = (FollowerZooKeeperServer)zk;
+
+            LOG.info("packetsNotCommitted:" + packetsNotCommitted);
             for(PacketInFlight p: packetsNotCommitted) {
                 fzk.logRequest(p.hdr, p.rec);
             }
+
+            LOG.info("packetsCommitted:" + packetsCommitted);
             for(Long zxid: packetsCommitted) {
                 fzk.commit(zxid);
             }
@@ -472,6 +515,8 @@ public class Learner {
             // Similar to follower, we need to log requests between the snapshot
             // and UPTODATE
             ObserverZooKeeperServer ozk = (ObserverZooKeeperServer) zk;
+
+            LOG.info("packetsNotCommitted:" + packetsNotCommitted);
             for (PacketInFlight p : packetsNotCommitted) {
                 Long zxid = packetsCommitted.peekFirst();
                 if (p.hdr.getZxid() != zxid) {
@@ -487,6 +532,8 @@ public class Learner {
                         p.hdr.getCxid(), p.hdr.getType(), null, null);
                 request.txn = p.rec;
                 request.hdr = p.hdr;
+
+                LOG.info("request:" + request);
                 ozk.commitRequest(request);
             }
         } else {
