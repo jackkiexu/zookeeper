@@ -191,8 +191,9 @@ public class Leader {
             }
             ss.setReuseAddress(true);
             if (!self.getQuorumListenOnAllIPs()) {
-                ss.bind(self.getQuorumAddress());
+                ss.bind(self.getQuorumAddress());       // 绑定端口
             }
+            LOG.info("Socket:" + ss);
         } catch (BindException e) {
             if (self.getQuorumListenOnAllIPs()) {
                 LOG.error("Couldn't bind to port " + self.getQuorumAddress().getPort(), e);
@@ -378,11 +379,12 @@ public class Leader {
             
             readyToStart = true;
             long epoch = getEpochToPropose(self.getId(), self.getAcceptedEpoch());                        // 等待足够多de Follower进来, 代表自己确实是 leader, 此处 lead 线程可能在 while 循环处等待
-            
+            LOG.info("epoch:"+epoch);
             zk.setZxid(ZxidUtils.makeZxid(epoch, 0));
             
             synchronized(this){
                 lastProposed = zk.getZxid();
+                LOG.info("lastProposed:"+lastProposed);
             }
             
             newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(),                    // 构建一个 NEWLEADER 的数据包
@@ -584,7 +586,7 @@ public class Leader {
             LOG.debug("Count for zxid: 0x{} is {}",
                     Long.toHexString(zxid), p.ackSet.size());
         }
-        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){                            // 判断是否票数够了
+        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){                            // 判断是否票数够了, 则启动  leader 的 server
             if (zxid != lastCommitted+1) {
                 LOG.warn("Commiting zxid 0x{} from {} not first!",
                         Long.toHexString(zxid), followerAddr);

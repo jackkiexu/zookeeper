@@ -219,7 +219,7 @@ public class Learner {
 
         sock = new Socket();        
         sock.setSoTimeout(self.tickTime * self.initLimit);                  // 这里的 SoTimeout 很重要, 若 InputStream.read 超过这个时间,则会报出 SocketTimeoutException 异常
-        for (int tries = 0; tries < 5; tries++) {                               // 连接 Leader 尝试 5次, 若还是失败, 则重新开始选举 leader
+        for (int tries = 0; tries < 5; tries++) {                               // 连接 Leader 尝试 5次, 若还是失败, 则抛出异常, 一直往外抛出, 直到 QuorumPeer 的重新开始选举 leader run 方法里面 -> 进行选举 Leader
             try {
                 sock.connect(addr, self.tickTime * self.syncLimit);
                 sock.setTcpNoDelay(nodelay);
@@ -322,7 +322,7 @@ public class Learner {
             if (qp.getType() == Leader.DIFF) {                              // DIFF 数据包
                 LOG.info("Getting a diff from the leader 0x" + Long.toHexString(qp.getZxid()));                
             }
-            else if (qp.getType() == Leader.SNAP) {                         // 收到的信息是 snap,
+            else if (qp.getType() == Leader.SNAP) {                         // 收到的信息是 snap, 则从 leader 复制一份 镜像数据到本地
                 LOG.info("Getting a snapshot from leader");
                 // The leader is going to dump the database
                 // clear our own database and read
@@ -353,7 +353,7 @@ public class Learner {
 
             }
             zk.getZKDatabase().setlastProcessedZxid(qp.getZxid());          // 因为这里的 ZKDatatree 是从 Leader 的 SnapShot 的 InputStream 里面获取的, 所以调用这里通过 set 进行赋值
-            zk.createSessionTracker();                                      // Learner 创建对应的 SessionTracker
+            zk.createSessionTracker();                                      // Learner 创建对应的 SessionTracker (Follower/Observer)
             
             long lastQueued = 0;
 

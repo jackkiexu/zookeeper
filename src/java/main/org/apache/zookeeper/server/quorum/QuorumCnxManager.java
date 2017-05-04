@@ -503,7 +503,7 @@ public class QuorumCnxManager {
 
     /**
      * Thread to listen on some port
-     * 这里的 Listener 会监听在  Leader 选举的端口
+     * 这里的 Listener 会监听在  Leader 选举的端口, 也就是配置信息里面(比如 server.1=127.0.0.1:2888:3888, 这里就是 3888 )最后一个端口号
      */
     public class Listener extends Thread {
 
@@ -802,8 +802,7 @@ public class QuorumCnxManager {
                     addToRecvQueue(new Message(message.duplicate(), sid));     // 将消息加入队列 (注意, 前方高能, 所有 ReceiveWork 公用一个  Queue)
                 }
             } catch (Exception e) {
-                LOG.warn("Connection broken for id " + sid + ", my id = " + 
-                        self.getId() + ", error = " , e);
+                LOG.warn("Connection broken for id " + sid + ", my id = " + self.getId() + ", error = " , e);
             } finally {
                 LOG.warn("Interrupting SendWorker");
                 sw.finish();                                                    // 关闭 SenderWork

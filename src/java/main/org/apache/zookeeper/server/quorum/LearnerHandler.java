@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * 参考资料
+ * http://www.aboutyun.com/thread-10286-1-1.html
+ */
 
 package org.apache.zookeeper.server.quorum;
 
@@ -302,7 +306,7 @@ public class LearnerHandler extends Thread {
             ia = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));
             bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
             oa = BinaryOutputArchive.getArchive(bufferedOutput);
-
+            // 等待 Follower 发来数据包
             QuorumPacket qp = new QuorumPacket();
             ia.readRecord(qp, "packet");
             if(qp.getType() != Leader.FOLLOWERINFO && qp.getType() != Leader.OBSERVERINFO){
@@ -559,7 +563,7 @@ public class LearnerHandler extends Thread {
                 int type;
 
                 switch (qp.getType()) {
-                case Leader.ACK:
+                case Leader.ACK:                                                                              // ACK 包看看之前的投票是否结束
                     if (this.learnerType == LearnerType.OBSERVER) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Received ACK from Observer  " + this.sid);

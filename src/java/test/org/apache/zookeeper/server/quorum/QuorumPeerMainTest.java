@@ -80,6 +80,89 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
         }
     }
 
+    /**
+     * Verify the ability to start a cluster.
+     */
+    @Test
+    public void testQuorum01() throws Exception {
+        ClientBase.setupTestEnv();
+
+        final int CLIENT_PORT_QP1 = PortAssignment.unique();
+        final int CLIENT_PORT_QP2 = PortAssignment.unique();
+
+        String quorumCfgSection =
+                "server.1=127.0.0.1:" + PortAssignment.unique()
+                        + ":" + PortAssignment.unique()
+                        + "\nserver.2=127.0.0.1:" + PortAssignment.unique()
+                        + ":" + PortAssignment.unique();
+
+        LOG.info("quorumCfgSection :" + quorumCfgSection);
+        // 下面是模拟集群中有两台机器 q1, q2
+        MainThread q1 = new MainThread(1, CLIENT_PORT_QP1, quorumCfgSection);
+        MainThread q2 = new MainThread(2, CLIENT_PORT_QP2, quorumCfgSection);
+        q1.start();
+
+        Thread.sleep(10 * 1000);
+        LOG.info("");
+        LOG.info("");
+        LOG.info("*****************************************************************************************************");
+        LOG.info("");
+        LOG.info("");
+
+//        q2.start();
+
+        Assert.assertTrue("waiting for server 1 being up",
+                ClientBase.waitForServerUp("127.0.0.1:" + CLIENT_PORT_QP1,
+                        CONNECTION_TIMEOUT));
+/*        Assert.assertTrue("waiting for server 2 being up",
+                ClientBase.waitForServerUp("127.0.0.1:" + CLIENT_PORT_QP2,
+                        CONNECTION_TIMEOUT));*/
+
+        Thread.sleep(5 * 1000);
+    }
+
+    /**
+     * Verify the ability to start a cluster.
+     */
+    @Test
+    public void testQuorum02() throws Exception {
+        ClientBase.setupTestEnv();
+
+        final int CLIENT_PORT_QP1 = PortAssignment.unique();
+        final int CLIENT_PORT_QP2 = PortAssignment.unique();
+
+        String quorumCfgSection =
+                "server.1=127.0.0.1:" + PortAssignment.unique()
+                        + ":" + PortAssignment.unique()
+                        + "\nserver.2=127.0.0.1:" + PortAssignment.unique()
+                        + ":" + PortAssignment.unique();
+
+        LOG.info("quorumCfgSection :" + quorumCfgSection);
+        // 下面是模拟集群中有两台机器 q1, q2
+        MainThread q1 = new MainThread(1, CLIENT_PORT_QP1, quorumCfgSection);
+        MainThread q2 = new MainThread(2, CLIENT_PORT_QP2, quorumCfgSection);
+//        q1.start();
+
+//        Thread.sleep(10 * 1000);
+        LOG.info("");
+        LOG.info("");
+        LOG.info("*****************************************************************************************************");
+        LOG.info("");
+        LOG.info("");
+
+        q2.start();
+
+/*        Assert.assertTrue("waiting for server 1 being up",
+                ClientBase.waitForServerUp("127.0.0.1:" + CLIENT_PORT_QP1,
+                        CONNECTION_TIMEOUT));*/
+        Assert.assertTrue("waiting for server 2 being up",
+                ClientBase.waitForServerUp("127.0.0.1:" + CLIENT_PORT_QP2,
+                        CONNECTION_TIMEOUT));
+
+        Thread.sleep(5 * 1000);
+    }
+
+
 	/**
      * Verify the ability to start a cluster.
      */
@@ -103,6 +186,11 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
         q1.start();
 
         Thread.sleep(10 * 1000);
+        LOG.info("");
+        LOG.info("");
+        LOG.info("*****************************************************************************************************");
+        LOG.info("");
+        LOG.info("");
 
         q2.start();
 
@@ -113,6 +201,8 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
                 ClientBase.waitForServerUp("127.0.0.1:" + CLIENT_PORT_QP2,
                         CONNECTION_TIMEOUT));
 
+        Thread.sleep(5 * 1000);
+/*
 
         ZooKeeper zk = new ZooKeeper("127.0.0.1:" + CLIENT_PORT_QP1,
                 ClientBase.CONNECTION_TIMEOUT, this);
@@ -138,7 +228,7 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
                         ClientBase.CONNECTION_TIMEOUT));
         Assert.assertTrue("waiting for server 2 down",
                 ClientBase.waitForServerDown("127.0.0.1:" + CLIENT_PORT_QP2,
-                        ClientBase.CONNECTION_TIMEOUT));
+                        ClientBase.CONNECTION_TIMEOUT));*/
     }
 
     /**

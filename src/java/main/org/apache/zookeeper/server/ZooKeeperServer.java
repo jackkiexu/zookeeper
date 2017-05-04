@@ -554,7 +554,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         ByteBuffer to = ByteBuffer.allocate(4);
         to.putInt(timeout);
         cnxn.setSessionId(sessionId);
-        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null); // ?????? session ????
+        submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null);
         return sessionId;                                             // 返回此回话对应的 sessionId
     }
 

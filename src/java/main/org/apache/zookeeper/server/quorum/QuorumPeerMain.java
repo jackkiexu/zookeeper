@@ -131,8 +131,7 @@ public class QuorumPeerMain {
       try {
                                                                                         // 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
           ServerCnxnFactory cnxnFactory = ServerCnxnFactory.createFactory();
-          cnxnFactory.configure(config.getClientPortAddress(),
-                                config.getMaxClientCnxns());
+          cnxnFactory.configure(config.getClientPortAddress(), config.getMaxClientCnxns());
   
           quorumPeer = new QuorumPeer();
           quorumPeer.setClientPortAddress(config.getClientPortAddress());

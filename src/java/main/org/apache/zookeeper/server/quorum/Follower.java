@@ -65,7 +65,7 @@ public class Follower extends Learner{
         self.end_fle = 0;
         fzk.registerJMX(new FollowerBean(this, zk), self.jmxLocalPeerBean);
         try {
-            InetSocketAddress addr = findLeader();                                  // 找到 Leader 的地址
+            InetSocketAddress addr = findLeader();                                  // 根据当前的 QuorumPeer 的 Vote 获取 leader.myid, 从而获取其对应的 Leader.port
             try {
                 connectToLeader(addr);                                              // 连接 Leader
                 long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);
@@ -80,7 +80,7 @@ public class Follower extends Learner{
                 }
                 syncWithLeader(newEpochZxid);                                       // 与 leader 进行数据同步
                 QuorumPacket qp = new QuorumPacket();
-                while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理
+                while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理, 线程一直在这边循环
                     readPacket(qp);
                     processPacket(qp);
                 }

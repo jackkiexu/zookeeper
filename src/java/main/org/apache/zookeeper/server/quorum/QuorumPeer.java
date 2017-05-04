@@ -778,7 +778,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     } else {
                         try {
                             setBCVote(null);
-                            setCurrentVote(makeLEStrategy().lookForLeader());
+                            setCurrentVote(makeLEStrategy().lookForLeader());                       // 选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception", e);
                             setPeerState(ServerState.LOOKING);
