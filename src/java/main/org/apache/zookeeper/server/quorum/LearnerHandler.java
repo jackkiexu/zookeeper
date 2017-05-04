@@ -322,6 +322,7 @@ public class LearnerHandler extends Thread {
             	} else {
             		LearnerInfo li = new LearnerInfo();                                                // 反序列化 LearnerInfo
             		ByteBufferInputStream.byteBuffer2Record(ByteBuffer.wrap(learnerInfoData), li);
+                    LOG.info("li :" + li);
             		this.sid = li.getServerid();
             		this.version = li.getProtocolVersion();
             	}
@@ -329,8 +330,7 @@ public class LearnerHandler extends Thread {
             	this.sid = leader.followerCounter.getAndDecrement();
             }
 
-            LOG.info("Follower sid: " + sid + " : info : "
-                    + leader.self.quorumPeers.get(sid));
+            LOG.info("Follower sid: " + sid + " : info : " + leader.self.quorumPeers.get(sid));
                         
             if (qp.getType() == Leader.OBSERVERINFO) {
                   learnerType = LearnerType.OBSERVER;
@@ -390,7 +390,7 @@ public class LearnerHandler extends Thread {
                         +" peerLastZxid=0x"+Long.toHexString(peerLastZxid));
 
                 LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 查看是否还有需要的投票
-
+                LOG.info("proposals:"+proposals);
                 if (proposals.size() != 0) {                                                            // 处理这些还需要的投票
                     LOG.debug("proposal size is {}", proposals.size());                             // 如果 follower 还没有处理这个事务, 有可能是 down后又恢复了, 则继续处理
                     if ((maxCommittedLog >= peerLastZxid)
