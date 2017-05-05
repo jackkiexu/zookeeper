@@ -66,7 +66,7 @@ public class FollowerRequestProcessor extends Thread implements
                 // We want to queue the request to be processed before we submit
                 // the request to the leader so that we are ready to receive
                 // the response
-                nextProcessor.processRequest(request);
+                nextProcessor.processRequest(request);            // 将提交给 FollowerRequestProcessor 的请求交给 CommitProcessor 来进行处理
                 
                 // We now ship the request to the leader. As with all
                 // other quorum operations, sync also follows this code
@@ -85,7 +85,7 @@ public class FollowerRequestProcessor extends Thread implements
                 case OpCode.createSession:
                 case OpCode.closeSession:
                 case OpCode.multi:
-                    zks.getFollower().request(request);
+                    zks.getFollower().request(request);             // 将事务类的请求都交给 Leader 处理
                     break;
                 }
             }
@@ -97,7 +97,7 @@ public class FollowerRequestProcessor extends Thread implements
 
     public void processRequest(Request request) {
         if (!finished) {
-            queuedRequests.add(request);
+            queuedRequests.add(request);                // 将要处理的 request 加入队列
         }
     }
 

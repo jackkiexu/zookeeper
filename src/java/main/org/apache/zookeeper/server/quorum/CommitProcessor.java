@@ -28,6 +28,10 @@ import org.apache.zookeeper.server.Request;
 import org.apache.zookeeper.server.RequestProcessor;
 
 /**
+ * 参考资料
+ * http://blog.csdn.net/vinowan/article/details/22197385
+ * http://www.aboutyun.com/thread-10287-1-1.html
+ *
  * This RequestProcessor matches the incoming committed requests with the
  * locally submitted requests. The trick is that locally submitted requests that
  * change the state of the system will come back as incoming committed requests,
@@ -39,14 +43,17 @@ public class CommitProcessor extends Thread implements RequestProcessor {
     /**
      * Requests that we are holding until the commit comes in.
      */
+    // 等待 ACK 确认的 Request
     LinkedList<Request> queuedRequests = new LinkedList<Request>();
 
     /**
      * Requests that have been committed.
      */
+    // 已经 Proposal ACK 过半确认过的 Request, 一般的要么是 Leader 自己 commit, 要么就是 Follower 接收到 Leader 的 commit 消息
     LinkedList<Request> committedRequests = new LinkedList<Request>();
 
     RequestProcessor nextProcessor;
+    // 等待被 nextProcessor 处理的队列, 其里面的数据是从 committedRequests, queuedRequests 里面获取来的
     ArrayList<Request> toProcess = new ArrayList<Request>();
 
     /**
@@ -68,21 +75,21 @@ public class CommitProcessor extends Thread implements RequestProcessor {
     public void run() {
         try {
             Request nextPending = null;            
-            while (!finished) {
+            while (!finished) {                                                             // while loop
                 int len = toProcess.size();
                 for (int i = 0; i < len; i++) {
-                    nextProcessor.processRequest(toProcess.get(i));
+                    nextProcessor.processRequest(toProcess.get(i));                       // 将 ack 过半的 Request 丢给 ToBeAppliedRequestProcessor 来进行处理
                 }
                 toProcess.clear();
                 synchronized (this) {
-                    if ((queuedRequests.size() == 0 || nextPending != null)
+                    if ((queuedRequests.size() == 0 || nextPending != null)               // 如果没有 Commit 的请求, 则进行wait, 直到 commit 请求的到来
                             && committedRequests.size() == 0) {
                         wait();
                         continue;
                     }
                     // First check and see if the commit came in for the pending
                     // request
-                    if ((queuedRequests.size() == 0 || nextPending != null)
+                    if ((queuedRequests.size() == 0 || nextPending != null)              // 有 commit request 进来, 获取 commit request
                             && committedRequests.size() > 0) {
                         Request r = committedRequests.remove();
                         /*
@@ -91,17 +98,17 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                          * use nextPending because it has the cnxn member set
                          * properly.
                          */
-                        if (nextPending != null
-                                && nextPending.sessionId == r.sessionId
+                        if (nextPending != null                                             // 这里其实就是比较 nextPending 与 committedRequests 中的 request 请求
+                                && nextPending.sessionId == r.sessionId                   // 而 nextPending 又是从 queuedRequests 里面拿出来的, 若相同, 则直接用 committedRequests 里面的 消息头, 消息体, zxid
                                 && nextPending.cxid == r.cxid) {
                             // we want to send our version of the request.
                             // the pointer to the connection in the request
                             nextPending.hdr = r.hdr;
                             nextPending.txn = r.txn;
                             nextPending.zxid = r.zxid;
-                            toProcess.add(nextPending);
+                            toProcess.add(nextPending);                                    // 将 请求 直接加入 toProcess, 直到下次 loop 被 nextProcessor 处理
                             nextPending = null;
-                        } else {
+                        } else {                                                            // Leader 直接 调用 commit 方法提交的 请求, 直接加入 toProcess, 直到下次 loop 被 nextProcessor 处理
                             // this request came from someone else so just
                             // send the commit packet
                             toProcess.add(r);
@@ -127,7 +134,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                         case OpCode.setACL:
                         case OpCode.createSession:
                         case OpCode.closeSession:
-                            nextPending = request;
+                            nextPending = request;                                            // 若请求是事务请求, 则将 follower 自己提交的 request 赋值给 nextPending
                             break;
                         case OpCode.sync:
                             if (matchSyncs) {

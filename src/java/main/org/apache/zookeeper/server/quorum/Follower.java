@@ -68,20 +68,24 @@ public class Follower extends Learner{
             InetSocketAddress addr = findLeader();                                  // 根据当前的 QuorumPeer 的 Vote 获取 leader.myid, 从而获取其对应的 Leader.port
             try {
                 connectToLeader(addr);                                              // 连接 Leader
-                long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);
+                long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);     // 向 Leader 发送一个 Leader.FOLLOWERINFO 的数据包
+                LOG.info("newEpochZxid:" + newEpochZxid);
 
                 //check to see if the leader zxid is lower than ours
                 //this should never happen but is just a safety check
-                long newEpoch = ZxidUtils.getEpochFromZxid(newEpochZxid);
+                long newEpoch = ZxidUtils.getEpochFromZxid(newEpochZxid);           // 返回 leader 的 zxid
+                LOG.info("newEpoch :" + newEpoch);
                 if (newEpoch < self.getAcceptedEpoch()) {
                     LOG.error("Proposed leader epoch " + ZxidUtils.zxidToString(newEpochZxid)
                             + " is less than our accepted epoch " + ZxidUtils.zxidToString(self.getAcceptedEpoch()));
                     throw new IOException("Error: Epoch of leader is lower");
                 }
+                LOG.info("syncWithLeader :" + newEpochZxid);
                 syncWithLeader(newEpochZxid);                                       // 与 leader 进行数据同步
                 QuorumPacket qp = new QuorumPacket();
                 while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理, 线程一直在这边循环
                     readPacket(qp);
+                    LOG.info("qp:" + qp);
                     processPacket(qp);
                 }
             } catch (IOException e) {

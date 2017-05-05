@@ -50,6 +50,9 @@ import org.apache.zookeeper.server.util.ZxidUtils;
 import org.apache.zookeeper.txn.TxnHeader;
 
 /**
+ * 参考资料
+ * http://blog.csdn.net/vinowan/article/details/22196897
+ *
  * This class is the superclass of two of the three main actors in a ZK
  * ensemble: Followers and Observers. Both Followers and Observers share 
  * a good deal of code which is moved into Peer to avoid duplication. 
@@ -175,7 +178,7 @@ public class Learner {
      * @throws IOException
      */
     void request(Request request) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();       // 将要发送给 Leader 的数据包序列化
         DataOutputStream oa = new DataOutputStream(baos);
         oa.writeLong(request.sessionId);
         oa.writeInt(request.cxid);
@@ -188,10 +191,10 @@ public class Learner {
             request.request.rewind();
             oa.write(b);
         }
-        oa.close();
+        oa.close();                                                     // 封装请求数据包
         QuorumPacket qp = new QuorumPacket(Leader.REQUEST, -1, baos.toByteArray(), request.authInfo);
 
-        writePacket(qp, true);
+        writePacket(qp, true);                                         // 将 事务请求 request 发送给 Leader
     }
     
     /**
@@ -246,8 +249,7 @@ public class Learner {
             }
             Thread.sleep(1000);
         }
-        leaderIs = BinaryInputArchive.getArchive(new BufferedInputStream(
-                sock.getInputStream()));
+        leaderIs = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));   // 封装对应的 I/O 数据流
         bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
         leaderOs = BinaryOutputArchive.getArchive(bufferedOutput);
     }   
@@ -268,12 +270,12 @@ public class Learner {
     	long lastLoggedZxid = self.getLastLoggedZxid();
         QuorumPacket qp = new QuorumPacket();                
         qp.setType(pktType);                                                    // 若是 Follower ,则当前的角色是  Leader.FOLLOWERINFO
-        qp.setZxid(ZxidUtils.makeZxid(self.getAcceptedEpoch(), 0));
+        qp.setZxid(ZxidUtils.makeZxid(self.getAcceptedEpoch(), 0));             // Follower 的 lastZxid 的值
         
         /*
          * Add sid to payload
          */
-        LearnerInfo li = new LearnerInfo(self.getId(), 0x10000);
+        LearnerInfo li = new LearnerInfo(self.getId(), 0x10000);               // 将 Follower 的信息封装成 LearnerInfo
         LOG.info("li:" + li);
 
         ByteArrayOutputStream bsid = new ByteArrayOutputStream();
@@ -418,14 +420,14 @@ public class Learner {
                         if (pif.hdr.getZxid() != qp.getZxid()) {
                             LOG.warn("Committing " + qp.getZxid() + ", but next proposal is " + pif.hdr.getZxid());
                         } else {
-                            zk.processTxn(pif.hdr, pif.rec);
+                            zk.processTxn(pif.hdr, pif.rec);               // 处理对应的事件
                             packetsNotCommitted.remove();
                         }
                     } else {
                         packetsCommitted.add(qp.getZxid());
                     }
                     break;
-                case Leader.INFORM:
+                case Leader.INFORM:                                                         // 这个 INFORM 只有Observer 才会处理
                     /*
                      * Only observer get this type of packet. We treat this
                      * as receiving PROPOSAL and COMMMIT.
@@ -483,12 +485,12 @@ public class Learner {
                 }
             }
         }
-        ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));
+        ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));                                           // 更新 zixd newLeaderZxid & ~0xffffffffL, 表明已经切换到新的 epoch
 
         LOG.info("ack:" + ack);
-        writePacket(ack, true);
+        writePacket(ack, true);                                                                // 回复 leader ack 消息
         sock.setSoTimeout(self.tickTime * self.syncLimit);                                  // 设置 InputStream.read 的超时时间
-        zk.startup();                                                                           // 启动 zookeeper server
+        zk.startup();                                                                           // 启动 Learner zookeeper server
         /*
          * Update the election vote here to ensure that all members of the
          * ensemble report the same vote to new servers that start up and
@@ -496,7 +498,7 @@ public class Learner {
          * 
          * @see https://issues.apache.org/jira/browse/ZOOKEEPER-1732
          */
-        self.updateElectionVote(newEpoch);
+        self.updateElectionVote(newEpoch);                                                      // 更新最新的 newEpoch
 
         // We need to log the stuff that came in between the snapshot and the uptodate
         if (zk instanceof FollowerZooKeeperServer) {

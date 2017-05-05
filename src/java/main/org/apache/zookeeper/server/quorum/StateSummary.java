@@ -54,4 +54,12 @@ public class StateSummary {
 	public int hashCode() {
 		return (int)(currentEpoch ^ lastZxid);
 	}
+
+	@Override
+	public String toString() {
+		return "StateSummary{" +
+				"currentEpoch=" + currentEpoch +
+				", lastZxid=" + lastZxid +
+				'}';
+	}
 }

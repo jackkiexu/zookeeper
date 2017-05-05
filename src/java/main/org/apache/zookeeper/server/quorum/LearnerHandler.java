@@ -201,7 +201,7 @@ public class LearnerHandler extends Thread {
             try {
                 QuorumPacket p;
                 p = queuedPackets.poll();
-                LOG.info(" P :" + p);
+                LOG.info(" p :" + p);
                 if (p == null) {
                     bufferedOutput.flush();
                     p = queuedPackets.take();
@@ -316,18 +316,17 @@ public class LearnerHandler extends Thread {
             // 等待 Follower 发来数据包
             QuorumPacket qp = new QuorumPacket();
             long a1 = System.currentTimeMillis();
-            ia.readRecord(qp, "packet");
+            ia.readRecord(qp, "packet");                                                             // 读取 Follower 发过来的 FOLLOWERINFO 数据包
             LOG.info("System.currentTimeMillis() - a1 : " + (System.currentTimeMillis() - a1));
             LOG.info("qp:" + qp);
 
-            if(qp.getType() != Leader.FOLLOWERINFO && qp.getType() != Leader.OBSERVERINFO){
-            	LOG.error("First packet " + qp.toString()
-                        + " is not FOLLOWERINFO or OBSERVERINFO!");
+            if(qp.getType() != Leader.FOLLOWERINFO && qp.getType() != Leader.OBSERVERINFO){         // 不应该有这种数据的存在
+            	LOG.error("First packet " + qp.toString() + " is not FOLLOWERINFO or OBSERVERINFO!");
                 return;
             }
             byte learnerInfoData[] = qp.getData();                                                      // 读取参与者发来的数据
 
-            LOG.info("learnerInfoData :" + Arrays.asList(learnerInfoData));
+            LOG.info("learnerInfoData :" + Arrays.toString(learnerInfoData));                       // 这里的 learnerInfo 就是 Follower/Observer 的信息
             if (learnerInfoData != null) {
             	if (learnerInfoData.length == 8) {
             		ByteBuffer bbsid = ByteBuffer.wrap(learnerInfoData);
@@ -371,12 +370,12 @@ public class LearnerHandler extends Thread {
                 ByteBuffer.wrap(ver).putInt(0x10000);
                 QuorumPacket newEpochPacket = new QuorumPacket(Leader.LEADERINFO, ZxidUtils.makeZxid(newEpoch, 0), ver, null);
                 LOG.info("newEpochPacket:" + newEpochPacket);
-                oa.writeRecord(newEpochPacket, "packet");
+                oa.writeRecord(newEpochPacket, "packet");                                        // 将 Leader 的信息发送给对应的 Follower / Observer
                 bufferedOutput.flush();
                 QuorumPacket ackEpochPacket = new QuorumPacket();
                 ia.readRecord(ackEpochPacket, "packet");                                          // 这一步就是 read 与 集群中的参与者发来的数据信息, 这里的 InputStream 就是 sock.getInputStream()
 
-                LOG.info("ackEpochPacket:" +ackEpochPacket);
+                LOG.info("ackEpochPacket:" +ackEpochPacket);                                    // 刚刚发送了 leader 的信息, 现在获取一下确认的 ack
 
                 if (ackEpochPacket.getType() != Leader.ACKEPOCH) {
                     LOG.error(ackEpochPacket.toString()
@@ -406,7 +405,7 @@ public class LearnerHandler extends Thread {
             ReadLock rl = lock.readLock();
             try {
                 rl.lock();        
-                final long maxCommittedLog = leader.zk.getZKDatabase().getmaxCommittedLog();
+                final long maxCommittedLog = leader.zk.getZKDatabase().getmaxCommittedLog();         // zookeeper 会缓存 maxCommittedLog -> minCommittedLog 之间的事务
                 final long minCommittedLog = leader.zk.getZKDatabase().getminCommittedLog();
 
                 LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
@@ -486,8 +485,8 @@ public class LearnerHandler extends Thread {
                     // The leader may recently take a snapshot, so the committedLog
                     // is empty. We don't need to send snapshot if the follow
                     // is already sync with in-memory db.
-                    LOG.debug("committedLog is empty but leader and follower "
-                            + "are in sync, zxid=0x{}",
+                    LOG.info("committedLog is empty but leader and follower "
+                                    + "are in sync, zxid=0x{}",
                             Long.toHexString(peerLastZxid));
 
                     LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
@@ -597,7 +596,7 @@ public class LearnerHandler extends Thread {
 
             while (true) {
                 qp = new QuorumPacket();
-                ia.readRecord(qp, "packet");
+                ia.readRecord(qp, "packet");                                                        // 这里其实就是不断的从数据流(来源于 Follower 的) 读取数据
                 LOG.info("qp:" + qp);
 
                 long traceMask = ZooTrace.SERVER_PACKET_TRACE_MASK;
@@ -623,17 +622,19 @@ public class LearnerHandler extends Thread {
                             LOG.debug("Received ACK from Observer  " + this.sid);
                         }
                     }
+                    LOG.info("syncLimitCheck.updateAck(qp.getZxid()):"  + qp.getZxid());
                     syncLimitCheck.updateAck(qp.getZxid());
+                    LOG.info("this.sid:" + this.sid + ", qp.getZxid():" + qp.getZxid() + ", sock.getLocalSocketAddress():" + sock.getLocalSocketAddress());
                     leader.processAck(this.sid, qp.getZxid(), sock.getLocalSocketAddress());                // ack 包处理成功, 如果 follower 数据同步成功, 则将它添加到 NEWLEADER 这个投票的结果中
                     break;
                 case Leader.PING:                                                                            // ping 数据包, 更新 session 的超时时间
                     // Process the touches
-                    ByteArrayInputStream bis = new ByteArrayInputStream(qp
-                            .getData());
+                    ByteArrayInputStream bis = new ByteArrayInputStream(qp.getData());
                     DataInputStream dis = new DataInputStream(bis);
                     while (dis.available() > 0) {
                         long sess = dis.readLong();
                         int to = dis.readInt();
+                        LOG.info("leader.zk.touch: sess" + sess + ", to:"+to);
                         leader.zk.touch(sess, to);
                     }
                     break;
@@ -642,10 +643,12 @@ public class LearnerHandler extends Thread {
                     dis = new DataInputStream(bis);
                     long id = dis.readLong();
                     int to = dis.readInt();
+                    LOG.info("id:"+id + ", to:" + to);
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     DataOutputStream dos = new DataOutputStream(bos);
                     dos.writeLong(id);
                     boolean valid = leader.zk.touch(id, to);
+                    LOG.info("id:" + id + ", to:" + to + ", valid:" + valid);
                     if (valid) {
                         try {
                             //set the session owner
@@ -664,22 +667,24 @@ public class LearnerHandler extends Thread {
                     }
                     dos.writeBoolean(valid);
                     qp.setData(bos.toByteArray());
-                    queuedPackets.add(qp);
+                    queuedPackets.add(qp);                                                               // 将数据包返回给对应的 follower
                     break;
                 case Leader.REQUEST:                                                                      // REQUEST 数据包, follower 会将事务请求转发给 leader 进行处理
                     bb = ByteBuffer.wrap(qp.getData());
                     sessionId = bb.getLong();
                     cxid = bb.getInt();
                     type = bb.getInt();
-                    bb = bb.slice();
+                    bb = bb.slice();                                                                       // 读取事务信息
                     Request si;
+                    LOG.info(" sessionId:" + sessionId + ", cxid:" + cxid + ", type:" + type);
                     if(type == OpCode.sync){
                         si = new LearnerSyncRequest(this, sessionId, cxid, type, bb, qp.getAuthinfo());
                     } else {
                         si = new Request(null, sessionId, cxid, type, bb, qp.getAuthinfo());
                     }
                     si.setOwner(this);
-                    leader.zk.submitRequest(si);
+                    LOG.info("si:" + si);
+                    leader.zk.submitRequest(si);                                                         // 将事务请求的信息交由 Leader 的 RequestProcessor 处理
                     break;
                 default:
                 }
