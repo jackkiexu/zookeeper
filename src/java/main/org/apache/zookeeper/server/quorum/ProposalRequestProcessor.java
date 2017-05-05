@@ -72,14 +72,14 @@ public class ProposalRequestProcessor implements RequestProcessor {
             zks.getLeader().processSync((LearnerSyncRequest)request);
         } else {
                 nextProcessor.processRequest(request);
-            if (request.hdr != null) {
+            if (request.hdr != null) {                                        // 若是 事务请求
                 // We need to sync and get consensus on any transactions
                 try {
-                    zks.getLeader().propose(request);
+                    zks.getLeader().propose(request);                          // Leader 将 request 发送给 Follower
                 } catch (XidRolloverException e) {
                     throw new RequestProcessorException(e.getMessage(), e);
                 }
-                syncProcessor.processRequest(request);
+                syncProcessor.processRequest(request);                       // 将 request 交给 syncProcessor 进行落磁盘
             }
         }
     }

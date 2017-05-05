@@ -66,6 +66,11 @@ import org.apache.zookeeper.OpResult.SetDataResult;
 import org.apache.zookeeper.OpResult.ErrorResult;
 
 /**
+ *
+ * 参考资料
+ * http://blog.csdn.net/vinowan/article/details/22197513
+ *
+ *
  * This Request processor actually applies any transaction associated with a
  * request and services any queries. It is always at the end of a
  * RequestProcessor chain (hence the name), so it does not have a nextProcessor

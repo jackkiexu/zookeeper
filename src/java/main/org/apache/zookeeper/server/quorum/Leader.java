@@ -50,6 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 参考资料
+ * http://blog.csdn.net/vinowan/article/details/22197461
+ *
  * This class has the control logic for the Leader.
  */
 public class Leader {
@@ -629,6 +632,9 @@ public class Leader {
         }
     }
 
+    /**
+     * 维护 Leader 类的 toBeApplied 队列, 这个队列中保存着已经完成 投票的 Request 事件
+     */
     static class ToBeAppliedRequestProcessor implements RequestProcessor {
         private RequestProcessor next;
 
@@ -664,8 +670,8 @@ public class Leader {
          */
         public void processRequest(Request request) throws RequestProcessorException {
             // request.addRQRec(">tobe");
-            next.processRequest(request);
-            Proposal p = toBeApplied.peek();
+            next.processRequest(request);                   // 交由 FinalRequestProcessor commit 到 ZKDatabase 里面s
+            Proposal p = toBeApplied.peek();               // 进行 request 从 toBeApplied 删除
             if (p != null && p.request != null
                     && p.request.zxid == request.zxid) {
                 toBeApplied.remove();

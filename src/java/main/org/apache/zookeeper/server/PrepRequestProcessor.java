@@ -79,7 +79,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(PrepRequestProcessor.class);
 
     static boolean skipACL;
-    static {
+    static {                                    // 获取配置信息, 是否跳过 权限验证
         skipACL = System.getProperty("zookeeper.skipACL", "no").equals("yes");
         if (skipACL) {
             LOG.info("zookeeper.skipACL==\"yes\", ACL checks will be skipped");
@@ -91,9 +91,9 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
      * should never be useed otherwise
      */
     private static  boolean failCreate = false;
-
+    // 已提交请求的队列
     LinkedBlockingQueue<Request> submittedRequests = new LinkedBlockingQueue<Request>();
-
+    // 下个处理器
     RequestProcessor nextProcessor;
 
     ZooKeeperServer zks;
@@ -117,7 +117,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     public void run() {
         try {
             while (true) {
-                Request request = submittedRequests.take();
+                Request request = submittedRequests.take();                         // 从 queue 里面拿出 request, 没有就阻塞
                 long traceMask = ZooTrace.CLIENT_REQUEST_TRACE_MASK;
                 if (request.type == OpCode.ping) {
                     traceMask = ZooTrace.CLIENT_PING_TRACE_MASK;
@@ -125,12 +125,12 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 if (LOG.isTraceEnabled()) {
                     ZooTrace.logRequest(LOG, traceMask, 'P', request, "");
                 }
-                if (Request.requestOfDeath == request) {
+                if (Request.requestOfDeath == request) {                           // 在关闭处理器后, 会添加 requestOfDeath, 表示关闭处理器后不再接收请求
                     break;
                 }
                 pRequest(request);
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException e) {                                          // 异常处理
             LOG.error("Unexpected interruption", e);
         } catch (RequestProcessorException e) {
             if (e.getCause() instanceof XidRolloverException) {
@@ -215,7 +215,9 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     		    if (lastSlash == -1 || path.indexOf('\0') != -1) {
     		        continue;
     		    }
+                // 提取节点的父节点路径
     		    String parentPath = path.substring(0, lastSlash);
+                // 获取父节点的 record
     		    ChangeRecord parentCr = getRecordForPath(parentPath);
     		    if (parentCr != null) {
     		        pendingChangeRecords.put(parentPath, parentCr);
@@ -326,35 +328,35 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                                     zks.getTime(), type);
 
         switch (type) {
-            case OpCode.create:                
+            case OpCode.create:                                                                // 创建 path 请求
                 zks.sessionTracker.checkSession(request.sessionId, request.getOwner());     //  进行校验 session
                 CreateRequest createRequest = (CreateRequest)record;   
                 if(deserialize)
                     ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);   // 从 request.request 里面发序列化出 createRequest
-                String path = createRequest.getPath();
+                String path = createRequest.getPath();                                          // 获取路径
                 int lastSlash = path.lastIndexOf('/');
                 if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {               // 校验 path 路径
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
                     throw new KeeperException.BadArgumentsException(path);
                 }
-                List<ACL> listACL = removeDuplicates(createRequest.getAcl());
+                List<ACL> listACL = removeDuplicates(createRequest.getAcl());                   // ACL 去重
                 if (!fixupACL(request.authInfo, listACL)) {
                     throw new KeeperException.InvalidACLException(path);
                 }
-                String parentPath = path.substring(0, lastSlash);
+                String parentPath = path.substring(0, lastSlash);                               // 获取父节点
                 ChangeRecord parentRecord = getRecordForPath(parentPath);
 
-                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE,
+                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE,                         // 检查 acl
                         request.authInfo);
-                int parentCVersion = parentRecord.stat.getCversion();
+                int parentCVersion = parentRecord.stat.getCversion();                          // 获取父节点的 子节点创建的版本
                 CreateMode createMode =
                     CreateMode.fromFlag(createRequest.getFlags());
-                if (createMode.isSequential()) {
+                if (createMode.isSequential()) {                                                // 判断是否是 sequential 模式 创建 path
                     path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);
                 }
                 try {
-                    PathUtils.validatePath(path);
+                    PathUtils.validatePath(path);                                               // path 校验
                 } catch(IllegalArgumentException ie) {
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
@@ -367,38 +369,38 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 } catch (KeeperException.NoNodeException e) {
                     // ignore this one
                 }
-                boolean ephemeralParent = parentRecord.stat.getEphemeralOwner() != 0;
+                boolean ephemeralParent = parentRecord.stat.getEphemeralOwner() != 0;       // 父节点是否是临时节点 (不允许在临时节点下面创建节点)
                 if (ephemeralParent) {
                     throw new KeeperException.NoChildrenForEphemeralsException(path);
                 }
-                int newCversion = parentRecord.stat.getCversion()+1;
-                request.txn = new CreateTxn(path, createRequest.getData(),
+                int newCversion = parentRecord.stat.getCversion()+1;                        // 创建子节点的 version ++
+                request.txn = new CreateTxn(path, createRequest.getData(),                  // 构建 CreateTxn
                         listACL,
                         createMode.isEphemeral(), newCversion);
                 StatPersisted s = new StatPersisted();
-                if (createMode.isEphemeral()) {
+                if (createMode.isEphemeral()) {                                             // 判断创建的 path 是否是 临时节点
                     s.setEphemeralOwner(request.sessionId);
                 }
                 parentRecord = parentRecord.duplicate(request.hdr.getZxid());
-                parentRecord.childCount++;
-                parentRecord.stat.setCversion(newCversion);
-                addChangeRecord(parentRecord);
-                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,
+                parentRecord.childCount++;                                                // 父 path 的 子节点数 ++
+                parentRecord.stat.setCversion(newCversion);                                // 设置新的 cversion
+                addChangeRecord(parentRecord);                                              // 添加父节点要改变的事件到对应的队列里面
+                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,           // 将子节点新生成的事件添加到对应的对立里面
                         0, listACL));
                 break;
-            case OpCode.delete:
-                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
+            case OpCode.delete:                                                                         // 删除 path 请求
+                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());              // 检查 session (1. 过期, 2. 是否属于对应 owner)
                 DeleteRequest deleteRequest = (DeleteRequest)record;
-                if(deserialize)
+                if(deserialize)                                                                          // 反序列化 生成 deleteRequest
                     ByteBufferInputStream.byteBuffer2Record(request.request, deleteRequest);
-                path = deleteRequest.getPath();
+                path = deleteRequest.getPath();                                                          // 要删除的 path
                 lastSlash = path.lastIndexOf('/');
                 if (lastSlash == -1 || path.indexOf('\0') != -1
                         || zks.getZKDatabase().isSpecialPath(path)) {
                     throw new KeeperException.BadArgumentsException(path);
                 }
-                parentPath = path.substring(0, lastSlash);
-                parentRecord = getRecordForPath(parentPath);
+                parentPath = path.substring(0, lastSlash);                                              // 获取父节点
+                parentRecord = getRecordForPath(parentPath);                                            //
                 ChangeRecord nodeRecord = getRecordForPath(path);
                 checkACL(zks, parentRecord.acl, ZooDefs.Perms.DELETE,
                         request.authInfo);
@@ -529,29 +531,29 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         
         try {
             switch (request.type) {
-                case OpCode.create:
+                case OpCode.create:                                                                     // 新建 path 请求
                 CreateRequest createRequest = new CreateRequest();
                 pRequest2Txn(request.type, zks.getNextZxid(), request, createRequest, true);
                 break;
-            case OpCode.delete:
+            case OpCode.delete:                                                                         // 删除请求
                 DeleteRequest deleteRequest = new DeleteRequest();               
                 pRequest2Txn(request.type, zks.getNextZxid(), request, deleteRequest, true);
                 break;
-            case OpCode.setData:
+            case OpCode.setData:                                                                        // 设置数据请求
                 SetDataRequest setDataRequest = new SetDataRequest();                
                 pRequest2Txn(request.type, zks.getNextZxid(), request, setDataRequest, true);
                 break;
-            case OpCode.setACL:
+            case OpCode.setACL:                                                                         // 设置权限请求
                 SetACLRequest setAclRequest = new SetACLRequest();                
                 pRequest2Txn(request.type, zks.getNextZxid(), request, setAclRequest, true);
                 break;
-            case OpCode.check:
+            case OpCode.check:                                                                          // 版本检查请求
                 CheckVersionRequest checkRequest = new CheckVersionRequest();              
                 pRequest2Txn(request.type, zks.getNextZxid(), request, checkRequest, true);
                 break;
-            case OpCode.multi:
+            case OpCode.multi:                                                                          // 多重请求
                 MultiTransactionRecord multiRequest = new MultiTransactionRecord();
-                try {
+                try {                                                                                    // 序列化出 multiRequest
                     ByteBufferInputStream.byteBuffer2Record(request.request, multiRequest);
                 } catch(IOException e) {
                    request.hdr =  new TxnHeader(request.sessionId, request.cxid, zks.getNextZxid(),
@@ -563,7 +565,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 long zxid = zks.getNextZxid();
                 KeeperException ke = null;
 
-                //Store off current pending change records in case we need to rollback
+                //Store off current pending change records in case we need to rollback                    // 存储 multiRequest, 可能需要进行回滚
                 HashMap<String, ChangeRecord> pendingChanges = getPendingChanges(multiRequest);
 
                 int index = 0;
@@ -581,13 +583,13 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     
                     /* Prep the request and convert to a Txn */
                     else {
-                        try {
+                        try {                                                                           // 调用 pRequest2Txn 转成事务请求
                             pRequest2Txn(op.getType(), zxid, request, subrequest, false);
                         } catch (KeeperException e) {
                             if (ke == null) {
                                 ke = e;
                             }
-                            request.hdr.setType(OpCode.error);
+                            request.hdr.setType(OpCode.error);                                        // 异常处理
                             request.txn = new ErrorTxn(e.code().intValue());
                             LOG.info("Got user-level KeeperException when processing "
                             		+ request.toString() + " aborting remaining multi ops."
@@ -596,7 +598,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
 
                             request.setException(e);
 
-                            /* Rollback change records from failed multi-op */
+                            /* Rollback change records from failed multi-op */                         // 数据回滚
                             rollbackPendingChanges(zxid, pendingChanges);
                         }
                     }
@@ -608,23 +610,23 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
                     request.txn.serialize(boa, "request") ;
                     ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
-
+                                                                                                    // 将数据请求添加到对应的数组
                     txns.add(new Txn(request.hdr.getType(), bb.array()));
                     index++;
                 }
-
+                                                                                                   // 增加事务头
                 request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid, zks.getTime(), request.type);
-                request.txn = new MultiTxn(txns);
+                request.txn = new MultiTxn(txns);                                                 // 事务体
                 
                 break;
 
             //create/close session don't require request record
-            case OpCode.createSession:
+            case OpCode.createSession:                                                          // 创建关闭会话
             case OpCode.closeSession:
                 pRequest2Txn(request.type, zks.getNextZxid(), request, null, true);
                 break;
  
-            //All the rest don't need to create a Txn - just verify session
+            //All the rest don't need to create a Txn - just verify session                       // 下面的请求只需要验证会话
             case OpCode.sync:
             case OpCode.exists:
             case OpCode.getData:
@@ -669,8 +671,8 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 request.txn = new ErrorTxn(Code.MARSHALLINGERROR.intValue());
             }
         }
-        request.zxid = zks.getZxid();
-        nextProcessor.processRequest(request);
+        request.zxid = zks.getZxid();                                                            // 这里的 zxid 其实已经 ++ 了
+        nextProcessor.processRequest(request);                                                  // 将 request 交由下个处理器处理
     }
 
     private List<ACL> removeDuplicates(List<ACL> acl) {

@@ -28,6 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 参考
+ * http://blog.csdn.net/vinowan/article/details/22197227
+ *
  * This RequestProcessor logs requests to disk. It batches the requests to do
  * the io efficiently. The request is not passed to the next RequestProcessor
  * until its log has been synced to disk.
@@ -142,10 +145,10 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                     // track the number of records written to the log
                     if (zks.getZKDatabase().append(si)) {                                   // 最加数据到 txnLog 文件里面
                         logCount++;
-                        if (logCount > (snapCount / 2 + randRoll)) {                        // 日志 roll 阈值
+                        if (logCount > (snapCount / 2 + randRoll)) {                        // 日志 落磁盘 阈值
                             randRoll = r.nextInt(snapCount/2);
                             // roll the log
-                            zks.getZKDatabase().rollLog();
+                            zks.getZKDatabase().rollLog();                                  // 将事务日志落磁盘, 持久化
                             // take a snapshot
                             if (snapInProcess != null && snapInProcess.isAlive()) {
                                 LOG.warn("Too busy to snap, skipping");
