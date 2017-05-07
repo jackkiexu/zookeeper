@@ -50,8 +50,7 @@ import org.slf4j.LoggerFactory;
 public class SyncRequestProcessor extends Thread implements RequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(SyncRequestProcessor.class);
     private final ZooKeeperServer zks;
-    private final LinkedBlockingQueue<Request> queuedRequests =
-        new LinkedBlockingQueue<Request>();
+    private final LinkedBlockingQueue<Request> queuedRequests = new LinkedBlockingQueue<Request>();
     private final RequestProcessor nextProcessor;
 
     private Thread snapInProcess = null;
@@ -70,6 +69,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
     /**
      * The number of log entries to log before starting a snapshot
      */
+    // 在开始进行 takesnapshot 前已有的 snapshot 数量
     private static int snapCount = ZooKeeperServer.getSnapCount();
     
     /**

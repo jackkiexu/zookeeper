@@ -54,8 +54,6 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     ConcurrentLinkedQueue<Request> pendingSyncs;
     
     /**
-     * @param port
-     * @param dataDir
      * @throws IOException
      */
     FollowerZooKeeperServer(FileTxnSnapLog logFactory,QuorumPeer self,
@@ -112,9 +110,9 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
                     + " without seeing txn");
             return;
         }
-        long firstElementZxid = pendingTxns.element().zxid;
-        if (firstElementZxid != zxid) {
-            LOG.error("Committing zxid 0x" + Long.toHexString(zxid)
+        long firstElementZxid = pendingTxns.element().zxid;                 // http://blog.csdn.net/fei33423/article/details/53749138
+        if (firstElementZxid != zxid) {                                     // 这里就有经典问题, 在 Leader 端提交了 3 个 Proposal 的信息(comit 1, comit 2, comit 3), 但 follower 在接收到 comit 1 后就接收到 comit 3
+            LOG.error("Committing zxid 0x" + Long.toHexString(zxid)         // 则就会打印这里的日志, 并且进行退出
                     + " but next pending txn 0x"
                     + Long.toHexString(firstElementZxid));
             System.exit(12);

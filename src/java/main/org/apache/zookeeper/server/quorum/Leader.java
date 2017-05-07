@@ -695,6 +695,7 @@ public class Leader {
      * @param qp
      *                the packet to be sent
      */
+    // 向 Follower 发送 Proposal 的消息
     void sendPacket(QuorumPacket qp) {
         synchronized (forwardingFollowers) {
             for (LearnerHandler f : forwardingFollowers) {                

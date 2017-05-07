@@ -711,6 +711,7 @@ public class LearnerHandler extends Thread {
         }
     }
 
+    // 进行 LearnerHandler 的关闭操作, 其实就是通过在 queuedPackets 里面加入一个 proposalOfDeath
     public void shutdown() {
         // Send the packet of death
         try {

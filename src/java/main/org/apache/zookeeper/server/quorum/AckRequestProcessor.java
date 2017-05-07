@@ -26,6 +26,13 @@ import org.apache.zookeeper.server.RequestProcessor;
 
 
 /**
+ *
+ * PreRequestProcessor -> ProposalRequestProcessor -> CommitProcessor -> ToBeAppliedRequestProcessor -> FinalRequestProcessor
+ *                                                 \_
+ *                                                    SyncRequestProcessor -> AckRequestProcessor
+ *
+ * 主要负责将 SyncRequestProcessor 处理完的事务日志后, Leader 向 Proposal 的投票收集器 发送 ack 反馈
+ *                                              (就是 Leader 自己提出 Proposal, 自己通过 AckRequestProcessor 调用 leader.processAck 来说明: leader 自己赞成 这个 Proposal
  * This is a very simple RequestProcessor that simply forwards a request from a
  * previous stage to the leader as an ACK.
  */
@@ -42,7 +49,7 @@ class AckRequestProcessor implements RequestProcessor {
      */
     public void processRequest(Request request) {
         QuorumPeer self = leader.self;
-        if(self != null)
+        if(self != null)                            // Leader 自己提出 Proposal, 自己通过 AckRequestProcessor 调用 leader.processAck 来说明: leader 自己赞成 这个 Proposal
             leader.processAck(self.getId(), request.zxid, null);
         else
             LOG.error("Null QuorumPeer");
