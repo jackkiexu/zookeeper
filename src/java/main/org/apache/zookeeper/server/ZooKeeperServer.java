@@ -119,10 +119,10 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     static final private long superSecret = 0XB3415C00L;
 
     int requestsInProcess;
+
     final List<ChangeRecord> outstandingChanges = new ArrayList<ChangeRecord>();
     // this data structure must be accessed under the outstandingChanges lock
-    final HashMap<String, ChangeRecord> outstandingChangesForPath =
-        new HashMap<String, ChangeRecord>();
+    final HashMap<String, ChangeRecord> outstandingChangesForPath = new HashMap<String, ChangeRecord>();
     
     private ServerCnxnFactory serverCnxnFactory;
 
@@ -310,6 +310,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return hzxid;
     }
 
+    // ZooKeeper 全局的 zxid 分配器
     synchronized long getNextZxid() {
         return ++hzxid;
     }

@@ -37,7 +37,6 @@ public class PathUtils {
 	
     /**
      * Validate the provided znode path string
-     * 校验 设置的 path 的合法性
      *
      * @param path znode path string
      * @throws IllegalArgumentException if the path is invalid

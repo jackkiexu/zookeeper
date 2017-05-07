@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Most simple HostProvider, resolves only on instantiation.
- * 
+ *
  */
 public final class StaticHostProvider implements HostProvider {
     private static final Logger LOG = LoggerFactory
@@ -47,7 +47,7 @@ public final class StaticHostProvider implements HostProvider {
 
     /**
      * Constructs a SimpleHostSet.
-     * 
+     *
      * @param serverAddresses
      *            possibly unresolved ZooKeeper server addresses
      * @throws UnknownHostException
@@ -58,12 +58,12 @@ public final class StaticHostProvider implements HostProvider {
             throws UnknownHostException {
         for (InetSocketAddress address : serverAddresses) {
             InetAddress ia = address.getAddress();
-            // 1. »ñÈ¡¶ÔÓ¦µÄ hostAddress »ò hostName
+            // 1. è·å–å¯¹åº”çš„ hostAddress æˆ– hostName
             InetAddress resolvedAddresses[] = InetAddress.getAllByName((ia!=null) ? ia.getHostAddress():
-                address.getHostName());
-            // 2. Ñ­»·±éÀú resolvedAddresses
+                    address.getHostName());
+            // 2. å¾ªç¯éå† resolvedAddresses
             for (InetAddress resolvedAddress : resolvedAddresses) {
-                // 3. Í¨¹ıÉèÖÃ host String Îª hostName ·ÀÖ¹·¢ËÍÊı¾İÊ±¸ù¾İ ÓòÃûÀ´½øĞĞ DNS lookup(²éÑ¯)
+                // 3. é€šè¿‡è®¾ç½® host String ä¸º hostName é˜²æ­¢å‘é€æ•°æ®æ—¶æ ¹æ® åŸŸåæ¥è¿›è¡Œ DNS lookup(æŸ¥è¯¢)
 
                 // If hostName is null but the address is not, we can tell that
                 // the hostName is an literal IP address. Then we can set the host string as the hostname
@@ -71,24 +71,24 @@ public final class StaticHostProvider implements HostProvider {
                 // As far as i know, the only way to check if the hostName is null is use toString().
                 // Both the two implementations of InetAddress are final class, so we can trust the return value of
                 // the toString() method.
-                if (resolvedAddress.toString().startsWith("/") 
+                if (resolvedAddress.toString().startsWith("/")
                         && resolvedAddress.getAddress() != null) {
                     this.serverAddresses.add(
                             new InetSocketAddress(InetAddress.getByAddress(
                                     address.getHostName(),
-                                    resolvedAddress.getAddress()), 
+                                    resolvedAddress.getAddress()),
                                     address.getPort()));
                 } else {
                     this.serverAddresses.add(new InetSocketAddress(resolvedAddress.getHostAddress(), address.getPort()));
-                }  
+                }
             }
         }
-        
+
         if (this.serverAddresses.isEmpty()) {
             throw new IllegalArgumentException(
                     "A HostProvider may not be empty!");
         }
-        // 3. Í¨¹ı shuffle ½« serverAddresses ±ä³ÉÒ»¸öÑ­»·µÄÁ´±ís
+        // 3. é€šè¿‡ shuffle å°† serverAddresses å˜æˆä¸€ä¸ªå¾ªç¯çš„é“¾è¡¨s
         Collections.shuffle(this.serverAddresses);
     }
 

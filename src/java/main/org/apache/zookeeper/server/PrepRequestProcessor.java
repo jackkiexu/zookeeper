@@ -100,8 +100,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
 
     public PrepRequestProcessor(ZooKeeperServer zks,
             RequestProcessor nextProcessor) {
-        super("ProcessThread(sid:" + zks.getServerId()
-                + " cport:" + zks.getClientPort() + "):");
+        super("ProcessThread(sid:" + zks.getServerId() + " cport:" + zks.getClientPort() + "):");
         this.nextProcessor = nextProcessor;
         this.zks = zks;
     }
@@ -128,7 +127,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 if (Request.requestOfDeath == request) {                           // 在关闭处理器后, 会添加 requestOfDeath, 表示关闭处理器后不再接收请求
                     break;
                 }
-                pRequest(request);
+                pRequest(request);                                                 // 对 Request 进行处理
             }
         } catch (InterruptedException e) {                                          // 异常处理
             LOG.error("Unexpected interruption", e);
@@ -329,7 +328,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
 
         switch (type) {
             case OpCode.create:                                                                // 创建 path 请求
-                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());     //  进行校验 session
+                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());        //  进行校验 session 是否是 createSession 时的 owner
                 CreateRequest createRequest = (CreateRequest)record;   
                 if(deserialize)
                     ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);   // 从 request.request 里面发序列化出 createRequest
@@ -462,7 +461,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 nodeRecord.stat.setAversion(version);
                 addChangeRecord(nodeRecord);
                 break;
-            case OpCode.createSession:
+            case OpCode.createSession:                                                         // 创建 session
                 request.request.rewind();
                 int to = request.request.getInt();
                 request.txn = new CreateSessionTxn(to);

@@ -25,12 +25,12 @@ import org.apache.zookeeper.common.PathUtils;
 
 /**
  * A parser for ZooKeeper Client connect strings.
- * 
+ *
  * This class is not meant to be seen or used outside of ZooKeeper itself.
- * 
+ *
  * The chrootPath member should be replaced by a Path object in issue
  * ZOOKEEPER-849.
- * 
+ *
  * @see org.apache.zookeeper.ZooKeeper
  */
 public final class ConnectStringParser {
@@ -41,15 +41,15 @@ public final class ConnectStringParser {
     private final ArrayList<InetSocketAddress> serverAddresses = new ArrayList<InetSocketAddress>();
 
     /**
-     *  ÒÔÏÂÊÇÒ»¸ö zookeeper Á´½ÓµØÖ·µÄ½âÎö¹ı³Ì
+     *  ä»¥ä¸‹æ˜¯ä¸€ä¸ª zookeeper é“¾æ¥åœ°å€çš„è§£æè¿‡ç¨‹
      * @throws IllegalArgumentException
      *             for an invalid chroot path.
      */
     public ConnectStringParser(String connectString) {
         // parse out chroot, if any
-        // 1. ½âÎö³ı chroot, Õâ¸ö chroot ×÷ÓÃÓÚÁ¬½Ó·şÎñµÄËùÓĞ»úÆ÷
+        // 1. è§£æé™¤ chroot, è¿™ä¸ª chroot ä½œç”¨äºè¿æ¥æœåŠ¡çš„æ‰€æœ‰æœºå™¨
         int off = connectString.indexOf('/');
-        if (off >= 0) { // off >=0 ËµÃ÷ÓĞ chroot
+        if (off >= 0) { // off >=0 è¯´æ˜æœ‰ chroot
             String chrootPath = connectString.substring(off);
             // ignore "/" chroot spec, same as null
             if (chrootPath.length() == 1) {
@@ -58,11 +58,11 @@ public final class ConnectStringParser {
                 PathUtils.validatePath(chrootPath);
                 this.chrootPath = chrootPath;
             }
-            connectString = connectString.substring(0, off); // ½« ³ı chroot Ê£ÓàµÄ²¿·Ö´æ´¢ÏÂÀ´s
+            connectString = connectString.substring(0, off); // å°† é™¤ chroot å‰©ä½™çš„éƒ¨åˆ†å­˜å‚¨ä¸‹æ¥s
         } else {
             this.chrootPath = null;
         }
-        // 2. ·Ö¸îËùÓĞĞèÒª½øĞĞÁ´½ÓµÄ µØÖ·(·Ö¸ô·ûºÅ , )
+        // 2. åˆ†å‰²æ‰€æœ‰éœ€è¦è¿›è¡Œé“¾æ¥çš„ åœ°å€(åˆ†éš”ç¬¦å· , )
         String hostsList[] = connectString.split(",");
         for (String host : hostsList) {
             int port = DEFAULT_PORT;
@@ -74,7 +74,7 @@ public final class ConnectStringParser {
                 }
                 host = host.substring(0, pidx);
             }
-            // ¼ÓÈëÊı×éÖĞs
+            // åŠ å…¥æ•°ç»„ä¸­s
             serverAddresses.add(InetSocketAddress.createUnresolved(host, port));
         }
     }
