@@ -78,7 +78,9 @@ public class CommitProcessor extends Thread implements RequestProcessor {
             while (!finished) {                                                             // while loop
                 int len = toProcess.size();
                 for (int i = 0; i < len; i++) {
-                    nextProcessor.processRequest(toProcess.get(i));                       // 将 ack 过半的 Request 丢给 ToBeAppliedRequestProcessor 来进行处理
+                    Request request = toProcess.get(i);
+                    LOG.info("request:"+ request);
+                    nextProcessor.processRequest(request);                       // 将 ack 过半的 Request 丢给 ToBeAppliedRequestProcessor 来进行处理
                 }
                 toProcess.clear();
                 synchronized (this) {

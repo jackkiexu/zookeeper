@@ -100,30 +100,30 @@ public class FinalRequestProcessor implements RequestProcessor {
         ProcessTxnResult rc = null;
         synchronized (zks.outstandingChanges) {
             while (!zks.outstandingChanges.isEmpty()
-                    && zks.outstandingChanges.get(0).zxid <= request.zxid) {
-                ChangeRecord cr = zks.outstandingChanges.remove(0);
-                if (cr.zxid < request.zxid) {
+                    && zks.outstandingChanges.get(0).zxid <= request.zxid) {                        // outstandingChanges 不为空, 且首个元素的 zxid < request.zxid
+                ChangeRecord cr = zks.outstandingChanges.remove(0);                                  // 移除首个元素
+                if (cr.zxid < request.zxid) {                                                          // 进行相应日志处理
                     LOG.warn("Zxid outstanding "
                             + cr.zxid
                             + " is less than current " + request.zxid);
                 }
-                if (zks.outstandingChangesForPath.get(cr.path) == cr) {
+                if (zks.outstandingChangesForPath.get(cr.path) == cr) {                            // 移除 ChangeRecord 对应的路径
                     zks.outstandingChangesForPath.remove(cr.path);
                 }
             }
-            if (request.hdr != null) {
+            if (request.hdr != null) {                                                                 // 这里的 request.hdr != null 说明请求是事务请求
                TxnHeader hdr = request.hdr;
                Record txn = request.txn;
 
-               rc = zks.processTxn(hdr, txn);
+               rc = zks.processTxn(hdr, txn);                                                           // 调用 ZKDatabase 进行事务处理
             }
             // do not add non quorum packets to the queue.
-            if (Request.isQuorum(request.type)) {
+            if (Request.isQuorum(request.type)) {                                                      // 若是事务请求, 加入 ZKDatabase 的 committedLog 队列
                 zks.getZKDatabase().addCommittedProposal(request);
             }
         }
 
-        if (request.hdr != null && request.hdr.getType() == OpCode.closeSession) {
+        if (request.hdr != null && request.hdr.getType() == OpCode.closeSession) {                  // 进行会话关闭处理
             ServerCnxnFactory scxn = zks.getServerCnxnFactory();
             // this might be possible since
             // we might just be playing diffs from the leader
@@ -162,7 +162,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 LOG.debug("{}",request);
             }
             switch (request.type) {
-            case OpCode.ping: {
+            case OpCode.ping: {                                                                               // PING 请求
                 zks.serverStats().updateLatency(request.createTime);
 
                 lastOp = "PING";

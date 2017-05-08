@@ -144,6 +144,34 @@ public abstract class ClientBase extends ZKTestCase {
         }
     }
 
+
+    @Before
+    public void setUp() throws Exception {
+        /* some useful information - log the number of fds used before
+         * and after a test is run. Helps to verify we are freeing resources
+         * correctly. Unfortunately this only works on unix systems (the
+         * only place sun has implemented as part of the mgmt bean api.
+         */
+        OSMXBean osMbean = new OSMXBean();
+        if (osMbean.getUnix() == true) {
+            initialFdCount = osMbean.getOpenFileDescriptorCount();
+            LOG.info("Initial fdcount is: "
+                    + initialFdCount);
+        }
+
+        setupTestEnv();
+
+        JMXEnv.setUp();
+
+        setUpAll();
+
+        tmpDir = createTmpDir(BASETEST);
+        // 启动一个 ZooKeeperServer
+        startServer();
+
+        LOG.info("Client test setup finished");
+    }
+
     protected TestableZooKeeper createClient()
         throws IOException, InterruptedException
     {
@@ -231,7 +259,7 @@ public abstract class ClientBase extends ZKTestCase {
                 // if there are multiple hostports, just take the first one
                 HostPort hpobj = parseHostPortList(hp).get(0);
                 String result = send4LetterWord(hpobj.host, hpobj.port, "stat"); // 发送 命令给 zookeeper 服务器, 并返回结果
-                LOG.info("result:"+result);
+                LOG.info("result:" + result);
                 if (result.startsWith("Zookeeper version:") &&
                         !result.contains("READ-ONLY")) {
                     return true;
@@ -342,9 +370,8 @@ public abstract class ClientBase extends ZKTestCase {
     /**
      * Starting the given server instance
      */
-    public static void startServerInstance(File dataDir,
-            ServerCnxnFactory factory, String hostPort) throws IOException,
-            InterruptedException {
+    // 开启一个 ZooKeeper Server
+    public static void startServerInstance(File dataDir, ServerCnxnFactory factory, String hostPort) throws IOException, InterruptedException {
         final int port = getPort(hostPort);
         LOG.info("STARTING server instance 127.0.0.1:{}", port);
         ZooKeeperServer zks = new ZooKeeperServer(dataDir, dataDir, 3000);
@@ -422,32 +449,7 @@ public abstract class ClientBase extends ZKTestCase {
         allClientsSetup = true;
     }
 
-    @Before
-    public void setUp() throws Exception {
-        /* some useful information - log the number of fds used before
-         * and after a test is run. Helps to verify we are freeing resources
-         * correctly. Unfortunately this only works on unix systems (the
-         * only place sun has implemented as part of the mgmt bean api.
-         */
-        OSMXBean osMbean = new OSMXBean();
-        if (osMbean.getUnix() == true) {
-            initialFdCount = osMbean.getOpenFileDescriptorCount();  	
-            LOG.info("Initial fdcount is: "
-                    + initialFdCount);
-        }
 
-        setupTestEnv();
-
-        JMXEnv.setUp();
-
-        setUpAll();
-
-        tmpDir = createTmpDir(BASETEST);
-
-        startServer();
-
-        LOG.info("Client test setup finished");
-    }
 
     protected void startServer() throws Exception {
         LOG.info("STARTING server");
@@ -455,8 +457,7 @@ public abstract class ClientBase extends ZKTestCase {
                 maxCnxns);
         startServerInstance(tmpDir, serverFactory, hostPort);
         // ensure that server and data bean are registered
-        Set<ObjectName> children = JMXEnv.ensureParent("InMemoryDataTree",
-                "StandaloneServer_port");
+        Set<ObjectName> children = JMXEnv.ensureParent("InMemoryDataTree", "StandaloneServer_port");
         // Remove beans which are related to zk client sessions. Strong
         // assertions cannot be done for these client sessions because
         // registeration of these beans with server will happen only on their

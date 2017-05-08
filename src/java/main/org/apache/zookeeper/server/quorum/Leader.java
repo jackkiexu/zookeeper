@@ -669,6 +669,7 @@ public class Leader {
          * @see org.apache.zookeeper.server.RequestProcessor#processRequest(org.apache.zookeeper.server.Request)
          */
         public void processRequest(Request request) throws RequestProcessorException {
+            LOG.info("request:"+ request);
             // request.addRQRec(">tobe");
             next.processRequest(request);                   // 交由 FinalRequestProcessor commit 到 ZKDatabase 里面s
             Proposal p = toBeApplied.peek();               // 进行 request 从 toBeApplied 删除

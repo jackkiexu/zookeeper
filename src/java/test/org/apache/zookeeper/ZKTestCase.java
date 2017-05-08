@@ -34,7 +34,7 @@ import org.junit.runners.model.FrameworkMethod;
  */
 @RunWith(JUnit4ZKTestRunner.class)
 public class ZKTestCase {
-    private static final Logger LOG = LoggerFactory.getLogger(ZKTestCase.class);
+    public static final Logger LOG = LoggerFactory.getLogger(ZKTestCase.class);
 
     private String testName;
 

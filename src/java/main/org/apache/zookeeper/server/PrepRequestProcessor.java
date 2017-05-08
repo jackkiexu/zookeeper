@@ -117,6 +117,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         try {
             while (true) {
                 Request request = submittedRequests.take();                         // 从 queue 里面拿出 request, 没有就阻塞
+                LOG.info("request:"+request);
                 long traceMask = ZooTrace.CLIENT_REQUEST_TRACE_MASK;
                 if (request.type == OpCode.ping) {
                     traceMask = ZooTrace.CLIENT_PING_TRACE_MASK;

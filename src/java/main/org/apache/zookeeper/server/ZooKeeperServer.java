@@ -98,7 +98,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    public static final int DEFAULT_TICK_TIME = 3000;
+    public static final int DEFAULT_TICK_TIME = 300000000;
     protected int tickTime = DEFAULT_TICK_TIME;
     /** value of -1 indicates unset, use default */
     protected int minSessionTimeout = -1;
@@ -534,11 +534,11 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         Random r = new Random(id ^ superSecret);
         byte p[] = new byte[16];
         r.nextBytes(p);
-        System.out.println("p 1 :" + (Arrays.toString(p)));
+        LOG.info("p 1 :" + (Arrays.toString(p)));
         r.nextBytes(p);
-        System.out.println("p 2 :" + (Arrays.toString(p)));
+        LOG.info("p 2 :" + (Arrays.toString(p)));
         r.nextBytes(p);
-        System.out.println("p 2 :" + (Arrays.toString(p)));
+        LOG.info("p 2 :" + (Arrays.toString(p)));
         return p;
     }
 
@@ -654,6 +654,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
      */
     private void submitRequest(ServerCnxn cnxn, long sessionId, int type, int xid, ByteBuffer bb, List<Id> authInfo) {
         Request si = new Request(cnxn, sessionId, xid, type, bb, authInfo);
+        LOG.info("si:"+si);
         submitRequest(si);
     }
     
@@ -815,6 +816,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         BinaryInputArchive bia = BinaryInputArchive.getArchive(new ByteBufferInputStream(incomingBuffer));
         ConnectRequest connReq = new ConnectRequest();
         connReq.deserialize(bia, "connect");
+        LOG.info("connReq:"+connReq);
         LOG.info("Session establishment request from client "
                 + cnxn.getRemoteSocketAddress()
                 + " client's lastZxid is 0x"

@@ -31,31 +31,33 @@ public class CreateModeTest extends ZKTestCase {
     
     @Test
     public void testBasicCreateMode() {
-        CreateMode cm = CreateMode.PERSISTENT;
+        CreateMode cm = CreateMode.PERSISTENT;                                      // 持久化的 path
         Assert.assertEquals(cm.toFlag(), 0);
         Assert.assertFalse(cm.isEphemeral());
         Assert.assertFalse(cm.isSequential());
         
-        cm = CreateMode.EPHEMERAL;
+        cm = CreateMode.EPHEMERAL;                                                  // session 断开就删除 path
         Assert.assertEquals(cm.toFlag(), 1);
         Assert.assertTrue(cm.isEphemeral());
         Assert.assertFalse(cm.isSequential());
         
-        cm = CreateMode.PERSISTENT_SEQUENTIAL;
+        cm = CreateMode.PERSISTENT_SEQUENTIAL;                                   // 单调递增持久化的节点
         Assert.assertEquals(cm.toFlag(), 2);
         Assert.assertFalse(cm.isEphemeral());
         Assert.assertTrue(cm.isSequential());
         
-        cm = CreateMode.EPHEMERAL_SEQUENTIAL;
+        cm = CreateMode.EPHEMERAL_SEQUENTIAL;                                    // 单调递增临时节点的节点
         Assert.assertEquals(cm.toFlag(), 3);
         Assert.assertTrue(cm.isEphemeral());
         Assert.assertTrue(cm.isSequential());
     }
     
     @Test
-    public void testFlagConversion() throws KeeperException {
+    public void testFlagConversion() throws KeeperException {                   // 测试 枚举转化
         // Ensure we get the same value back after round trip conversion
         EnumSet<CreateMode> allModes = EnumSet.allOf(CreateMode.class);
+
+        LOG.info("allModes:"+allModes);
 
         for(CreateMode cm : allModes) {
             Assert.assertEquals(cm, CreateMode.fromFlag( cm.toFlag() ) );
@@ -65,14 +67,14 @@ public class CreateModeTest extends ZKTestCase {
     @Test
     public void testInvalidFlagConversion() throws KeeperException {
         try {
-            CreateMode cm = CreateMode.fromFlag(99);
+            CreateMode cm = CreateMode.fromFlag(99);                                    // 从无效的 flag 获取 CreateMode
             Assert.fail("Shouldn't be able to convert 99 to a CreateMode.");
         } catch(KeeperException ke) {
             Assert.assertEquals(Code.BADARGUMENTS, ke.code());
         }
 
         try {
-            CreateMode cm = CreateMode.fromFlag(-1);
+            CreateMode cm = CreateMode.fromFlag(-1);                                   // 从无效的 flag 获取 CreateMode
             Assert.fail("Shouldn't be able to convert -1 to a CreateMode.");
         } catch(KeeperException ke) {
             Assert.assertEquals(Code.BADARGUMENTS, ke.code());

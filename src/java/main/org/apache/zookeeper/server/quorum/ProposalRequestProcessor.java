@@ -59,6 +59,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
     }
     
     public void processRequest(Request request) throws RequestProcessorException {
+        LOG.info("request:"+request);
         // LOG.warn("Ack>>> cxid = " + request.cxid + " type = " +
         // request.type + " id = " + request.sessionId);
         // request.addRQRec(">prop");

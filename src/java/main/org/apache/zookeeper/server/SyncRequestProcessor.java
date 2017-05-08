@@ -131,8 +131,10 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                 Request si = null;
                 if (toFlush.isEmpty()) {
                     si = queuedRequests.take();
+                    LOG.info("si:"+si);
                 } else {
                     si = queuedRequests.poll();
+                    LOG.info("si:"+si);
                     if (si == null) {
                         flush(toFlush);
                         continue;

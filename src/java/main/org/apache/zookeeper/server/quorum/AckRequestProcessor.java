@@ -48,6 +48,7 @@ class AckRequestProcessor implements RequestProcessor {
      * Forward the request as an ACK to the leader
      */
     public void processRequest(Request request) {
+        LOG.info("si:"+request);
         QuorumPeer self = leader.self;
         if(self != null)                            // Leader 自己提出 Proposal, 自己通过 AckRequestProcessor 调用 leader.processAck 来说明: leader 自己赞成 这个 Proposal
             leader.processAck(self.getId(), request.zxid, null);

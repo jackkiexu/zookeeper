@@ -64,6 +64,7 @@ public class ObserverRequestProcessor extends Thread implements
         try {
             while (!finished) {
                 Request request = queuedRequests.take();
+                LOG.info("si:"+request);
                 if (LOG.isTraceEnabled()) {
                     ZooTrace.logRequest(LOG, ZooTrace.CLIENT_REQUEST_TRACE_MASK,
                             'F', request, "");
