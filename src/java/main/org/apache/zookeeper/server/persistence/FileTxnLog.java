@@ -246,23 +246,23 @@ public class FileTxnLog implements TxnLog {
      * @return
      */
     public static File[] getLogFiles(File[] logDirList,long snapshotZxid) {
-        List<File> files = Util.sortDataDir(logDirList, "log", true);
+        List<File> files = Util.sortDataDir(logDirList, "log", true);               // 将所有的 txn log 进行升续排序
         long logZxid = 0;
         // Find the log file that starts before or at the same time as the
         // zxid of the snapshot
         for (File f : files) {
-            long fzxid = Util.getZxidFromName(f.getName(), "log");
-            if (fzxid > snapshotZxid) {
+            long fzxid = Util.getZxidFromName(f.getName(), "log");                  // 从 txn log 文件名获取 对应  zxid
+            if (fzxid > snapshotZxid) {                                              // fzxid > snapshotZxid 说明, 对应的 txn log 还需要保留
                 continue;
             }
             // the files
             // are sorted with zxid's
-            if (fzxid > logZxid) {
+            if (fzxid > logZxid) {                                                  // 获取要删除的 txn log 文件中 最大的 zxid 的值
                 logZxid = fzxid;
             }
         }
         List<File> v=new ArrayList<File>(5);
-        for (File f : files) {
+        for (File f : files) {                                                      // 再次过滤 txn log, 通过 (fzxid < logZxid) 筛选出 要进行删除的 txn log 文件
             long fzxid = Util.getZxidFromName(f.getName(), "log");
             if (fzxid < logZxid) {
                 continue;

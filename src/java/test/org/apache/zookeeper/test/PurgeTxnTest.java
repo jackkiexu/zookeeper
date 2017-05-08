@@ -68,16 +68,16 @@ public class PurgeTxnTest extends ZKTestCase implements  Watcher {
         Assert.assertTrue("waiting for server to shutdown",
                 ClientBase.waitForServerDown(HOSTPORT, CONNECTION_TIMEOUT));
         // now corrupt the snapshot
-        PurgeTxnLog.purge(tmpDir, tmpDir, 3);
-        FileTxnSnapLog snaplog = new FileTxnSnapLog(tmpDir, tmpDir);
-        List<File> listLogs = snaplog.findNRecentSnapshots(4);
+        PurgeTxnLog.purge(tmpDir, tmpDir, 3);                                                 // 调用  PurgeTxnLog.purge 来进行 snapshot txn log 的删除
+        FileTxnSnapLog snaplog = new FileTxnSnapLog(tmpDir, tmpDir);                         // 构建出  FileTxnSnapLog
+        List<File> listLogs = snaplog.findNRecentSnapshots(4);                                // 找出最新的 4 个文件
         int numSnaps = 0;
         for (File ff: listLogs) {
             if (ff.getName().startsWith("snapshot")) {
                 numSnaps++;
             }
         }
-        Assert.assertTrue("exactly 3 snapshots ", (numSnaps == 3));
+        Assert.assertTrue("exactly 3 snapshots ", (numSnaps == 3));                       // 判断是否留下 3 个文件
         zks.shutdown();
     }
 

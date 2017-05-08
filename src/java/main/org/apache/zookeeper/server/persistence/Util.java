@@ -139,7 +139,7 @@ public class Util {
     public static long getZxidFromName(String name, String prefix) {
         long zxid = -1;
         String nameParts[] = name.split("\\.");
-        if (nameParts.length == 2 && nameParts[0].equals(prefix)) {
+        if (nameParts.length == 2 && nameParts[0].equals(prefix)) {         // 这里通过 prefix 来区分 snapshot 还是 txnlog
             try {
                 zxid = Long.parseLong(nameParts[1], 16);
             } catch (NumberFormatException e) {

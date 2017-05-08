@@ -247,7 +247,7 @@ public class QuorumPeerConfig {
         // Reset to MIN_SNAP_RETAIN_COUNT if invalid (less than 3)
         // PurgeTxnLog.purge(File, File, int) will not allow to purge less
         // than 3.
-        if (snapRetainCount < MIN_SNAP_RETAIN_COUNT) {
+        if (snapRetainCount < MIN_SNAP_RETAIN_COUNT) {                          // 小于 MIN_SNAP_RETAIN_COUNT (默认 3个), 也会用 3 个
             LOG.warn("Invalid autopurge.snapRetainCount: " + snapRetainCount
                     + ". Defaulting to " + MIN_SNAP_RETAIN_COUNT);
             snapRetainCount = MIN_SNAP_RETAIN_COUNT;
