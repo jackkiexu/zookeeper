@@ -18,6 +18,7 @@
 
 package org.apache.zookeeper.test;
 
+import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.CreateMode;
@@ -41,7 +42,7 @@ public class QuorumQuotaTest extends QuorumBase {
         zk.create("/a", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                 CreateMode.PERSISTENT);
         int i = 0;
-        for (i=0; i < 300;i++) {
+        for (i=0; i < 1;i++) {
             zk.create("/a/" + i, "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                     CreateMode.PERSISTENT);
         }
@@ -51,7 +52,7 @@ public class QuorumQuotaTest extends QuorumBase {
         StatsTrack st = new StatsTrack(new String(data));
         Assert.assertTrue("bytes are set", st.getBytes() == 1204L);
         Assert.assertTrue("num count is set", st.getCount() == 301);
-        for (i=300; i < 600; i++) {
+        for (i=1; i < 2; i++) {
             zk.create("/a/" + i, "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                     CreateMode.PERSISTENT);
         }
@@ -59,5 +60,11 @@ public class QuorumQuotaTest extends QuorumBase {
         st = new StatsTrack(new String(data));
         Assert.assertTrue("bytes are set", st.getBytes() == 2404L);
         Assert.assertTrue("num count is set", st.getCount() == 601);
+    }
+
+    @Test
+    public void testApp(){
+        LOG.info("ProviderRegistry.listProviders:" + ProviderRegistry.listProviders());
+        ProviderRegistry.listProviders();
     }
 }

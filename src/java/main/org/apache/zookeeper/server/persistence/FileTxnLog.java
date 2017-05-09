@@ -317,18 +317,18 @@ public class FileTxnLog implements TxnLog {
      * commit the logs. make sure that evertyhing hits the
      * disk
      */
-    // 将 TxnLog 的 buffer 数据 flush 到磁盘上
+    // 将 TxnLog 的 buffer 数据 flush 到磁盘上 (一般是 Txn log 超过 1000 就会在 SyncRequestProcessor 中出发落磁盘)
     public synchronized void commit() throws IOException {
         if (logStream != null) {
             logStream.flush();
         }
-        for (FileOutputStream log : streamsToFlush) {
+        for (FileOutputStream log : streamsToFlush) {           // 将FileStream 里面的 Txn Log 文件落磁盘
             log.flush();
             if (forceSync) {
                 long startSyncNS = System.nanoTime();
 
                 log.getChannel().force(false);
-
+                                                                  // 监控是否落磁盘时间超限制
                 long syncElapsedMS = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
                 if (syncElapsedMS > fsyncWarningThresholdMS) {
                     LOG.warn("fsync-ing the write ahead log in "
@@ -339,7 +339,7 @@ public class FileTxnLog implements TxnLog {
                 }
             }
         }
-        while (streamsToFlush.size() > 1) {
+        while (streamsToFlush.size() > 1) {                    // 将对应的 File Stream 都进行删除
             streamsToFlush.removeFirst().close();
         }
     }

@@ -64,11 +64,10 @@ public class Leader {
     }
 
     static public class Proposal {
-        public QuorumPacket packet;
+        public QuorumPacket packet;             // 这个 packet 用于发送出去的
         // 每个 Proposal 对应一个 ackSet, 只有 ackSet 里面的ack数量在集群中过半才能真正的进行提交
         public HashSet<Long> ackSet = new HashSet<Long>();
-
-        public Request request;
+        public Request request;                 // 这里的 request 才是发送的正真 事务消息
 
         @Override
         public String toString() {
@@ -761,7 +760,7 @@ public class Leader {
 
     /**
      * create a proposal and send it out to all the members
-     * 
+     * 创建 一个  Proposal 并且 发送给集群中的 Followers
      * @param request
      * @return the proposal that is queued to send to all the members
      */
@@ -771,12 +770,11 @@ public class Leader {
          * election. Force a re-election instead. See ZOOKEEPER-1277
          */
         if ((request.zxid & 0xffffffffL) == 0xffffffffL) {
-            String msg =
-                    "zxid lower 32 bits have rolled over, forcing re-election, and therefore new epoch start";
+            String msg = "zxid lower 32 bits have rolled over, forcing re-election, and therefore new epoch start";
             shutdown(msg);
             throw new XidRolloverException(msg);
         }
-
+                                                                                // 将发送的 Proposal 序列化成  byte 数组
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
         try {
@@ -787,9 +785,8 @@ public class Leader {
             baos.close();
         } catch (IOException e) {
             LOG.warn("This really should be impossible", e);
-        }
-        QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid, 
-                baos.toByteArray(), null);
+        }                                                                       // 组装 Proposal
+        QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid, baos.toByteArray(), null);
         
         Proposal p = new Proposal();
         p.packet = pp;
@@ -800,7 +797,7 @@ public class Leader {
             }
 
             lastProposed = p.packet.getZxid();
-            outstandingProposals.put(lastProposed, p);
+            outstandingProposals.put(lastProposed, p);                   // 将事务请求暂时存储下来
             sendPacket(pp);
         }
         return p;

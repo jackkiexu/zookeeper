@@ -28,7 +28,7 @@ public class PortAssignment {
     private static int nextPort = 11221;
 
     /** Assign a new, unique port to the test */
-    public synchronized static int unique() {
+    public synchronized static int unique() {                                   // ZooKeeperServer 的端口分配
         LOG.info("assigning port " + nextPort);
         return nextPort++;
     }

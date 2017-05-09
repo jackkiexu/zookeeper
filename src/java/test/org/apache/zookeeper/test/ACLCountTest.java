@@ -21,28 +21,23 @@ package org.apache.zookeeper.test;
 import static org.apache.zookeeper.test.ClientBase.CONNECTION_TIMEOUT;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
+import org.apache.zookeeper.*;
 import org.apache.zookeeper.common.PathTrie;
-import org.apache.zookeeper.server.SessionTrackerImpl;
+import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.server.*;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
+import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.PortAssignment;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZKTestCase;
-import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
-import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
-import org.apache.zookeeper.server.ServerCnxnFactory;
-import org.apache.zookeeper.server.SyncRequestProcessor;
-import org.apache.zookeeper.server.ZooKeeperServer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -168,7 +163,73 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
     @Test
     public void initializeNextSession(){
         long sessionId = SessionTrackerImpl.initializeNextSession(9l);
-        LOG.info("sessionId:"+sessionId);
+        LOG.info("sessionId:" + sessionId);
+    }
+
+
+
+    @Test
+    public void testApp() throws Exception{
+        ProviderRegistry.initialize();
+        LOG.info("ProviderRegistry.listProviders:" + ProviderRegistry.listProviders());
+
+        LOG.info(DigestAuthenticationProvider.generateDigest("super:superpw"));
+    }
+
+
+
+    @Test
+    public void testSuperServer(){
+        List<ACL> acls = new ArrayList<>();
+
+        try{
+            Id id1 = new Id("digest", DigestAuthenticationProvider.generateDigest("fish:fishpw"));
+            ACL acl1 = new ACL(ZooDefs.Perms.WRITE, id1);
+
+            Id id2 = new Id("digest", DigestAuthenticationProvider.generateDigest("qsd:qsdpw"));
+            ACL acl2 = new ACL(ZooDefs.Perms.READ, id2);
+
+            acls.add(acl1);
+            acls.add(acl2);
+        }catch (Exception e){
+
+        }
+
+        ZooKeeper zk = null;
+        try {
+            zk = new ZooKeeper("10.0.1.75:2181,10.0.1.76:2181,10.0.1.77:2181", 300000, new Watcher() {
+                // 监控所有被触发的事件
+                public void process(WatchedEvent event) {
+                    System.out.println("已经触发了" + event.getType() + "事件！");
+                }
+            });
+            if (zk.exists("/test", true) == null) {
+                System.out.println(zk.create("/test", "ACL测试".getBytes(), acls, CreateMode.PERSISTENT));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testSuperClient() {
+        try {
+            ZooKeeper zk = new ZooKeeper("10.0.1.75:2181,10.0.1.76:2181,10.0.1.77:2181", 300000, new Watcher() {
+                // 监控所有被触发的事件
+                public void process(WatchedEvent event) {
+                    System.out.println("已经触发了" + event.getType() + "事件！");
+                }
+            });
+            zk.addAuthInfo("digest", "super:superpw".getBytes());
+            System.out.println(new String(zk.getData("/test", null, null)));
+            zk.setData("/test", "I change！".getBytes(), -1);
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

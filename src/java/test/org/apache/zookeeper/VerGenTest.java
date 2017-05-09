@@ -62,6 +62,7 @@ public class VerGenTest extends ZKTestCase {
     @Test
     public void testParser() {
         VerGen.Version v = VerGen.parseVersionString(input);
+        LOG.info("Version:" + v);
         Assert.assertEquals(expected[0], v.maj);
         Assert.assertEquals(expected[1], v.min);
         Assert.assertEquals(expected[2], v.micro);

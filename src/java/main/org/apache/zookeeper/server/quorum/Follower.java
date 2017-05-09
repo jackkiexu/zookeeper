@@ -84,9 +84,9 @@ public class Follower extends Learner{
                 syncWithLeader(newEpochZxid);                                       // 与 leader 进行数据同步
                 QuorumPacket qp = new QuorumPacket();
                 while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理, 线程一直在这边循环
-                    readPacket(qp);
+                    readPacket(qp);                                                 // 对应的 leader 方, 消息的发送是通过 LearnerHandler.sendPackets
                     LOG.info("qp:" + qp);
-                    processPacket(qp);
+                    processPacket(qp);                                             // 处理 Leader 发送过来的数据包
                 }
             } catch (IOException e) {
                 LOG.warn("Exception when following the leader", e);
@@ -116,15 +116,15 @@ public class Follower extends Learner{
             break;
         case Leader.PROPOSAL:                                                  // Proposal 包, 投票处理
             TxnHeader hdr = new TxnHeader();
-            Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);
-            if (hdr.getZxid() != lastQueued + 1) {
+            Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);      // 反序列化出 Request
+            if (hdr.getZxid() != lastQueued + 1) {                            // 这里说明什么呢, 说明 Follower 可能少掉了 Proposal
                 LOG.warn("Got zxid 0x"
                         + Long.toHexString(hdr.getZxid())
                         + " expected 0x"
                         + Long.toHexString(lastQueued + 1));
             }
             lastQueued = hdr.getZxid();
-            fzk.logRequest(hdr, txn);
+            fzk.logRequest(hdr, txn);                                           // 将 Request 交给 FollowerZooKeeperServer 来进行处理
             break;
         case Leader.COMMIT:                                                    // 投票处理
             fzk.commit(qp.getZxid());

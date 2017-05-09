@@ -418,6 +418,10 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
+    /**
+     *
+     * PrepRequestProcessor --> SynRequestProcessor --> FinalRequestProcessor
+     */
     protected void setupRequestProcessors() {
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
         RequestProcessor syncProcessor = new SyncRequestProcessor(this,
@@ -694,7 +698,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    public static int getSnapCount() {
+    // 这个数字是出发 ZooKeeperServer 进行 takeSnap 的阈值
+    public static int getSnapCount() {      // 除非配置文件里面配置, 默认就是 100 * 1000
         String sc = System.getProperty("zookeeper.snapCount");
         try {
             int snapCount = Integer.parseInt(sc);

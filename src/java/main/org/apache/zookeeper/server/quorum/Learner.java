@@ -156,7 +156,7 @@ public class Learner {
      *                the packet to be instantiated
      * @throws IOException
      */
-    void readPacket(QuorumPacket pp) throws IOException {
+    void readPacket(QuorumPacket pp) throws IOException {       // 从 leader 读取发送过来的数据包
         synchronized (leaderIs) {
             leaderIs.readRecord(pp, "packet"); // 从 leaderIs 里面读取出 QuorumPacket 的值
         }

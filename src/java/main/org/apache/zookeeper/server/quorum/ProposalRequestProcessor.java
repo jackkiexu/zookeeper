@@ -43,6 +43,15 @@ public class ProposalRequestProcessor implements RequestProcessor {
 
     SyncRequestProcessor syncProcessor;
 
+    /**
+     * Leader 的 RequestProcessor 处理链
+     *
+     * PreRequestProcessor : 创建和修改
+     *
+     * PrepRequestProcessor --> ProposalRequestProcessor --> CommitProcessor --> ToBeAppliedRequestProcessor --> FinalRequestProcessor
+     *                                                    \
+     *                                                     SynRequestProcessor --> AckRequestProcessor (这条分支是在 ProposalRequestProcessor 里面进行构建的)
+     */
     public ProposalRequestProcessor(LeaderZooKeeperServer zks,
             RequestProcessor nextProcessor) {
         this.zks = zks;
@@ -76,7 +85,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
         if(request instanceof LearnerSyncRequest){
             zks.getLeader().processSync((LearnerSyncRequest)request);
         } else {
-                nextProcessor.processRequest(request);
+                nextProcessor.processRequest(request);                        // 这里的 nextProcessor 其实就是 CommitProcessor
             if (request.hdr != null) {                                        // 若是 事务请求
                 // We need to sync and get consensus on any transactions
                 try {

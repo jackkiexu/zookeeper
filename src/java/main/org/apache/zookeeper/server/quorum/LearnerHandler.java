@@ -200,14 +200,14 @@ public class LearnerHandler extends Thread {
         while (true) {
             try {
                 QuorumPacket p;
-                p = queuedPackets.poll();
+                p = queuedPackets.poll();                                       // 将 Leader 发送给 Follower 的 Request 取出来
                 LOG.info(" p :" + p);
                 if (p == null) {
                     bufferedOutput.flush();
-                    p = queuedPackets.take();
+                    p = queuedPackets.take();                                   // 取出数据为空, 程序在这边阻塞着
                 }
                 LOG.info("p == proposalOfDeath :" + (p == proposalOfDeath));
-                if (p == proposalOfDeath) {
+                if (p == proposalOfDeath) {                                    // 若取出的数据包是 proposalOfDeath, 则退出 while loop
                     // Packet of death!
                     break;
                 }
@@ -221,7 +221,7 @@ public class LearnerHandler extends Thread {
                 if (LOG.isTraceEnabled()) {
                     ZooTrace.logQuorumPacket(LOG, traceMask, 'o', p);
                 }
-                oa.writeRecord(p, "packet");
+                oa.writeRecord(p, "packet");                                    // 将数据包写到远端
             } catch (IOException e) {
                 if (!sock.isClosed()) {
                     LOG.warn("Unexpected exception at " + this, e);

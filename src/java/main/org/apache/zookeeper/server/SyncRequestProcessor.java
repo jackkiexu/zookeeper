@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 参考
  * http://blog.csdn.net/vinowan/article/details/22197227
+ * http://www.cnblogs.com/echobfy/p/5174007.html
  *
  * This RequestProcessor logs requests to disk. It batches the requests to do
  * the io efficiently. The request is not passed to the next RequestProcessor
@@ -69,7 +70,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
     /**
      * The number of log entries to log before starting a snapshot
      */
-    // 在开始进行 takesnapshot 前已有的 snapshot 数量
+    // 在开始进行 takesnapshot 的阈值
     private static int snapCount = ZooKeeperServer.getSnapCount();
     
     /**
@@ -126,11 +127,11 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
 
             // we do this in an attempt to ensure that not all of the servers
             // in the ensemble take a snapshot at the same time
-            setRandRoll(r.nextInt(snapCount/2));
+            setRandRoll(r.nextInt(snapCount/2));                                             // randRoll 的取值为 0 - (snapCount/2) 之间的值
             while (true) {
                 Request si = null;
                 if (toFlush.isEmpty()) {
-                    si = queuedRequests.take();
+                    si = queuedRequests.take();                                             // 拿出 Request 里面的数据
                     LOG.info("si:"+si);
                 } else {
                     si = queuedRequests.poll();
@@ -145,14 +146,14 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                 }
                 if (si != null) {
                     // track the number of records written to the log
-                    if (zks.getZKDatabase().append(si)) {                                   // 最加数据到 txnLog 文件里面
-                        logCount++;
-                        if (logCount > (snapCount / 2 + randRoll)) {                        // 日志 落磁盘 阈值
+                    if (zks.getZKDatabase().append(si)) {                                   // 最加数据到 txnLog 文件里面 (落磁盘)
+                        logCount++;                                                         // 这台 QuorumPeer 已经处理的 Request 数
+                        if (logCount > (snapCount / 2 + randRoll)) {                        // 日志 落磁盘 阈值, 这里采用 snapCount 的一半 + 一个随机数 randRoll, 超过了就进行落磁盘操作
                             randRoll = r.nextInt(snapCount/2);
                             // roll the log
-                            zks.getZKDatabase().rollLog();                                  // 将事务日志落磁盘, 持久化
-                            // take a snapshot
-                            if (snapInProcess != null && snapInProcess.isAlive()) {
+                            zks.getZKDatabase().rollLog();                                  // 这里就是将 logStream = null, 因为在 FileTxnSnapLog.append(TxnHeader hdr 时判断 logStream 是否是 null, 若是的话就生成新的 事务文件
+                            // take a snapshot                                              // 其实也就是在 调用 zks.getZKDatabase().append(si) 时进行判断
+                            if (snapInProcess != null && snapInProcess.isAlive()) {    // 上个  snapInProcess 进程还没有完成
                                 LOG.warn("Too busy to snap, skipping");
                             } else {
                                 snapInProcess = new Thread("Snapshot Thread") {         // 开启一个线程, 进行 take snapshot
@@ -166,7 +167,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                                     };
                                 snapInProcess.start();
                             }
-                            logCount = 0;
+                            logCount = 0;                                                  // 重置 logCount
                         }
                     } else if (toFlush.isEmpty()) {
                         // optimization for read heavy workloads

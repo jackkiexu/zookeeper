@@ -68,8 +68,8 @@ public class ProviderRegistry {
     public static String listProviders() {
         StringBuilder sb = new StringBuilder();
         for(String s: authenticationProviders.keySet()) {
-        sb.append(s + " ");
-}
+                sb.append(s + " ");
+        }
         return sb.toString();
     }
 }

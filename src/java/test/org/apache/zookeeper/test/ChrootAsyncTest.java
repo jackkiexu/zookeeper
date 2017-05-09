@@ -38,8 +38,7 @@ public class ChrootAsyncTest extends AsyncOpsTest {
 
         ZooKeeper zk = createClient(hp);
         try {
-            zk.create("/chrootasynctest", null, Ids.OPEN_ACL_UNSAFE,
-                    CreateMode.PERSISTENT);
+            zk.create("/chrootasynctest", null, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } finally {
             zk.close();
         }

@@ -111,6 +111,16 @@ public class VerGen {
         public int min;
         public int micro;
         public String qualifier;
+
+        @Override
+        public String toString() {
+            return "Version{" +
+                    "maj=" + maj +
+                    ", min=" + min +
+                    ", micro=" + micro +
+                    ", qualifier='" + qualifier + '\'' +
+                    '}';
+        }
     }
 
     public static Version parseVersionString(String input) {

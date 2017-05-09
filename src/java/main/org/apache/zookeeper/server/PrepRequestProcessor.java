@@ -275,7 +275,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         }
     }
 
-    static void checkACL(ZooKeeperServer zks, List<ACL> acl, int perm,
+    public static void checkACL(ZooKeeperServer zks, List<ACL> acl, int perm,
             List<Id> ids) throws KeeperException.NoAuthException {
         if (skipACL) {
             return;
@@ -722,11 +722,9 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 }
                 boolean authIdValid = false;
                 for (Id cid : authInfo) {
-                    AuthenticationProvider ap =
-                        ProviderRegistry.getProvider(cid.getScheme());
+                    AuthenticationProvider ap = ProviderRegistry.getProvider(cid.getScheme());
                     if (ap == null) {
-                        LOG.error("Missing AuthenticationProvider for "
-                                + cid.getScheme());
+                        LOG.error("Missing AuthenticationProvider for " + cid.getScheme());
                     } else if (ap.isAuthenticated()) {
                         authIdValid = true;
                         toAdd.add(new ACL(a.getPerms(), cid));

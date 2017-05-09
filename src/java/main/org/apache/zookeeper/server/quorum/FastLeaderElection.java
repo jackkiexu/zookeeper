@@ -963,7 +963,7 @@ public class FastLeaderElection implements Election {
                            
                             if(ooePredicate(recvset, outofelection, n)) {       // 检测投票是否结束,  Leader 是否已经去人
                                 self.setPeerState((n.leader == self.getId()) ?
-                                        ServerState.LEADING: learningState());
+                                        ServerState.LEADING: learningState()); // 在此处进行更行 QuorumPeer 的状态信息 (LEADING / FOLLOWING)
 
                                 Vote endVote = new Vote(n.leader, 
                                         n.zxid, 

@@ -86,16 +86,15 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     LinkedBlockingQueue<Request> pendingTxns = new LinkedBlockingQueue<Request>();
 
     public void logRequest(TxnHeader hdr, Record txn) {
-        LOG.info("hdr:" + hdr + ", txn:" + txn);
-        Request request = new Request(null, hdr.getClientId(), hdr.getCxid(),
-                hdr.getType(), null, null);
+        LOG.info("hdr:" + hdr + ", txn:" + txn);                                // 构建出 Leader 发来的  Request
+        Request request = new Request(null, hdr.getClientId(), hdr.getCxid(), hdr.getType(), null, null);
         request.hdr = hdr;
         request.txn = txn;
         request.zxid = hdr.getZxid();
         if ((request.zxid & 0xffffffffL) != 0) {
-            pendingTxns.add(request);
+            pendingTxns.add(request);                                           // 当 request commit 时, 就进行 remove 掉
         }
-        syncProcessor.processRequest(request);
+        syncProcessor.processRequest(request);                                  // 将 Request 交给 SyncRequestProcessor 来进行处理
     }
 
     /**

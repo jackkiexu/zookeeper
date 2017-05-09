@@ -67,7 +67,7 @@ public class ZooDefs {
         public final int error = -1;
     }
 
-    public interface Perms {
+    public interface Perms {                                    // ZooKeeper 的权限控制
         int READ = 1 << 0;
 
         int WRITE = 1 << 1;
@@ -109,8 +109,7 @@ public class ZooDefs {
          * This ACL gives the world the ability to read.
          */
         public final ArrayList<ACL> READ_ACL_UNSAFE = new ArrayList<ACL>(
-                Collections
-                        .singletonList(new ACL(Perms.READ, ANYONE_ID_UNSAFE)));
+                Collections.singletonList(new ACL(Perms.READ, ANYONE_ID_UNSAFE)));
     }
 
     final public static String[] opNames = { "notification", "create",
