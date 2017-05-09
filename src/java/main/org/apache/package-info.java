@@ -4,6 +4,8 @@
  * http://blog.csdn.net/vinowan/article/details/22197049
  *
  * http://blog.csdn.net/fei33423/article/details/53749138
+ * 下面这个非常好
+ * http://www.aboutyun.com/thread-10287-1-1.html
  *
  * Zookeeper 集群常见问题
  * 1. follower 接收到丢掉的 commit
