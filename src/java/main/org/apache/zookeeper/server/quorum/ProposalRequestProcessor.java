@@ -89,7 +89,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
             if (request.hdr != null) {                                        // 若是 事务请求
                 // We need to sync and get consensus on any transactions
                 try {
-                    zks.getLeader().propose(request);                          // Leader 将 request 发送给 Follower
+                    zks.getLeader().propose(request);                          // Leader 进行 Request 的投票 (Proposal) 将 request 发送给 Follower
                 } catch (XidRolloverException e) {
                     throw new RequestProcessorException(e.getMessage(), e);
                 }

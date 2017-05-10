@@ -586,7 +586,7 @@ public class Leader {
             // The proposal has already been committed
             return;
         }
-        Proposal p = outstandingProposals.get(zxid);                               // 获取 zxid 对应的 Proposal
+        Proposal p = outstandingProposals.get(zxid);                               // 从投票箱 outstandingProposals 获取 zxid 对应的 Proposal
         LOG.info("p:" + p);
         if (p == null) {
             LOG.warn("Trying to commit future proposal: zxid 0x{} from {}", Long.toHexString(zxid), followerAddr);
@@ -611,7 +611,7 @@ public class Leader {
             LOG.info("outstandingProposals:" + outstandingProposals);
             outstandingProposals.remove(zxid);                                           // 从 outstandingProposals 里面删除那个可以提交的 Proposal
             if (p.request != null) {
-                toBeApplied.add(p);                                                       // 加入到 toBeApplied 队列里面
+                toBeApplied.add(p);                                                       // 加入到 toBeApplied 队列里面, 这里的 toBeApplied 是 ToBeAppliedRequestProcessor, Leader 共用的队列, 在经过 CommitProcessor 处理过后, 就到 ToBeAppliedRequestProcessor 里面进行处理
                 LOG.info("toBeApplied:" + toBeApplied);
             }
 
@@ -664,7 +664,8 @@ public class Leader {
 
         /*
          * (non-Javadoc)
-         * 
+         * 参考
+         * http://shift-alt-ctrl.iteye.com/blog/1849545
          * @see org.apache.zookeeper.server.RequestProcessor#processRequest(org.apache.zookeeper.server.Request)
          */
         public void processRequest(Request request) throws RequestProcessorException {
@@ -720,6 +721,7 @@ public class Leader {
      * 
      * @param zxid
      */
+    // Leader 向集群中的各个节点发送 Commit Proposal 通知
     public void commit(long zxid) {
         synchronized(this){
             lastCommitted = zxid;
@@ -797,8 +799,8 @@ public class Leader {
             }
 
             lastProposed = p.packet.getZxid();
-            outstandingProposals.put(lastProposed, p);                   // 将事务请求暂时存储下来
-            sendPacket(pp);
+            outstandingProposals.put(lastProposed, p);                   // 将 没有经过 过半 ACK 确认的 Proposal 暂时放在 outstandingProposals 里面; outstandingProposals 相当于投票箱, Proposal 相当于议题,  Proposal.ackSet 相当于 投赞成票的 myid 集合(只要集群中过半 myid 在 Proposal.ackSet中, 则这个议题就会通过)
+            sendPacket(pp);                                                   // 将 Proposal 发送给各台 Follower
         }
         return p;
     }

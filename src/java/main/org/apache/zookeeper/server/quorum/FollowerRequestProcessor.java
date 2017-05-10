@@ -75,7 +75,7 @@ public class FollowerRequestProcessor extends Thread implements
                 // of the sync operations this follower has pending, so we
                 // add it to pendingSyncs.
                 switch (request.type) {
-                case OpCode.sync:
+                case OpCode.sync:                                 // 处理同步数据
                     zks.pendingSyncs.add(request);
                     zks.getFollower().request(request);
                     break;

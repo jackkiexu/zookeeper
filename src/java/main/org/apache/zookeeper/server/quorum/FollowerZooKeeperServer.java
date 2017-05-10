@@ -85,7 +85,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
 
     LinkedBlockingQueue<Request> pendingTxns = new LinkedBlockingQueue<Request>();
 
-    public void logRequest(TxnHeader hdr, Record txn) {
+    public void logRequest(TxnHeader hdr, Record txn) {                          // 接收 Leader 发来的 Proposal
         LOG.info("hdr:" + hdr + ", txn:" + txn);                                // 构建出 Leader 发来的  Request
         Request request = new Request(null, hdr.getClientId(), hdr.getCxid(), hdr.getType(), null, null);
         request.hdr = hdr;
@@ -94,7 +94,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
         if ((request.zxid & 0xffffffffL) != 0) {
             pendingTxns.add(request);                                           // 当 request commit 时, 就进行 remove 掉
         }
-        syncProcessor.processRequest(request);                                  // 将 Request 交给 SyncRequestProcessor 来进行处理
+        syncProcessor.processRequest(request);                                  // 将 Request 交给 SyncRequestProcessor 来进行落磁盘处理, 在落好磁盘后, 调用 SendAckRequestProcessor 进行回复 Leader ACK, 说明 Follower 对于这个 Proposal 已经认可
     }
 
     /**

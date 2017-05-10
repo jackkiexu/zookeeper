@@ -50,7 +50,7 @@ class AckRequestProcessor implements RequestProcessor {
     public void processRequest(Request request) {
         LOG.info("si:"+request);
         QuorumPeer self = leader.self;
-        if(self != null)                            // Leader 自己提出 Proposal, 自己通过 AckRequestProcessor 调用 leader.processAck 来说明: leader 自己赞成 这个 Proposal
+        if(self != null)                            // Leader 自己提出 Proposal, 先通过 SyncRequestProcessor 将 proposal 落磁盘, 然后自己再通过 AckRequestProcessor 调用 leader.processAck 来说明: leader 自己赞成 这个 Proposal
             leader.processAck(self.getId(), request.zxid, null);
         else
             LOG.error("Null QuorumPeer");

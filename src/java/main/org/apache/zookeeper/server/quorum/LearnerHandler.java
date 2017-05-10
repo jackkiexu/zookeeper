@@ -616,7 +616,7 @@ public class LearnerHandler extends Thread {
 
                 LOG.info("qp.getType() : " + qp);
                 switch (qp.getType()) {
-                case Leader.ACK:                                                                              // ACK 包看看之前的投票是否结束
+                case Leader.ACK:                                                                              // 处理 Follower 回复给 Leader 的ACK 包看看之前的投票是否结束
                     if (this.learnerType == LearnerType.OBSERVER) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Received ACK from Observer  " + this.sid);

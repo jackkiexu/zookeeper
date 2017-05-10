@@ -800,8 +800,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     break;
                 case FOLLOWING:
                     try {
-                        LOG.info("FOLLOWING, and myid is " + myid);
-                        setFollower(makeFollower(logFactory));              // 初始化 follower
+                        LOG.info("FOLLOWING, and myid is " + myid);     // 最上层还是 QuorumPeer
+                        setFollower(makeFollower(logFactory));              // 初始化 follower, 在 Follower 里面引用 FollowerZooKeeperServer
                         follower.followLeader();                            // follower 在此等待
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);

@@ -138,6 +138,7 @@ public class Learner {
      *                the proposal packet to be sent to the leader
      * @throws IOException
      */
+    // 将 QuorumPeer 之间的数据包发送给 Leader
     void writePacket(QuorumPacket pp, boolean flush) throws IOException {
         synchronized (leaderOs) {
             if (pp != null) {

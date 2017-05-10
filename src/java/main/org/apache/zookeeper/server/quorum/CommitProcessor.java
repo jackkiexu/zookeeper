@@ -79,8 +79,8 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                 int len = toProcess.size();
                 for (int i = 0; i < len; i++) {
                     Request request = toProcess.get(i);
-                    LOG.info("request:"+ request);
-                    nextProcessor.processRequest(request);                       // 将 ack 过半的 Request 丢给 ToBeAppliedRequestProcessor 来进行处理
+                    LOG.info("request:"+ request);                               // Follower 里面就是 丢给 FinalRequestProcessor 处理
+                    nextProcessor.processRequest(request);                       // 将 ack 过半的 Request 丢给 ToBeAppliedRequestProcessor 来进行处理 (Leader 中是这样处理)
                 }
                 toProcess.clear();
                 synchronized (this) {
@@ -91,7 +91,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                     }
                     // First check and see if the commit came in for the pending
                     // request
-                    if ((queuedRequests.size() == 0 || nextPending != null)              // 有 commit request 进来, 获取 commit request
+                    if ((queuedRequests.size() == 0 || nextPending != null)              // 当 Leader 通过了 过半ACK确认后, 则会将这个 Request 丢给 Follower 来处理, Follower 会直接将 Request 丢到 committedRequests 里面, 进而处理
                             && committedRequests.size() > 0) {
                         Request r = committedRequests.remove();
                         /*
@@ -110,7 +110,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                             nextPending.zxid = r.zxid;
                             toProcess.add(nextPending);                                    // 将 请求 直接加入 toProcess, 直到下次 loop 被 nextProcessor 处理
                             nextPending = null;
-                        } else {                                                            // Leader 直接 调用 commit 方法提交的 请求, 直接加入 toProcess, 直到下次 loop 被 nextProcessor 处理
+                        } else {                                                            // Leader 直接 调用 commit 方法提交的 请求, 直接加入 toProcess, 直到下次 loop 被 nextProcessor 处理 (这个 IF 判断中是 Leader 中处理的)
                             // this request came from someone else so just
                             // send the commit packet
                             toProcess.add(r);
@@ -145,7 +145,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
                                 toProcess.add(request);
                             }
                             break;
-                        default:
+                        default:                                                            // 这里直接加入到 队列 toProcess 中的其实是 非 事务的请求 (比如getData), 丢到 toProcess 里面的请求会丢到下个 RequestProcessor
                             toProcess.add(request);
                         }
                     }

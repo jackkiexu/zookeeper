@@ -114,7 +114,7 @@ public class Follower extends Learner{
         case Leader.PING:                                                       // PING 包, 写会 session 数据
             ping(qp);            
             break;
-        case Leader.PROPOSAL:                                                  // Proposal 包, 投票处理
+        case Leader.PROPOSAL:                                                  // 处理 Leader 发来的 Proposal 包, 投票处理
             TxnHeader hdr = new TxnHeader();
             Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);      // 反序列化出 Request
             if (hdr.getZxid() != lastQueued + 1) {                            // 这里说明什么呢, 说明 Follower 可能少掉了 Proposal
@@ -126,7 +126,7 @@ public class Follower extends Learner{
             lastQueued = hdr.getZxid();
             fzk.logRequest(hdr, txn);                                           // 将 Request 交给 FollowerZooKeeperServer 来进行处理
             break;
-        case Leader.COMMIT:                                                    // 投票处理
+        case Leader.COMMIT:                                                    // 处理 Leader 发来的 COMMIT 包投票处理 Proposal 在 Follower 上进行 Proposal 提交
             fzk.commit(qp.getZxid());
             break;
         case Leader.UPTODATE:
