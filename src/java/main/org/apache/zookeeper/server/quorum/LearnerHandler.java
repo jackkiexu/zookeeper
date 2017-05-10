@@ -332,11 +332,11 @@ public class LearnerHandler extends Thread {
             		ByteBuffer bbsid = ByteBuffer.wrap(learnerInfoData);
             		this.sid = bbsid.getLong();
             	} else {
-            		LearnerInfo li = new LearnerInfo();                                                // 反序列化 LearnerInfo
+            		LearnerInfo li = new LearnerInfo();                                                // 反序列化出 LearnerInfo
             		ByteBufferInputStream.byteBuffer2Record(ByteBuffer.wrap(learnerInfoData), li);
                     LOG.info("li :" + li);
-            		this.sid = li.getServerid();
-            		this.version = li.getProtocolVersion();
+            		this.sid = li.getServerid();                                                      // 取出 Follower 的 myid
+            		this.version = li.getProtocolVersion();                                          // 通讯的协议
             	}
             } else {
             	this.sid = leader.followerCounter.getAndDecrement();
@@ -348,18 +348,18 @@ public class LearnerHandler extends Thread {
                   learnerType = LearnerType.OBSERVER;
             }            
             
-            long lastAcceptedEpoch = ZxidUtils.getEpochFromZxid(qp.getZxid());                       // 与之连接的 Learner 现在的 Leader 选举 轮次
+            long lastAcceptedEpoch = ZxidUtils.getEpochFromZxid(qp.getZxid());                       // 通过 zxid 来获取 Follower 的 Leader 选举的 epoch
 
             LOG.info("qp : " + qp + ", lastAcceptedEpoch : " + lastAcceptedEpoch);
 
             long peerLastZxid;
             StateSummary ss = null;
             long zxid = qp.getZxid();
-            long newEpoch = leader.getEpochToPropose(this.getSid(), lastAcceptedEpoch);            // 将 Learner 的投票信息加入到 connectingFollowers 里面, 判断 Leader 选举是否结束
+            long newEpoch = leader.getEpochToPropose(this.getSid(), lastAcceptedEpoch);            // 将 Follower 的 Leader 选举的 epoch  信息加入到 connectingFollowers 里面, 判断 集群中 Leader 选举的 epoch 同步是否 OK
 
             LOG.info("qp : " + qp + ", newEpoch : " + newEpoch);
 
-            if (this.getVersion() < 0x10000) {
+            if (this.getVersion() < 0x10000) {                                                      // 这个 if 里面是兼容老的代码
                 // we are going to have to extrapolate the epoch information
                 long epoch = ZxidUtils.getEpochFromZxid(zxid);
                 ss = new StateSummary(epoch, zxid);
@@ -367,13 +367,13 @@ public class LearnerHandler extends Thread {
                 leader.waitForEpochAck(this.getSid(), ss);
             } else {                                                                                // 发送一个新的 QuorumPacket
                 byte ver[] = new byte[4];
-                ByteBuffer.wrap(ver).putInt(0x10000);
+                ByteBuffer.wrap(ver).putInt(0x10000);                                               // 构建出 Leader 的信息
                 QuorumPacket newEpochPacket = new QuorumPacket(Leader.LEADERINFO, ZxidUtils.makeZxid(newEpoch, 0), ver, null);
                 LOG.info("newEpochPacket:" + newEpochPacket);
                 oa.writeRecord(newEpochPacket, "packet");                                        // 将 Leader 的信息发送给对应的 Follower / Observer
                 bufferedOutput.flush();
                 QuorumPacket ackEpochPacket = new QuorumPacket();
-                ia.readRecord(ackEpochPacket, "packet");                                          // 这一步就是 read 与 集群中的参与者发来的数据信息, 这里的 InputStream 就是 sock.getInputStream()
+                ia.readRecord(ackEpochPacket, "packet");                                          // Leader 读取 Follower 发来的 ACKEPOCH 信息
 
                 LOG.info("ackEpochPacket:" +ackEpochPacket);                                    // 刚刚发送了 leader 的信息, 现在获取一下确认的 ack
 
@@ -385,7 +385,7 @@ public class LearnerHandler extends Thread {
                 ByteBuffer bbepoch = ByteBuffer.wrap(ackEpochPacket.getData());
                 ss = new StateSummary(bbepoch.getInt(), ackEpochPacket.getZxid());
                 LOG.info("ss : " + ss);
-                leader.waitForEpochAck(this.getSid(), ss);
+                leader.waitForEpochAck(this.getSid(), ss);                                       // 在这边等待所有的 Follower 都回复 ACKEPOCH 值 (这里也是满足过半就可以)
 
             }
             peerLastZxid = ss.getLastZxid();

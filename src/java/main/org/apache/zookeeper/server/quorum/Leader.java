@@ -186,7 +186,7 @@ public class Leader {
     
     ServerSocket ss;
 
-    // 初始化 Leader, 并监听对应额端口
+    // 初始化 Leader, 并监听对应额端口, 这个端口是用于连接 Leader 与 Follower 之间的消息通信
     Leader(QuorumPeer self,LeaderZooKeeperServer zk) throws IOException {
         this.self = self;
         try {

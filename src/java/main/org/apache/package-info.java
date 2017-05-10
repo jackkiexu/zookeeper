@@ -7,6 +7,9 @@
  * 下面这个非常好
  * http://www.aboutyun.com/thread-10287-1-1.html
  *
+ * Leader/Follower初始化
+ * http://www.aboutyun.com/thread-10286-1-1.html
+ *
  * Zookeeper 集群常见问题
  * 1. follower 接收到丢掉的 commit
  * 2. Leader/Follower 建立过程

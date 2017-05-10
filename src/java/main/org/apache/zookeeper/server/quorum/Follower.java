@@ -68,7 +68,7 @@ public class Follower extends Learner{
             InetSocketAddress addr = findLeader();                                  // 根据当前的 QuorumPeer 的 Vote 获取 leader.myid, 从而获取其对应的 Leader.port
             try {
                 connectToLeader(addr);                                              // 连接 Leader
-                long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);     // 向 Leader 发送一个 Leader.FOLLOWERINFO 的数据包
+                long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);     // 与 leader 同步选举的 epoch (This message type is sent by a follower to pass the last zxid)
                 LOG.info("newEpochZxid:" + newEpochZxid);
 
                 //check to see if the leader zxid is lower than ours
