@@ -118,7 +118,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                rc = zks.processTxn(hdr, txn);                                                           // 调用 ZKDatabase 进行事务处理
             }
             // do not add non quorum packets to the queue.
-            if (Request.isQuorum(request.type)) {                                                      // 若是事务请求, 加入 ZKDatabase 的 committedLog 队列
+            if (Request.isQuorum(request.type)) {                                                      // 若是事务请求, 加入 ZKDatabase 的 committedLog 队列, 这个 commit 队列是在 Follower 快速同步时使用的
                 zks.getZKDatabase().addCommittedProposal(request);
             }
         }

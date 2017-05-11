@@ -20,17 +20,23 @@ package org.apache.zookeeper.server;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.jute.BinaryOutputArchive;
 import org.apache.zookeeper.PortAssignment;
 import org.apache.zookeeper.KeeperException.Code;
 import org.apache.zookeeper.KeeperException.SessionExpiredException;
 import org.apache.zookeeper.KeeperException.SessionMovedException;
+import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.OpCode;
+import org.apache.zookeeper.proto.ConnectRequest;
+import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.server.PrepRequestProcessor;
 import org.apache.zookeeper.server.Request;
 import org.apache.zookeeper.server.RequestProcessor;
@@ -60,7 +66,14 @@ public class PrepRequestProcessorTest extends ClientBase {
                 ClientBase.waitForServerUp(HOSTPORT,CONNECTION_TIMEOUT));
         zks.sessionTracker = new MySessionTracker(); 
         PrepRequestProcessor processor = new PrepRequestProcessor(zks, new MyRequestProcessor());
-        Request foo = new Request(null, 1l, 1, OpCode.create, ByteBuffer.allocate(3), null);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
+
+        CreateRequest createReq = new CreateRequest("/foo2" , new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, 1);
+        createReq.serialize(boa, "request");
+
+        Request foo = new Request(null, 1l, 1, OpCode.create, ByteBuffer.wrap(baos.toByteArray()), Arrays.asList(ZooDefs.Ids.ANYONE_ID_UNSAFE));
         processor.pRequest(foo);
         testEnd.await(5, TimeUnit.MINUTES);
         f.shutdown();

@@ -341,7 +341,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     throw new KeeperException.BadArgumentsException(path);
                 }
                 List<ACL> listACL = removeDuplicates(createRequest.getAcl());                   // ACL 去重
-                if (!fixupACL(request.authInfo, listACL)) {
+                if (!fixupACL(request.authInfo, listACL)) {                                   // 权限校验
                     throw new KeeperException.InvalidACLException(path);
                 }
                 String parentPath = path.substring(0, lastSlash);                               // 获取父节点
