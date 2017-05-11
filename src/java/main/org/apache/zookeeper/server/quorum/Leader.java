@@ -427,7 +427,7 @@ public class Leader {
                 self.tick++;
                 return;
             }
-            
+            // 在所有 Follower 与 Leader 进行 选举 epoch, 数据内容同步好之后, Leader 开启 ZooKeeperServer 服务
             startZkServer();
             
             /**
@@ -839,7 +839,10 @@ public class Leader {
     /**
      * lets the leader know that a follower is capable of following and is done
      * syncing
-     * 
+     *
+     * zookeeper 的典型问题
+     * http://blog.csdn.net/fei33423/article/details/53749138
+     *
      * @param handler handler of the follower
      * @return last proposed zxid
      */

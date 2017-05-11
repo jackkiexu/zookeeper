@@ -394,7 +394,7 @@ public class Learner {
             boolean snapshotTaken = false;
             // we are now going to start getting transactions to apply followed by an UPTODATE
             outerLoop:
-            while (self.isRunning()) {                                     // 同步完数据后, 准备执行投票
+            while (self.isRunning()) {                                     // 同步完数据后, 准备执行投票 这里的 self.isRunning() 默认就是 true
                 readPacket(qp);
 
                 LOG.info("qp:" + qp);
@@ -461,7 +461,7 @@ public class Learner {
                         self.setCurrentEpoch(newEpoch);
                     }
                     self.cnxnFactory.setZooKeeperServer(zk);                
-                    break outerLoop;
+                    break outerLoop;                                                // 获取 UPTODATE 后 退出 while loop
                 case Leader.NEWLEADER: // it will be NEWLEADER in v1.0              // 说明之前残留的投票已经处理完, 则将内存中的数据写入文件, 并发送 ACK 包
                     LOG.info("newEpoch:" + newEpoch);
                     // Create updatingEpoch file and remove it after current
@@ -489,7 +489,7 @@ public class Learner {
         ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));                                           // 更新 zixd newLeaderZxid & ~0xffffffffL, 表明已经切换到新的 epoch
 
         LOG.info("ack:" + ack);
-        writePacket(ack, true);                                                                // 回复 leader ack 消息
+        writePacket(ack, true);                                                                // 回复 leader ack 消息 (针对 数据包 Leader.UPTODATE )
         sock.setSoTimeout(self.tickTime * self.syncLimit);                                  // 设置 InputStream.read 的超时时间
         zk.startup();                                                                           // 启动 Learner zookeeper server
         /*

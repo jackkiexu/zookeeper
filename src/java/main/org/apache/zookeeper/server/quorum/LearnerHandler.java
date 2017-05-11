@@ -592,7 +592,8 @@ public class LearnerHandler extends Thread {
             // so we need to mark when the peer can actually start
             // using the data
             //
-            queuedPackets.add(new QuorumPacket(Leader.UPTODATE, -1, null, null));               // leader 启动, 发送一个 UPTODATE 数据包
+            // 下面这个数据包 Leader.UPTODATE 的发送是在 new Thread() 中进行的
+            queuedPackets.add(new QuorumPacket(Leader.UPTODATE, -1, null, null));               // leader 启动后 (Leader 的启动在 Leader.lead().startZkServer()中进行), 发送一个 UPTODATE 数据包
 
             while (true) {
                 qp = new QuorumPacket();
@@ -616,7 +617,7 @@ public class LearnerHandler extends Thread {
 
                 LOG.info("qp.getType() : " + qp);
                 switch (qp.getType()) {
-                case Leader.ACK:                                                                              // 处理 Follower 回复给 Leader 的ACK 包看看之前的投票是否结束
+                case Leader.ACK:                                                                              // 处理 Follower 回复给 Leader 的ACK 包看看之前的投票是否结束 ( 这里是 Follower 在处理 UPTODATE 后恢复 ACK)
                     if (this.learnerType == LearnerType.OBSERVER) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Received ACK from Observer  " + this.sid);
