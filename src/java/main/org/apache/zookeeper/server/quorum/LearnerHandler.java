@@ -752,6 +752,7 @@ public class LearnerHandler extends Thread {
     /**
      * ping calls from the leader to the peers
      */
+    // 这里其实是 Leader 向 Follower 发送 ping 请求
     public void ping() {
         long id;
         if (syncLimitCheck.check(System.nanoTime())) {

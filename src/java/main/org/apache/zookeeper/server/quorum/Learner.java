@@ -567,7 +567,8 @@ public class Learner {
                     + " is valid: " + valid);
         }
     }
-        
+
+    // Follower 将自己的 sessionId 及超时时间发送给 Leader, 让 Leader 进行 touch 操作, 校验是否 session 超时
     protected void ping(QuorumPacket qp) throws IOException {
         // Send back the ping with our session data
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

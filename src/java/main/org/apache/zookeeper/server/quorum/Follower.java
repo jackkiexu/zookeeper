@@ -111,7 +111,7 @@ public class Follower extends Learner{
      */
     protected void processPacket(QuorumPacket qp) throws IOException{
         switch (qp.getType()) {
-        case Leader.PING:                                                       // PING 包, 写会 session 数据
+        case Leader.PING:                                                       // PING 包, Follower 会将 自己的 session 信息发送给 Leader, 让 Leader 来进行校验 sessionId 是否超时
             ping(qp);            
             break;
         case Leader.PROPOSAL:                                                  // 处理 Leader 发来的 Proposal 包, 投票处理

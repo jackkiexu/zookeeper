@@ -11,9 +11,12 @@
  * http://www.aboutyun.com/thread-10286-1-1.html
  *
  * Zookeeper 集群常见问题
- * 1. follower 接收到丢掉的 commit
- * 2. Leader/Follower 建立过程
- * 3. Follower 数据 sync 过程
+ *
+ * 0. Follower 上创建 session, 如何通知 Leader ?
+ * 1. 既然 session 将都由 Leader 来进行校验是否超时, 那超时了怎么办 ?
+ * 2. SyncLimitCheck 的作用 ?
+ * 3. outstandingChanges, outstandingChangesForPath 的作用 ?
+ * 4. Leader.toBeApplied Leader.outstandingProposals 的作用 ?
  *
  * Created by xjk on 5/3/17.
  */
