@@ -295,10 +295,10 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                         && id.getId().equals("anyone")) {
                     return;
                 }
-                AuthenticationProvider ap = ProviderRegistry.getProvider(id
+                AuthenticationProvider ap = ProviderRegistry.getProvider(id         // 获取 id.getScheme() 所对应的权限校验类
                         .getScheme());
                 if (ap != null) {
-                    for (Id authId : ids) {                        
+                    for (Id authId : ids) {                                         // 对权限加以校验
                         if (authId.getScheme().equals(id.getScheme())
                                 && ap.matches(authId.getId(), id.getId())) {
                             return;

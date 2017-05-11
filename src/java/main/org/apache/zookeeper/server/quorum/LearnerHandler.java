@@ -413,6 +413,19 @@ public class LearnerHandler extends Thread {
                                         + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
                 );
 
+
+                /**
+                 * http://www.jianshu.com/p/4cc1040b6a14
+                 *
+                 * 1) 若 lastzxid 在 min 和 max 之间
+                 *      循环 proposals
+                 *      a) 当单个 proposal 的zxid <= 当前的 peerLastZxid 时, 说明已经提交过了, 直接跳过
+                 *      b) 当 proposal 的zxid 大于 peerLastZxid 时, 则删除小于 peerLastZxid部分, 因为已经提交过了, 剩余部分继续做 commit 操作,
+                 *          因此在所有 commit 之前, 先发送一个 trunc 事件, 删除已经提交过的部分, 然后发送需要的 commit 的相关节点
+                 * 2) 如果当前的 peerLastZxid 大于 max, 则全部做 TRUNC
+                 * 3) 剩下的不处理, 可能是新加入的节点, 所以事件类型为 SNAP, 同步数据时直接取快照
+                 */
+
                 LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 查看是否还有需要的投票
                 LOG.info("proposals:"+proposals);
                 if (proposals.size() != 0) {                                                            // 处理这些还需要的投票
@@ -501,6 +514,7 @@ public class LearnerHandler extends Thread {
                     LOG.debug("proposals is empty");
                 }               
 
+                // 将 Leader 中没有 commit 的数据 commit 掉
                 LOG.info("Sending " + Leader.getPacketType(packetToSend));
                 leaderLastZxid = leader.startForwarding(this, updates);
                 LOG.info("leaderLastZxid : " + leaderLastZxid);

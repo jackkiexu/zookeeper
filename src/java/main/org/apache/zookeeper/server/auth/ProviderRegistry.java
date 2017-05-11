@@ -32,7 +32,7 @@ public class ProviderRegistry {
     private static boolean initialized = false;
     private static HashMap<String, AuthenticationProvider> authenticationProviders =
         new HashMap<String, AuthenticationProvider>();
-
+    // 初始化 ZooKeeper 支持的 加密方式 IP, Digest
     public static void initialize() {
         synchronized (ProviderRegistry.class) {
             if (initialized)
@@ -58,13 +58,14 @@ public class ProviderRegistry {
             initialized = true;
         }
     }
-
+    // 获取 scheme 对应的加密方式
     public static AuthenticationProvider getProvider(String scheme) {
         if(!initialized)
             initialize();
         return authenticationProviders.get(scheme);
     }
 
+    // 罗列出来 ZooKeeper 暂且支持的 加密方式 (默认 IP, Digest)
     public static String listProviders() {
         StringBuilder sb = new StringBuilder();
         for(String s: authenticationProviders.keySet()) {
