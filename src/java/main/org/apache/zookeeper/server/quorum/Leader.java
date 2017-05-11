@@ -843,6 +843,7 @@ public class Leader {
      * zookeeper 的典型问题
      * http://blog.csdn.net/fei33423/article/details/53749138
      * http://www.jianshu.com/p/4cc1040b6a14
+     * http://blog.csdn.net/a040600145/article/details/53842280?utm_source=itdadao&utm_medium=referral
      *
      * @param handler handler of the follower
      * @return last proposed zxid
