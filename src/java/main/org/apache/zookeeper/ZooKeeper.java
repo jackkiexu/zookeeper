@@ -782,6 +782,7 @@ public class ZooKeeper {
         }
         request.setAcl(acl);
         ReplyHeader r = cnxn.submitRequest(h, request, response, null);
+        LOG.info("ReplyHeader : " + r + ", r.getErr():" + r.getErr());
         if (r.getErr() != 0) {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()),
                     clientPath);

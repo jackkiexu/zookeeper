@@ -471,7 +471,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 zks.setOwner(request.sessionId, request.getOwner());
                 break;
             case OpCode.closeSession:
-                // We don't want to do this check since the session expiration thread
+                // We don't want to do this check since the session expiration thread            // 这里其实就是 Leader 在本机上 针对sessionId 超时, 做的一些处理
                 // queues up this operation without being the session owner.
                 // this request is the last of the session so it should be ok
                 //zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
@@ -633,13 +633,13 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
             case OpCode.getACL:
             case OpCode.getChildren:
             case OpCode.getChildren2:
-            case OpCode.ping:
+            case OpCode.ping:                                                                   // zookeeper 每隔 10 秒就会发送一个 ping 包
             case OpCode.setWatches:
-                zks.sessionTracker.checkSession(request.sessionId,
+                zks.sessionTracker.checkSession(request.sessionId,                            // 校验 session 是否超时
                         request.getOwner());
                 break;
             }
-        } catch (KeeperException e) {
+        } catch (KeeperException e) {                                                           // 当 session 超时时, 就会走这里的异常
             if (request.hdr != null) {
                 request.hdr.setType(OpCode.error);
                 request.txn = new ErrorTxn(e.code().intValue());

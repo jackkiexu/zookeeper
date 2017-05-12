@@ -309,7 +309,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
     protected long incrPacketsSent() {
         return packetsSent.incrementAndGet();
     }
-
+    // 更新 response 对应的统计数据
     protected synchronized void updateStatsForResponse(long cxid, long zxid,
             String op, long start, long end)
     {

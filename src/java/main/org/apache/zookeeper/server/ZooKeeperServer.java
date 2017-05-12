@@ -98,7 +98,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    public static final int DEFAULT_TICK_TIME = 300000000;
+    public static final int DEFAULT_TICK_TIME = 3000;   // 这个值, 其实就是限制 zookeeper client 自己设置的超时时间, 必须在 minSessionTimeout 与 maxSessionTimeout 之间
     protected int tickTime = DEFAULT_TICK_TIME;
     /** value of -1 indicates unset, use default */
     protected int minSessionTimeout = -1;
@@ -435,7 +435,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         sessionTracker = new SessionTrackerImpl(this, zkDb.getSessionWithTimeOuts(),
                 tickTime, 1);
     }
-    
+    // 这里其实就是开启一个线程 根据超时时间 不断的轮询 sessionSets 来进行 session 的检查
     protected void startSessionTracker() {
         ((SessionTrackerImpl)sessionTracker).start();
     }
@@ -591,7 +591,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             revalidateSession(cnxn, sessionId, sessionTimeout);
         }
     }
-
+    // 在 client 连接 zookeeperServer 成功后, 进行 返回相应响应
     public void finishSessionInit(ServerCnxn cnxn, boolean valid) {
         // register with JMX
         try {
@@ -602,7 +602,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 LOG.warn("Failed to register with JMX", e);
         }
 
-        try {
+        try {                                                                           // 生成 createSession 的 响应 数据
             ConnectResponse rsp = new ConnectResponse(0, valid ? cnxn.getSessionTimeout()
                     : 0, valid ? cnxn.getSessionId() : 0, // send 0 if session is no
                             // longer valid
@@ -616,9 +616,9 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                         this instanceof ReadOnlyZooKeeperServer, "readOnly");
             }
             baos.close();
-            ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
+            ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());                        // 将 Response 转化成字节流
             bb.putInt(bb.remaining() - 4).rewind();
-            cnxn.sendBuffer(bb);    
+            cnxn.sendBuffer(bb);                                                        // 返回给客户端
 
             if (!valid) {
                 LOG.info("Invalid session 0x"
@@ -678,7 +678,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             }
         }
         try {
-            touch(si.cnxn);                                         // 再次 更新 Session 的 timeout
+            touch(si.cnxn);                                         // 查看 session 是否还存活, 每个岛这里的操作都是事务操作, 都会更新对应的 session 更新时间
             boolean validpacket = Request.isValid(si.type);
             if (validpacket) {
                 firstProcessor.processRequest(si);

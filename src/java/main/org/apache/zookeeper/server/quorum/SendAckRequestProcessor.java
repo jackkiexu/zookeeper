@@ -39,7 +39,7 @@ public class SendAckRequestProcessor implements RequestProcessor, Flushable {
 
     public void processRequest(Request si) {
         LOG.info("si:"+si);
-        if(si.type != OpCode.sync){                                     // Follower 对于一个 Proposal, 向 Leader 回复 ACK
+        if(si.type != OpCode.sync){                                     // Follower 对于一个 Proposal( Leader发给 Follower 的), 向 Leader 回复 ACK, Leader 端则进行 ack 的收集, 在 LearnerHandler.run 中的最后一个 while loop 里面
             QuorumPacket qp = new QuorumPacket(Leader.ACK, si.hdr.getZxid(), null, null);
             try {
                 learner.writePacket(qp, false);

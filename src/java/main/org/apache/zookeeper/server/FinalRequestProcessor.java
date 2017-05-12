@@ -174,13 +174,13 @@ public class FinalRequestProcessor implements RequestProcessor {
                 return;
             }
             case OpCode.createSession: {
-                zks.serverStats().updateLatency(request.createTime);
+                zks.serverStats().updateLatency(request.createTime);                                        // 根据这次的请求, 更新整个系统的 minLatency maxLatency
 
                 lastOp = "SESS";
                 cnxn.updateStatsForResponse(request.cxid, request.zxid, lastOp,
                         request.createTime, System.currentTimeMillis());
 
-                zks.finishSessionInit(request.cnxn, true);
+                zks.finishSessionInit(request.cnxn, true);                                                   // 将对应的相应信息写回客户端
                 return;
             }
             case OpCode.multi: {
@@ -243,6 +243,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 lastOp = "CLOS";
                 closeSession = true;
                 err = Code.get(rc.err);
+                LOG.info("rc:" + rc);
                 break;
             }
             case OpCode.sync: {
@@ -376,6 +377,8 @@ public class FinalRequestProcessor implements RequestProcessor {
             // successfully fwd/processed by the leader and as a result
             // the client and leader disagree on where the client is most
             // recently attached (and therefore invalid SESSION MOVED generated)
+            e.printStackTrace();
+            LOG.info(e.getMessage());
             cnxn.sendCloseSession();
             return;
         } catch (KeeperException e) {
@@ -397,13 +400,13 @@ public class FinalRequestProcessor implements RequestProcessor {
         long lastZxid = zks.getZKDatabase().getDataTreeLastProcessedZxid();
         ReplyHeader hdr =
             new ReplyHeader(request.cxid, lastZxid, err.intValue());
-
+        LOG.info("ReplyHeader:" + hdr);
         zks.serverStats().updateLatency(request.createTime);
         cnxn.updateStatsForResponse(request.cxid, lastZxid, lastOp,
                     request.createTime, System.currentTimeMillis());
 
         try {
-            cnxn.sendResponse(hdr, rsp, "response");
+            cnxn.sendResponse(hdr, rsp, "response");                                // 向客户端回复响应信息
             if (closeSession) {
                 cnxn.sendCloseSession();
             }

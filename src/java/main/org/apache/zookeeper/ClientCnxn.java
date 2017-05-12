@@ -1076,7 +1076,7 @@ public class ClientCnxn {
                         int timeToNextPing = readTimeout / 2 - clientCnxnSocket.getIdleSend() - 
                         		((clientCnxnSocket.getIdleSend() > 1000) ? 1000 : 0);
                         //send a ping request either time is due or no packet sent out within MAX_SEND_PING_INTERVAL
-                        if (timeToNextPing <= 0 || clientCnxnSocket.getIdleSend() > MAX_SEND_PING_INTERVAL) {
+                        if (timeToNextPing <= 0 || clientCnxnSocket.getIdleSend() > MAX_SEND_PING_INTERVAL) {           // 这里其实就是 zookeeper client 每隔 100 秒进行一次心跳包的发送
                             sendPing();
                             clientCnxnSocket.updateLastSend();
                         } else {
@@ -1099,7 +1099,8 @@ public class ClientCnxn {
                         }
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
-
+                    LOG.info("pendingQueue : " + pendingQueue);
+                    LOG.info("outgoingQueue : " + outgoingQueue);
                     clientCnxnSocket.doTransport(to, pendingQueue, outgoingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
                     if (closing) {

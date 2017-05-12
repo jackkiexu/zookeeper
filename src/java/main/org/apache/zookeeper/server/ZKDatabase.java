@@ -65,6 +65,7 @@ public class ZKDatabase {
      * all these members.
      */
     protected DataTree dataTree;
+    // zookeeper集群中的 createSession 也是事务操作
     protected ConcurrentHashMap<Long, Integer> sessionsWithTimeouts;
     protected FileTxnSnapLog snapLog;
     protected long minCommittedLog, maxCommittedLog;

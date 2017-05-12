@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ClientBase extends ZKTestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(ClientBase.class);
 
-    public static int CONNECTION_TIMEOUT = 300000000;
+    public static int CONNECTION_TIMEOUT = 3000;
     static final File BASETEST =
         new File(System.getProperty("build.test.dir", "build"));
 

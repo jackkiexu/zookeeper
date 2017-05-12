@@ -84,7 +84,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     }
 
     LinkedBlockingQueue<Request> pendingTxns = new LinkedBlockingQueue<Request>();
-
+    // 在 Follower 的 processPacket 中进行处理
     public void logRequest(TxnHeader hdr, Record txn) {                          // 接收 Leader 发来的 Proposal
         LOG.info("hdr:" + hdr + ", txn:" + txn);                                // 构建出 Leader 发来的  Request
         Request request = new Request(null, hdr.getClientId(), hdr.getCxid(), hdr.getType(), null, null);

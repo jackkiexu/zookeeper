@@ -18,6 +18,9 @@
 
 package org.apache.zookeeper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -26,6 +29,9 @@ import java.util.Map;
 
 @SuppressWarnings("serial")
 public abstract class KeeperException extends Exception {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ZooKeeper.class);
+
     /**
      * All multi-requests that result in an exception retain the results
      * here so that it is possible to examine the problems in the catch
@@ -48,6 +54,7 @@ public abstract class KeeperException extends Exception {
      *  the caller.
      */
     public static KeeperException create(Code code, String path) {
+        LOG.info("code:" + code + ", path:" + path);
         KeeperException r = create(code);
         r.path = path;
         return r;

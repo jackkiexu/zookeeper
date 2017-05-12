@@ -273,7 +273,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
             zkServer.shutdown();
         }
     }
-
+    // 通过 sessionId 来获取对应的 NIOServerCnxn -> 进而关闭 socket
     @Override
     public synchronized void closeSession(long sessionId) {
         selector.wakeup();

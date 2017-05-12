@@ -396,7 +396,7 @@ public class NIOServerCnxn extends ServerCnxn {
     public void disableRecv() {
         sk.interestOps(sk.interestOps() & (~SelectionKey.OP_READ));
     }
-
+    // 改变 SelectionKey 值, 让 socket 可读时 进行相应的事件通知
     public void enableRecv() {
         synchronized (this.factory) {
             sk.selector().wakeup();

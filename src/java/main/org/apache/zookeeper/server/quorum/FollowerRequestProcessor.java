@@ -79,7 +79,7 @@ public class FollowerRequestProcessor extends Thread implements
                     zks.pendingSyncs.add(request);
                     zks.getFollower().request(request);
                     break;
-                case OpCode.create:
+                case OpCode.create:                              // 从这里 看出 path 创建/删除/设置数据/设置访问权限/创建,关闭session, 多个操作 -> 都 是 Follower 交给 leader 进行处理
                 case OpCode.delete:
                 case OpCode.setData:
                 case OpCode.setACL:

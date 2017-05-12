@@ -463,7 +463,7 @@ public class Leader {
             boolean tickSkip = true;
     
             while (true) {
-                Thread.sleep(self.tickTime / 2);
+                Thread.sleep(self.tickTime / 2);                                                 //
                 if (!tickSkip) {
                     self.tick++;
                 }
@@ -478,7 +478,7 @@ public class Leader {
                     if (f.synced() && f.getLearnerType() == LearnerType.PARTICIPANT) {
                         syncedSet.add(f.getSid());
                     }
-                    f.ping();
+                    f.ping();                                                                       // 这里的 ping 其实就是 Follower 将 session 发送给 Leader 来进行校验超时
                 }
 
               if (!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)) {               // 如果有 follower 挂掉导致投票不通过, 则退出 lead 流程, 重新选举
