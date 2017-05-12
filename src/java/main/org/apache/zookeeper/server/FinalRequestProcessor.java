@@ -98,14 +98,16 @@ public class FinalRequestProcessor implements RequestProcessor {
         ZooTrace.logRequest(LOG, traceMask, 'E', request, "");
 
         ProcessTxnResult rc = null;
+
+        LOG.info("zks.outstandingChanges:" + zks.outstandingChanges);
+        LOG.info("zks.outstandingChangesForPath:" + zks.outstandingChangesForPath);
+
         synchronized (zks.outstandingChanges) {
             while (!zks.outstandingChanges.isEmpty()
                     && zks.outstandingChanges.get(0).zxid <= request.zxid) {                        // outstandingChanges 不为空, 且首个元素的 zxid < request.zxid
                 ChangeRecord cr = zks.outstandingChanges.remove(0);                                  // 移除首个元素
                 if (cr.zxid < request.zxid) {                                                          // 进行相应日志处理
-                    LOG.warn("Zxid outstanding "
-                            + cr.zxid
-                            + " is less than current " + request.zxid);
+                    LOG.warn("Zxid outstanding " + cr.zxid + " is less than current " + request.zxid);
                 }
                 if (zks.outstandingChangesForPath.get(cr.path) == cr) {                            // 移除 ChangeRecord 对应的路径
                     zks.outstandingChangesForPath.remove(cr.path);

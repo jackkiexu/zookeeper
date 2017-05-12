@@ -180,7 +180,7 @@ public class NIOServerCnxn extends ServerCnxn {
     /** Read the request payload (everything following the length prefix) */
     private void readPayload() throws IOException, InterruptedException {
         if (incomingBuffer.remaining() != 0) { // have we read length bytes?
-            int rc = sock.read(incomingBuffer); // sock is non-blocking, so ok
+            int rc = sock.read(incomingBuffer); // sock is non-blocking, so ok   // 在 readLength 中进行分配了 包体的数据包大小, 而在这边进行读取包体的内容
             if (rc < 0) {
                 throw new EndOfStreamException(
                         "Unable to read additional data from client sessionid 0x"
@@ -189,16 +189,16 @@ public class NIOServerCnxn extends ServerCnxn {
             }
         }
 
-        if (incomingBuffer.remaining() == 0) { // have we read length bytes?
-            packetReceived();
+        if (incomingBuffer.remaining() == 0) { // have we read length bytes?     // 数据包读满
+            packetReceived();                                                    // 更新已经接收到的数据包的个数
             incomingBuffer.flip();
-            if (!initialized) {
-                readConnectRequest();
+            if (!initialized) {                                                  // 判断 NIOServerCnxn 是否已经建立好 session
+                readConnectRequest();                                            // 创建 createSession 的数据包
             } else {
-                readRequest();
+                readRequest();                                                   // 读取普通的数据包
             }
             lenBuffer.clear();
-            incomingBuffer = lenBuffer;
+            incomingBuffer = lenBuffer;                                          // 恢复 incomingBuffer
         }
     }
 
@@ -212,6 +212,7 @@ public class NIOServerCnxn extends ServerCnxn {
     /**
      * Handles read/write IO on connection.
      */
+    // 将 SelectionKey 的 read/write 事件来进行处理
     void doIO(SelectionKey k) throws InterruptedException {
         try {
             if (isSocketOpen() == false) {
@@ -221,14 +222,14 @@ public class NIOServerCnxn extends ServerCnxn {
                 return;
             }
             if (k.isReadable()) {
-                int rc = sock.read(incomingBuffer);
+                int rc = sock.read(incomingBuffer);             // 读取请求包头的数据 (4个字节)
                 if (rc < 0) {
                     throw new EndOfStreamException(
                             "Unable to read additional data from client sessionid 0x"
                             + Long.toHexString(sessionId)
                             + ", likely client has closed socket");
                 }
-                if (incomingBuffer.remaining() == 0) {
+                if (incomingBuffer.remaining() == 0) {          // incomingBuffer 4个字节空间读满
                     boolean isPayload;
                     if (incomingBuffer == lenBuffer) { // start of next request
                         incomingBuffer.flip();
@@ -239,7 +240,7 @@ public class NIOServerCnxn extends ServerCnxn {
                         isPayload = true;
                     }
                     if (isPayload) { // not the case for 4letterword
-                        readPayload();
+                        readPayload();                         //  读取数据包, 并交由 zookeeperServer来进行处理
                     }
                     else {
                         // four letter words take care
@@ -366,7 +367,7 @@ public class NIOServerCnxn extends ServerCnxn {
             close();
         }
     }
-
+    // 调用 zookeeperServer 来处理数据包
     private void readRequest() throws IOException {
         zkServer.processPacket(this, incomingBuffer);
     }
@@ -374,11 +375,11 @@ public class NIOServerCnxn extends ServerCnxn {
     protected void incrOutstandingRequests(RequestHeader h) {
         if (h.getXid() >= 0) {
             synchronized (this) {
-                outstandingRequests++;
+                outstandingRequests++;                           // 每次发送完数据就进行 outstandingRequests --, 就在 NIOServerCnxn.sendResponse
             }
             synchronized (this.factory) {        
                 // check throttling
-                if (zkServer.getInProcess() > outstandingLimit) {
+                if (zkServer.getInProcess() > outstandingLimit) { // outstandingLimit 默认值为 1000
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Throttling recv " + zkServer.getInProcess());
                     }
@@ -413,6 +414,7 @@ public class NIOServerCnxn extends ServerCnxn {
         if (zkServer == null) {
             throw new IOException("ZooKeeperServer not running");
         }
+        // zookeeperServer 处理客户端连接请求
         zkServer.processConnectRequest(this, incomingBuffer);
         initialized = true;
     }
@@ -918,17 +920,17 @@ public class NIOServerCnxn extends ServerCnxn {
      */
     private boolean readLength(SelectionKey k) throws IOException {
         // Read the length, now get the buffer
-        int len = lenBuffer.getInt();
+        int len = lenBuffer.getInt();                           // 数据包体的大小
         if (!initialized && checkFourLetterWord(sk, len)) {
             return false;
         }
-        if (len < 0 || len > BinaryInputArchive.maxBuffer) {
+        if (len < 0 || len > BinaryInputArchive.maxBuffer) {    // 数据包长度是否正确
             throw new IOException("Len error " + len);
         }
         if (zkServer == null) {
             throw new IOException("ZooKeeperServer not running");
         }
-        incomingBuffer = ByteBuffer.allocate(len);
+        incomingBuffer = ByteBuffer.allocate(len);              // 分配包体数据包的长度
         return true;
     }
 

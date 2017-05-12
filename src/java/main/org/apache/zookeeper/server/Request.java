@@ -195,12 +195,10 @@ public class Request {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("sessionid:0x").append(Long.toHexString(sessionId))
-            .append(" type:").append(op2String(type))
-            .append(" cxid:0x").append(Long.toHexString(cxid))
-            .append(" zxid:0x").append(Long.toHexString(hdr == null ?
-                    -2 : hdr.getZxid()))
-            .append(" txntype:").append(hdr == null ?
-                    "unknown" : "" + hdr.getType());
+            .append(", type:").append(op2String(type))
+            .append(", cxid:0x").append(Long.toHexString(cxid))
+            .append(", zxid:0x").append(Long.toHexString(hdr == null ? -2 : hdr.getZxid()))
+            .append(", txntype:").append(hdr == null ? "unknown (hdr == null), " : " " + hdr.getType());
 
         // best effort to print the path assoc with this request
         String path = "n/a";
@@ -228,7 +226,7 @@ public class Request {
                 // ignore - can't find the path, will output "n/a" instead
             }
         }
-        sb.append(" reqpath:").append(path);
+        sb.append(", reqpath:").append(path);
 
         return sb.toString();
     }

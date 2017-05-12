@@ -50,7 +50,7 @@ public class ZooKeeperTest extends ClientBase {
         zk.create("/a/b", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                 CreateMode.PERSISTENT);
 
-        zk.create("/a/b/v", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
+  /*      zk.create("/a/b/v", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                 CreateMode.PERSISTENT);
 
         zk.create("/a/b/v/1", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
@@ -70,7 +70,7 @@ public class ZooKeeperTest extends ClientBase {
         Assert.assertTrue(children.contains("c"));
 
         ZKUtil.deleteRecursive(zk, "/a");
-        Assert.assertNull(zk.exists("/a", null));
+        Assert.assertNull(zk.exists("/a", null));*/
     }
 
     @Test

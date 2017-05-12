@@ -100,7 +100,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
 
     public PrepRequestProcessor(ZooKeeperServer zks,
             RequestProcessor nextProcessor) {
-        super("ProcessThread(sid:" + zks.getServerId() + " cport:" + zks.getClientPort() + "):");
+        super("PrepRequestProcessorThread (sid:" + zks.getServerId() + " cport:" + zks.getClientPort() + "):");
         this.nextProcessor = nextProcessor;
         this.zks = zks;
     }
@@ -147,6 +147,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         ChangeRecord lastChange = null;
         synchronized (zks.outstandingChanges) {
             lastChange = zks.outstandingChangesForPath.get(path);
+            LOG.info("lastChange:" + lastChange + ", path:" + path);
             /*
             for (int i = 0; i < zks.outstandingChanges.size(); i++) {
                 ChangeRecord c = zks.outstandingChanges.get(i);
@@ -181,6 +182,8 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
             zks.outstandingChanges.add(c);
             zks.outstandingChangesForPath.put(c.path, c);
         }
+        LOG.info("zks.outstandingChanges:" + zks.outstandingChanges);
+        LOG.info("zks.outstandingChangesForPath:" + zks.outstandingChangesForPath);
     }
 
     /**
@@ -474,7 +477,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 // We don't want to do this check since the session expiration thread            // 这里其实就是 Leader 在本机上 针对sessionId 超时, 做的一些处理
                 // queues up this operation without being the session owner.
                 // this request is the last of the session so it should be ok
-                //zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
+                // zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
                 HashSet<String> es = zks.getZKDatabase().getEphemerals(request.sessionId);      // 获取 session 对应的 临时 path
                 synchronized (zks.outstandingChanges) {
                     for (ChangeRecord c : zks.outstandingChanges) {

@@ -179,33 +179,33 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
     public void run() {
         while (!ss.socket().isClosed()) {
             try {
-                selector.select(1000);
-                Set<SelectionKey> selected;
+                selector.select(1000);                                                                  // 调用 只要有 selectionKey 事件触发, 就不阻塞, 而 selector.select() 的返回值就是调用 selector.selectedKeys 返回的个数
+                Set<SelectionKey> selected;                                                             // 其实这里 针对 selector.select 还有件事情没处理, 那就是 epoll 原生的 bug, 这里可参考 netty/jetty 的处理方式(用个计数器来计数 selector.select 空转的次数, 超过一定阀值, 就新建一个 selector, 并且将原来注册到先前selector 再注册到新的 selector 上)
                 synchronized (this) {
-                    selected = selector.selectedKeys();
+                    selected = selector.selectedKeys();                                                 // selectionKeys 注册的事件已经被selector捕获到的 selectionKeys 集合
                 }
                 ArrayList<SelectionKey> selectedList = new ArrayList<SelectionKey>(
                         selected);
                 Collections.shuffle(selectedList);
                 for (SelectionKey k : selectedList) {
-                    if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {                                   // 针对客户端额连接请求处理, 就是创建对应的 NIOServerCnxn
+                    if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {                                 // 针对客户端额连接请求处理, 就是创建对应的 NIOServerCnxn
                         SocketChannel sc = ((ServerSocketChannel) k
                                 .channel()).accept();
                         InetAddress ia = sc.socket().getInetAddress();
                         int cnxncount = getClientCnxnCount(ia);
-                        if (maxClientCnxns > 0 && cnxncount >= maxClientCnxns){                       // 每个 Server 可以连接的 client 端的个数都是受限的, 超过了, 就进行关闭, 默认 60 个
+                        if (maxClientCnxns > 0 && cnxncount >= maxClientCnxns){                         // 每个 Server 可以连接的 client 端的个数都是受限的, 超过了, 就进行关闭, 默认 60 个
                             LOG.warn("Too many connections from " + ia
                                      + " - max is " + maxClientCnxns );
                             sc.close();
-                        } else {                                                                          // 封装创建 NIOServerCnxn
+                        } else {                                                                        // 封装创建 NIOServerCnxn
                             LOG.info("Accepted socket connection from " + sc.socket().getRemoteSocketAddress());
-                            sc.configureBlocking(false);                                                  // 设置 IO 模式为 nio
+                            sc.configureBlocking(false);                                                // 设置 IO 模式为 nio
                             SelectionKey sk = sc.register(selector, SelectionKey.OP_READ);              // 这里有个注意点, 只有当需要写数据时, 再 register SelectionKey.OP_WRITE
                             NIOServerCnxn cnxn = createConnection(sc, sk);
                             sk.attach(cnxn);
                             addCnxn(cnxn);
                         }
-                    } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {  // 针对客户端的 读写时间处理
+                    } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {  // 针对客户端的 读写事件处理
                         NIOServerCnxn c = (NIOServerCnxn) k.attachment();
                         c.doIO(k);
                     } else {
@@ -215,7 +215,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
                         }
                     }
                 }
-                selected.clear();
+                selected.clear();                                                                       // 清除 selector 中 selectedKeys 集合中已经处理的 selectionKey, 这一步是必需的, 不然下次 再调用 selector.selectedKeys() 还会返回已经处理掉的 selectionKey
             } catch (RuntimeException e) {
                 LOG.warn("Ignoring unexpected runtime exception", e);
             } catch (Exception e) {

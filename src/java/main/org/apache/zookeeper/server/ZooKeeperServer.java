@@ -98,7 +98,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
-    public static final int DEFAULT_TICK_TIME = 3000;   // 这个值, 其实就是限制 zookeeper client 自己设置的超时时间, 必须在 minSessionTimeout 与 maxSessionTimeout 之间
+    public static final int DEFAULT_TICK_TIME = 99999999;   // 这个值, 其实就是限制 zookeeper client 自己设置的超时时间, 必须在 minSessionTimeout 与 maxSessionTimeout 之间
     protected int tickTime = DEFAULT_TICK_TIME;
     /** value of -1 indicates unset, use default */
     protected int minSessionTimeout = -1;
@@ -149,7 +149,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
      * Creates a ZooKeeperServer instance. It sets everything up, but doesn't
      * actually start listening for clients until run() is invoked.
      * 
-     * @param dataDir the directory to put the data
      */
     public ZooKeeperServer(FileTxnSnapLog txnLogFactory, int tickTime,
             int minSessionTimeout, int maxSessionTimeout,
@@ -247,7 +246,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     
     /**
      *  Restore sessions and data
-     *  ????????
      */
     public void loadData() throws IOException, InterruptedException {
         /*
@@ -888,7 +886,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         return false; 
     }
-
+    // NIOServerCnxnFactory.run -> NIOServerCnxn -> doIO -> readPayload -> readRequest/readConnectRequest(其中的 initialized 决定)
     public void processPacket(ServerCnxn cnxn, ByteBuffer incomingBuffer) throws IOException {
         // We have the request, now process and setup for next
         InputStream bais = new ByteBufferInputStream(incomingBuffer);
@@ -898,22 +896,31 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         // Through the magic of byte buffers, txn will not be
         // pointing
         // to the start of the txn
-        incomingBuffer = incomingBuffer.slice();
+        LOG.info("h:" + h);
+        LOG.info("this.getClass():" + this.getClass());
+
+        incomingBuffer = incomingBuffer.slice();                                    // 创建一个浅 copy 的 buffer
         if (h.getType() == OpCode.auth) {
             LOG.info("got auth packet " + cnxn.getRemoteSocketAddress());
             AuthPacket authPacket = new AuthPacket();
             ByteBufferInputStream.byteBuffer2Record(incomingBuffer, authPacket);
+
+            LOG.info("AuthPacket: " + authPacket);
+
             String scheme = authPacket.getScheme();
             AuthenticationProvider ap = ProviderRegistry.getProvider(scheme);
+            LOG.info("AuthenticationProvider : " + ap.getClass());
             Code authReturn = KeeperException.Code.AUTHFAILED;
             if(ap != null) {
                 try {
                     authReturn = ap.handleAuthentication(cnxn, authPacket.getAuth());
+                    LOG.info("authReturn:" + authReturn);
                 } catch(RuntimeException e) {
                     LOG.warn("Caught runtime exception from AuthenticationProvider: " + scheme + " due to " + e);
                     authReturn = KeeperException.Code.AUTHFAILED;                   
                 }
             }
+            LOG.info("authReturn:" + authReturn);
             if (authReturn!= KeeperException.Code.OK) {
                 if (ap == null) {
                     LOG.warn("No authentication provider for scheme: "
@@ -925,10 +932,11 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 // send a response...
                 ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
                         KeeperException.Code.AUTHFAILED.intValue());
-                cnxn.sendResponse(rh, null, null);
+                LOG.info("ReplyHeader:" + rh);
+                cnxn.sendResponse(rh, null, null);                      // 授权失败, 写回 client 端
                 // ... and close connection
                 cnxn.sendBuffer(ServerCnxnFactory.closeConn);
-                cnxn.disableRecv();
+                cnxn.disableRecv();                                     // 让对应的 client 不再能读
             } else {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Authentication succeeded for scheme: "
@@ -937,6 +945,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 LOG.info("auth success " + cnxn.getRemoteSocketAddress());
                 ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
                         KeeperException.Code.OK.intValue());
+                LOG.info("ReplyHeader:" + rh);                          // 授权成功, 写回 client 端
                 cnxn.sendResponse(rh, null, null);
             }
             return;
@@ -944,12 +953,14 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             if (h.getType() == OpCode.sasl) {
                 Record rsp = processSasl(incomingBuffer,cnxn);
                 ReplyHeader rh = new ReplyHeader(h.getXid(), 0, KeeperException.Code.OK.intValue());
+                LOG.info("ReplyHeader: " + rh);
                 cnxn.sendResponse(rh,rsp, "response"); // not sure about 3rd arg..what is it?
             }
             else {
                 Request si = new Request(cnxn, cnxn.getSessionId(), h.getXid(),
                   h.getType(), incomingBuffer, cnxn.getAuthInfo());
                 si.setOwner(ServerCnxn.me);
+                LOG.info("Request: " + si);
                 submitRequest(si);
             }
         }
@@ -960,6 +971,9 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         LOG.debug("Responding to client SASL token.");
         GetSASLRequest clientTokenRecord = new GetSASLRequest();
         ByteBufferInputStream.byteBuffer2Record(incomingBuffer,clientTokenRecord);
+
+        LOG.info("clientTokenRecord:" + clientTokenRecord);
+
         byte[] clientToken = clientTokenRecord.getToken();
         LOG.debug("Size of client SASL token: " + clientToken.length);
         byte[] responseToken = null;
@@ -970,6 +984,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 // if using the DIGEST-MD5 mechanism, clientToken will be empty at the beginning of the
                 // SASL negotiation process.
                 responseToken = saslServer.evaluateResponse(clientToken);
+                LOG.info("responseToken :" + new String(responseToken));
                 if (saslServer.isComplete() == true) {
                     String authorizationID = saslServer.getAuthorizationID();
                     LOG.info("adding SASL authorization for authorizationID: " + authorizationID);

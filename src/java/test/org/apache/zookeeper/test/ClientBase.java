@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ClientBase extends ZKTestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(ClientBase.class);
 
-    public static int CONNECTION_TIMEOUT = 3000;
+    public static int CONNECTION_TIMEOUT = 100000000;
     static final File BASETEST =
         new File(System.getProperty("build.test.dir", "build"));
 
@@ -374,7 +374,7 @@ public abstract class ClientBase extends ZKTestCase {
     public static void startServerInstance(File dataDir, ServerCnxnFactory factory, String hostPort) throws IOException, InterruptedException {
         final int port = getPort(hostPort);
         LOG.info("STARTING server instance 127.0.0.1:{}", port);
-        ZooKeeperServer zks = new ZooKeeperServer(dataDir, dataDir, 3000);
+        ZooKeeperServer zks = new ZooKeeperServer(dataDir, dataDir, CONNECTION_TIMEOUT);
         factory.startup(zks);
         Assert.assertTrue("waiting for server up", ClientBase.waitForServerUp(
                 "127.0.0.1:" + port, CONNECTION_TIMEOUT));

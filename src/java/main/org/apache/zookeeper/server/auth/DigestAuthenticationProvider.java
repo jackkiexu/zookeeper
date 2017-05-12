@@ -99,11 +99,13 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
     public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData)
     {
         String id = new String(authData);
+        LOG.info("id:" + id);
         try {
             String digest = generateDigest(id);
             if (digest.equals(superDigest)) {
                 cnxn.addAuthInfo(new Id("super", ""));
             }
+            LOG.info("digest : " + digest);
             cnxn.addAuthInfo(new Id(getScheme(), digest));
             return KeeperException.Code.OK;
         } catch (NoSuchAlgorithmException e) {

@@ -117,6 +117,7 @@ public class Learner {
     void validateSession(ServerCnxn cnxn, long clientId, int timeout)
             throws IOException {
         LOG.info("Revalidating client: 0x" + Long.toHexString(clientId));
+        LOG.info("validateSession :" + cnxn + ", clientId:" + clientId + ", timeout:" + timeout);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         dos.writeLong(clientId);
