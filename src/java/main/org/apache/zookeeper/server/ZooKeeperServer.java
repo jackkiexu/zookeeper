@@ -530,6 +530,17 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             return new ChangeRecord(zxid, path, stat, childCount,
                     acl == null ? new ArrayList<ACL>() : new ArrayList(acl));
         }
+
+        @Override
+        public String toString() {
+            return "ChangeRecord{" +
+                    "zxid=" + zxid +
+                    ", path='" + path + '\'' +
+                    ", stat=" + stat +
+                    ", childCount=" + childCount +
+                    ", acl=" + acl +
+                    '}';
+        }
     }
 
     public static byte[] generatePasswd(long id) {

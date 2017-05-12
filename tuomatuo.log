@@ -3986,3 +3986,241 @@ Node count: 4
 [2017-05-12 23:04:16,337] INFO  main (ClientBase.java:558) - sleeping for 20 secs
 [2017-05-12 23:04:16,338] INFO  main (ZKTestCase.java:60) - SUCCEEDED testDeleteRecursive
 [2017-05-12 23:04:16,339] INFO  main (ZKTestCase.java:55) - FINISHED testDeleteRecursive
+[2017-05-12 23:14:19,271] INFO  main (PortAssignment.java:32) - assigning port 11221
+[2017-05-12 23:14:19,280] INFO  main (ZKTestCase.java:50) - STARTING testDeleteRecursive
+[2017-05-12 23:14:19,293] INFO  main (ClientBase.java:158) - Initial fdcount is: 60
+[2017-05-12 23:14:19,645] INFO  main (ClientBase.java:455) - STARTING server
+[2017-05-12 23:14:19,647] INFO  main (ClientBase.java:401) - CREATING server instance 127.0.0.1:11221
+[2017-05-12 23:14:19,673] INFO  main (NIOServerCnxnFactory.java:97) - binding to port 0.0.0.0/0.0.0.0:11221
+[2017-05-12 23:14:19,677] INFO  main (ClientBase.java:376) - STARTING server instance 127.0.0.1:11221
+[2017-05-12 23:14:19,957] INFO  main (Environment.java:100) - Server environment:zookeeper.version=3.4.6--1, built on 05/04/2017 15:12 GMT
+[2017-05-12 23:14:19,957] INFO  main (Environment.java:100) - Server environment:host.name=192.168.1.2
+[2017-05-12 23:14:19,958] INFO  main (Environment.java:100) - Server environment:java.version=1.8.0_51
+[2017-05-12 23:14:19,958] INFO  main (Environment.java:100) - Server environment:java.vendor=Oracle Corporation
+[2017-05-12 23:14:19,958] INFO  main (Environment.java:100) - Server environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre
+[2017-05-12 23:14:19,958] INFO  main (Environment.java:100) - Server environment:java.class.path=/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit-rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/tools.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Users/xjk/Documents/ideaworkspace/zookeeper/.eclipse/classes-main:/Users/xjk/.ant/cache/jline/jline/jars/jline-2.11.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-server/jars/jetty-server-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/javax.servlet/javax.servlet-api/jars/javax.servlet-api-3.1.0.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-http/jars/jetty-http-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-util/jars/jetty-util-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-io/jars/jetty-io-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-servlet/jars/jetty-servlet-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-security/jars/jetty-security-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.11.jar:/Users/xjk/.ant/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.11.jar:/Users/xjk/.ant/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5.jar:/Users/xjk/.ant/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.5.jar:/Users/xjk/.ant/cache/commons-cli/commons-cli/jars/commons-cli-1.2.jar:/Users/xjk/.ant/cache/log4j/log4j/bundles/log4j-1.2.17.jar:/Users/xjk/.ant/cache/io.netty/netty/jars/netty-3.10.5.Final.jar:/Users/xjk/.ant/cache/net.java.dev.javacc/javacc/jars/javacc-5.0.jar:/Users/xjk/.ant/cache/commons-collections/commons-collections/jars/commons-collections-3.0.jar:/Users/xjk/.ant/cache/junit/junit/jars/junit-4.12.jar:/Users/xjk/.ant/cache/org.mockito/mockito-all/jars/mockito-all-1.8.2.jar:/Users/xjk/.ant/cache/com.puppycrawl.tools/checkstyle/jars/checkstyle-6.13.jar:/Users/xjk/.ant/cache/commons-collections/commons-collections/jars/commons-collections-3.2.2.jar
+[2017-05-12 23:14:19,959] INFO  main (Environment.java:100) - Server environment:java.library.path=/Users/xjk/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+[2017-05-12 23:14:19,959] INFO  main (Environment.java:100) - Server environment:java.io.tmpdir=/var/folders/b2/kt008nls3zd6jbjjc321lrsh0000gn/T/
+[2017-05-12 23:14:19,959] INFO  main (Environment.java:100) - Server environment:java.compiler=<NA>
+[2017-05-12 23:14:19,962] INFO  main (Environment.java:100) - Server environment:os.name=Mac OS X
+[2017-05-12 23:14:19,962] INFO  main (Environment.java:100) - Server environment:os.arch=x86_64
+[2017-05-12 23:14:19,965] INFO  main (Environment.java:100) - Server environment:os.version=10.10.5
+[2017-05-12 23:14:19,966] INFO  main (Environment.java:100) - Server environment:user.name=xjk
+[2017-05-12 23:14:19,966] INFO  main (Environment.java:100) - Server environment:user.home=/Users/xjk
+[2017-05-12 23:14:19,967] INFO  main (Environment.java:100) - Server environment:user.dir=/Users/xjk/Documents/ideaworkspace/zookeeper
+[2017-05-12 23:14:19,985] INFO  main (ZooKeeperServer.java:163) - Created server with tickTime 100000000 minSessionTimeout 200000000 maxSessionTimeout 2000000000 datadir /Users/xjk/Documents/ideaworkspace/zookeeper/build/2017-05-12-231419644.dir/version-2 snapdir /Users/xjk/Documents/ideaworkspace/zookeeper/build/2017-05-12-231419644.dir/version-2
+[2017-05-12 23:14:20,046] INFO  main (FourLetterWordMain.java:43) - connecting to 127.0.0.1 11221
+[2017-05-12 23:14:20,051] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (NIOServerCnxnFactory.java:201) - Accepted socket connection from /127.0.0.1:62680
+[2017-05-12 23:14:20,064] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (NIOServerCnxn.java:827) - Processing stat command from /127.0.0.1:62680
+[2017-05-12 23:14:20,067] INFO  Thread-2 (NIOServerCnxn.java:663) - Stat command output
+[2017-05-12 23:14:20,069] INFO  Thread-2 (NIOServerCnxn.java:1007) - Closed socket connection for client /127.0.0.1:62680 (no session established for client)
+[2017-05-12 23:14:20,072] INFO  main (ClientBase.java:262) - result:Zookeeper version: 3.4.6--1, built on 05/04/2017 15:12 GMT
+Clients:
+ /127.0.0.1:62680[0](queued=0,recved=1,sent=0)
+
+Latency min/avg/max: 0/0/0
+Received: 1
+Sent: 0
+Connections: 1
+Outstanding: 0
+Zxid: 0x0
+Mode: standalone
+Node count: 4
+
+[2017-05-12 23:14:20,072] INFO  main (JMXEnv.java:229) - ensureParent:[InMemoryDataTree, StandaloneServer_port]
+[2017-05-12 23:14:20,084] INFO  main (JMXEnv.java:246) - expect:InMemoryDataTree
+[2017-05-12 23:14:20,084] INFO  main (JMXEnv.java:250) - found:InMemoryDataTree org.apache.ZooKeeperService:name0=StandaloneServer_port-1,name1=InMemoryDataTree
+[2017-05-12 23:14:20,085] INFO  main (JMXEnv.java:246) - expect:StandaloneServer_port
+[2017-05-12 23:14:20,085] INFO  main (JMXEnv.java:250) - found:StandaloneServer_port org.apache.ZooKeeperService:name0=StandaloneServer_port-1
+[2017-05-12 23:14:20,089] INFO  main (ClientBase.java:172) - Client test setup finished
+[2017-05-12 23:14:20,089] INFO  main (JUnit4ZKTestRunner.java:50) - RUNNING TEST METHOD testDeleteRecursive
+[2017-05-12 23:14:20,094] INFO  main (Environment.java:100) - Client environment:zookeeper.version=3.4.6--1, built on 05/04/2017 15:12 GMT
+[2017-05-12 23:14:20,095] INFO  main (Environment.java:100) - Client environment:host.name=192.168.1.2
+[2017-05-12 23:14:20,095] INFO  main (Environment.java:100) - Client environment:java.version=1.8.0_51
+[2017-05-12 23:14:20,095] INFO  main (Environment.java:100) - Client environment:java.vendor=Oracle Corporation
+[2017-05-12 23:14:20,095] INFO  main (Environment.java:100) - Client environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre
+[2017-05-12 23:14:20,096] INFO  main (Environment.java:100) - Client environment:java.class.path=/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit-rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/lib/tools.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Users/xjk/Documents/ideaworkspace/zookeeper/.eclipse/classes-main:/Users/xjk/.ant/cache/jline/jline/jars/jline-2.11.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-server/jars/jetty-server-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/javax.servlet/javax.servlet-api/jars/javax.servlet-api-3.1.0.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-http/jars/jetty-http-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-util/jars/jetty-util-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-io/jars/jetty-io-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-servlet/jars/jetty-servlet-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.eclipse.jetty/jetty-security/jars/jetty-security-9.2.18.v20160721.jar:/Users/xjk/.ant/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.11.jar:/Users/xjk/.ant/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.11.jar:/Users/xjk/.ant/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.5.jar:/Users/xjk/.ant/cache/org.slf4j/slf4j-log4j12/jars/slf4j-log4j12-1.7.5.jar:/Users/xjk/.ant/cache/commons-cli/commons-cli/jars/commons-cli-1.2.jar:/Users/xjk/.ant/cache/log4j/log4j/bundles/log4j-1.2.17.jar:/Users/xjk/.ant/cache/io.netty/netty/jars/netty-3.10.5.Final.jar:/Users/xjk/.ant/cache/net.java.dev.javacc/javacc/jars/javacc-5.0.jar:/Users/xjk/.ant/cache/commons-collections/commons-collections/jars/commons-collections-3.0.jar:/Users/xjk/.ant/cache/junit/junit/jars/junit-4.12.jar:/Users/xjk/.ant/cache/org.mockito/mockito-all/jars/mockito-all-1.8.2.jar:/Users/xjk/.ant/cache/com.puppycrawl.tools/checkstyle/jars/checkstyle-6.13.jar:/Users/xjk/.ant/cache/commons-collections/commons-collections/jars/commons-collections-3.2.2.jar
+[2017-05-12 23:14:20,097] INFO  main (Environment.java:100) - Client environment:java.library.path=/Users/xjk/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+[2017-05-12 23:14:20,098] INFO  main (Environment.java:100) - Client environment:java.io.tmpdir=/var/folders/b2/kt008nls3zd6jbjjc321lrsh0000gn/T/
+[2017-05-12 23:14:20,099] INFO  main (Environment.java:100) - Client environment:java.compiler=<NA>
+[2017-05-12 23:14:20,099] INFO  main (Environment.java:100) - Client environment:os.name=Mac OS X
+[2017-05-12 23:14:20,099] INFO  main (Environment.java:100) - Client environment:os.arch=x86_64
+[2017-05-12 23:14:20,100] INFO  main (Environment.java:100) - Client environment:os.version=10.10.5
+[2017-05-12 23:14:20,100] INFO  main (Environment.java:100) - Client environment:user.name=xjk
+[2017-05-12 23:14:20,100] INFO  main (Environment.java:100) - Client environment:user.home=/Users/xjk
+[2017-05-12 23:14:20,101] INFO  main (Environment.java:100) - Client environment:user.dir=/Users/xjk/Documents/ideaworkspace/zookeeper
+[2017-05-12 23:14:20,102] INFO  main (ZooKeeper.java:440) - Initiating client connection, connectString=127.0.0.1:11221 sessionTimeout=100000000 watcher=org.apache.zookeeper.test.ClientBase$CountdownWatcher@3a03464
+[2017-05-12 23:14:20,125] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:994) - Opening socket connection to server 127.0.0.1/127.0.0.1:11221. Will not attempt to authenticate using SASL (unknown error)
+[2017-05-12 23:14:20,127] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,127] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (NIOServerCnxnFactory.java:201) - Accepted socket connection from /127.0.0.1:62681
+[2017-05-12 23:14:20,127] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,128] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:869) - Socket connection established to 127.0.0.1/127.0.0.1:11221, initiating session
+[2017-05-12 23:14:20,130] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,131] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : [clientPath:null serverPath:null finished:false header:: null replyHeader:: null request:: ConnectRequest{protocolVersion=0, lastZxidSeen=0, timeOut=100000000, sessionId=0, passwd=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]} response:: null]
+[2017-05-12 23:14:20,133] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,133] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,135] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:833) - connReq:ConnectRequest{protocolVersion=0, lastZxidSeen=0, timeOut=100000000, sessionId=0, passwd=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+[2017-05-12 23:14:20,135] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:834) - Session establishment request from client /127.0.0.1:62681 client's lastZxid is 0x0
+[2017-05-12 23:14:20,135] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:889) - Client attempting to establish new session at /127.0.0.1:62681
+[2017-05-12 23:14:20,137] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:670) - si:sessionid:0x15bfd3990de0000, type:createSession, cxid:0x0, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,138] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x15bfd3990de0000, type:createSession, cxid:0x0, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,139] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x15bfd3990de0000, type:createSession, cxid:0x0, zxid:0x1, txntype: -10, reqpath:n/a
+[2017-05-12 23:14:20,139] INFO  SyncRequestProcessorThread:sid:0): (FileTxnLog.java:199) - Creating new log file: log.1
+[2017-05-12 23:14:20,142] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:138) - si:null
+[2017-05-12 23:14:20,143] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:92) - Processing request:: sessionid:0x15bfd3990de0000, type:createSession, cxid:0x0, zxid:0x1, txntype: -10, reqpath:n/a
+[2017-05-12 23:14:20,144] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:102) - zks.outstandingChanges:[]
+[2017-05-12 23:14:20,144] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:103) - zks.outstandingChangesForPath:{}
+[2017-05-12 23:14:20,150] INFO  SyncRequestProcessorThread:sid:0): (ZooKeeperServer.java:550) - p 1 :[64, 70, 41, 69, -51, -102, 69, -105, 30, -29, -77, 20, 94, -16, -18, 103]
+[2017-05-12 23:14:20,150] INFO  SyncRequestProcessorThread:sid:0): (ZooKeeperServer.java:552) - p 2 :[23, 99, 9, -70, -86, 9, -93, 70, 54, 4, -8, 73, 16, 118, 45, -59]
+[2017-05-12 23:14:20,150] INFO  SyncRequestProcessorThread:sid:0): (ZooKeeperServer.java:554) - p 2 :[99, -90, 83, 54, 45, -21, -50, -33, -25, -105, 107, 84, 90, -76, -18, -36]
+[2017-05-12 23:14:20,151] INFO  SyncRequestProcessorThread:sid:0): (ZooKeeperServer.java:640) - Established session 0x15bfd3990de0000 with negotiated timeout 200000000 for client /127.0.0.1:62681
+[2017-05-12 23:14:20,151] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,151] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,152] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1274) - Session establishment complete on server 127.0.0.1/127.0.0.1:11221, sessionid = 0x15bfd3990de0000, negotiated timeout = 200000000
+[2017-05-12 23:14:20,154] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,155] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,156] INFO  main (JMXEnv.java:117) - expect:0x15bfd3990de0000
+[2017-05-12 23:14:20,157] INFO  main (JMXEnv.java:120) - found:0x15bfd3990de0000 org.apache.ZooKeeperService:name0=StandaloneServer_port-1,name1=Connections,name2=127.0.0.1,name3=0x15bfd3990de0000
+[2017-05-12 23:14:20,161] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,163] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : [clientPath:null serverPath:null finished:false header:: 0,5  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/,#736f6d65,-1  response::  ]
+[2017-05-12 23:14:20,164] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:910) - h:1,5
+
+[2017-05-12 23:14:20,164] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:911) - this.getClass():class org.apache.zookeeper.server.ZooKeeperServer
+[2017-05-12 23:14:20,164] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 1,5  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/,#736f6d65,-1  response::  ]
+[2017-05-12 23:14:20,165] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,165] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:974) - Request: sessionid:0x15bfd3990de0000, type:setData, cxid:0x1, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/
+[2017-05-12 23:14:20,165] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x15bfd3990de0000, type:setData, cxid:0x1, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/
+[2017-05-12 23:14:20,165] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:150) - lastChange:null, path:/
+[2017-05-12 23:14:20,169] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:185) - zks.outstandingChanges:[ChangeRecord{zxid=2, path='/', stat=0,0,0,0,1,0,0,0,0
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,169] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:186) - zks.outstandingChangesForPath:{/=ChangeRecord{zxid=2, path='/', stat=0,0,0,0,1,0,0,0,0
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,170] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x15bfd3990de0000, type:setData, cxid:0x1, zxid:0x2, txntype: 5, reqpath:n/a
+[2017-05-12 23:14:20,170] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:138) - si:null
+[2017-05-12 23:14:20,171] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:92) - Processing request:: sessionid:0x15bfd3990de0000, type:setData, cxid:0x1, zxid:0x2, txntype: 5, reqpath:n/a
+[2017-05-12 23:14:20,172] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:102) - zks.outstandingChanges:[ChangeRecord{zxid=2, path='/', stat=0,0,0,0,1,0,0,0,0
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,172] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:103) - zks.outstandingChangesForPath:{/=ChangeRecord{zxid=2, path='/', stat=0,0,0,0,1,0,0,0,0
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,174] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:405) - ReplyHeader:ReplyHeader{xid=1, zxid=2, err=0}
+[2017-05-12 23:14:20,175] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 1,5  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/,#736f6d65,-1  response::  ]
+[2017-05-12 23:14:20,175] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,176] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,176] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,180] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,181] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : [clientPath:null serverPath:null finished:false header:: 0,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,182] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:910) - h:2,1
+
+[2017-05-12 23:14:20,182] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:911) - this.getClass():class org.apache.zookeeper.server.ZooKeeperServer
+[2017-05-12 23:14:20,183] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:974) - Request: sessionid:0x15bfd3990de0000, type:create, cxid:0x2, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/a
+[2017-05-12 23:14:20,183] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x15bfd3990de0000, type:create, cxid:0x2, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/a
+[2017-05-12 23:14:20,184] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 2,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,184] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,184] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:150) - lastChange:null, path:
+[2017-05-12 23:14:20,184] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:150) - lastChange:null, path:/a
+[2017-05-12 23:14:20,191] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:185) - zks.outstandingChanges:[ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,191] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:186) - zks.outstandingChangesForPath:{=ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,192] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:185) - zks.outstandingChanges:[ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, ChangeRecord{zxid=3, path='/a', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,192] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:186) - zks.outstandingChangesForPath:{=ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, /a=ChangeRecord{zxid=3, path='/a', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,193] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x15bfd3990de0000, type:create, cxid:0x2, zxid:0x3, txntype: 1, reqpath:n/a
+[2017-05-12 23:14:20,193] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:138) - si:null
+[2017-05-12 23:14:20,194] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:92) - Processing request:: sessionid:0x15bfd3990de0000, type:create, cxid:0x2, zxid:0x3, txntype: 1, reqpath:n/a
+[2017-05-12 23:14:20,194] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:102) - zks.outstandingChanges:[ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, ChangeRecord{zxid=3, path='/a', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,195] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:103) - zks.outstandingChangesForPath:{=ChangeRecord{zxid=3, path='', stat=0,2,0,1494602060165,1,1,0,0,0
+, childCount=2, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, /a=ChangeRecord{zxid=3, path='/a', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,195] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:405) - ReplyHeader:ReplyHeader{xid=2, zxid=3, err=0}
+[2017-05-12 23:14:20,196] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 2,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,196] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,197] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,197] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,197] INFO  main (ZooKeeper.java:785) - ReplyHeader : ReplyHeader{xid=2, zxid=3, err=0}, r.getErr():0
+[2017-05-12 23:14:20,197] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,198] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : [clientPath:null serverPath:null finished:false header:: 0,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a/b,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,199] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:910) - h:3,1
+
+[2017-05-12 23:14:20,199] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:911) - this.getClass():class org.apache.zookeeper.server.ZooKeeperServer
+[2017-05-12 23:14:20,199] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 3,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a/b,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,199] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:974) - Request: sessionid:0x15bfd3990de0000, type:create, cxid:0x3, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/a/b
+[2017-05-12 23:14:20,199] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,199] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x15bfd3990de0000, type:create, cxid:0x3, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:/a/b
+[2017-05-12 23:14:20,200] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:150) - lastChange:null, path:/a
+[2017-05-12 23:14:20,200] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:150) - lastChange:null, path:/a/b
+[2017-05-12 23:14:20,200] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:185) - zks.outstandingChanges:[ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,200] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:186) - zks.outstandingChangesForPath:{/a=ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,201] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:185) - zks.outstandingChanges:[ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, ChangeRecord{zxid=4, path='/a/b', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,202] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:186) - zks.outstandingChangesForPath:{/a=ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, /a/b=ChangeRecord{zxid=4, path='/a/b', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,202] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x15bfd3990de0000, type:create, cxid:0x3, zxid:0x4, txntype: 1, reqpath:n/a
+[2017-05-12 23:14:20,202] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:138) - si:null
+[2017-05-12 23:14:20,204] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:92) - Processing request:: sessionid:0x15bfd3990de0000, type:create, cxid:0x3, zxid:0x4, txntype: 1, reqpath:n/a
+[2017-05-12 23:14:20,204] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:102) - zks.outstandingChanges:[ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, ChangeRecord{zxid=4, path='/a/b', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}]
+[2017-05-12 23:14:20,205] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:103) - zks.outstandingChangesForPath:{/a=ChangeRecord{zxid=4, path='/a', stat=3,3,1494602060183,1494602060183,0,1,0,0,3
+, childCount=1, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}, /a/b=ChangeRecord{zxid=4, path='/a/b', stat=0,0,0,0,0,0,0,0,0
+, childCount=0, acl=[ACL{perms=31, id=Id{scheme='world', id='anyone'}}]}}
+[2017-05-12 23:14:20,206] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:405) - ReplyHeader:ReplyHeader{xid=3, zxid=4, err=0}
+[2017-05-12 23:14:20,207] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 3,1  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: '/a/b,#736f6d65,v{s{31,s{'world,'anyone}}},0  response::  ]
+[2017-05-12 23:14:20,207] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,207] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,207] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,208] INFO  main (ZooKeeper.java:785) - ReplyHeader : ReplyHeader{xid=3, zxid=4, err=0}, r.getErr():0
+[2017-05-12 23:14:20,208] INFO  main (JUnit4ZKTestRunner.java:55) - Memory used 15131
+[2017-05-12 23:14:20,208] INFO  main (JUnit4ZKTestRunner.java:60) - Number of threads 19
+[2017-05-12 23:14:20,209] INFO  main (JUnit4ZKTestRunner.java:65) - FINISHED TEST METHOD testDeleteRecursive
+[2017-05-12 23:14:20,209] INFO  main (ClientBase.java:531) - tearDown starting
+[2017-05-12 23:14:20,209] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,210] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : [clientPath:null serverPath:null finished:false header:: 0,-11  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: null response:: null]
+[2017-05-12 23:14:20,210] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 4,-11  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: null response:: null]
+[2017-05-12 23:14:20,210] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,211] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:910) - h:4,-11
+
+[2017-05-12 23:14:20,211] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:911) - this.getClass():class org.apache.zookeeper.server.ZooKeeperServer
+[2017-05-12 23:14:20,211] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (ZooKeeperServer.java:974) - Request: sessionid:0x15bfd3990de0000, type:closeSession, cxid:0x4, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,211] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x15bfd3990de0000, type:closeSession, cxid:0x4, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,211] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:499) - Processed session termination for sessionid: 0x15bfd3990de0000
+[2017-05-12 23:14:20,211] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x15bfd3990de0000, type:closeSession, cxid:0x4, zxid:0x5, txntype: -11, reqpath:n/a
+[2017-05-12 23:14:20,212] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:138) - si:null
+[2017-05-12 23:14:20,212] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:92) - Processing request:: sessionid:0x15bfd3990de0000, type:closeSession, cxid:0x4, zxid:0x5, txntype: -11, reqpath:n/a
+[2017-05-12 23:14:20,212] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:102) - zks.outstandingChanges:[]
+[2017-05-12 23:14:20,212] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:103) - zks.outstandingChangesForPath:{}
+[2017-05-12 23:14:20,213] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:248) - rc:org.apache.zookeeper.server.DataTree$ProcessTxnResult@1395fa77
+[2017-05-12 23:14:20,213] INFO  SyncRequestProcessorThread:sid:0): (FinalRequestProcessor.java:405) - ReplyHeader:ReplyHeader{xid=4, zxid=5, err=0}
+[2017-05-12 23:14:20,214] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : [clientPath:null serverPath:null finished:false header:: 4,-11  replyHeader:: ReplyHeader{xid=0, zxid=0, err=0} request:: null response:: null]
+[2017-05-12 23:14:20,214] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,214] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1102) - pendingQueue : []
+[2017-05-12 23:14:20,215] INFO  main-SendThread(127.0.0.1:11221) (ClientCnxn.java:1103) - outgoingQueue : []
+[2017-05-12 23:14:20,216] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (NIOServerCnxn.java:1007) - Closed socket connection for client /127.0.0.1:62681 which had sessionid 0x15bfd3990de0000
+[2017-05-12 23:14:20,218] INFO  main-EventThread (ClientCnxn.java:521) - EventThread shut down
+[2017-05-12 23:14:20,218] INFO  main (ZooKeeper.java:686) - Session: 0x15bfd3990de0000 closed
+[2017-05-12 23:14:20,219] INFO  main (ClientBase.java:501) - STOPPING server
+[2017-05-12 23:14:20,222] INFO  NIOServerCxn.Factory:0.0.0.0/0.0.0.0:11221 (NIOServerCnxnFactory.java:226) - NIOServerCnxn factory exited run method
+[2017-05-12 23:14:20,222] INFO  main (ZooKeeperServer.java:447) - shutting down
+[2017-05-12 23:14:20,223] INFO  main (SessionTrackerImpl.java:242) - Shutting down
+[2017-05-12 23:14:20,223] INFO  main (PrepRequestProcessor.java:769) - Shutting down
+[2017-05-12 23:14:20,224] INFO  main (SyncRequestProcessor.java:220) - Shutting down
+[2017-05-12 23:14:20,224] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:120) - request:sessionid:0x0, type:notification, cxid:0x0, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,224] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:135) - si:sessionid:0x0, type:notification, cxid:0x0, zxid:0xfffffffffffffffe, txntype:unknown (hdr == null), , reqpath:n/a
+[2017-05-12 23:14:20,224] INFO  PrepRequestProcessorThread (sid:0 cport:-1): (PrepRequestProcessor.java:143) - PrepRequestProcessor exited loop!
+[2017-05-12 23:14:20,225] INFO  SyncRequestProcessorThread:sid:0): (SyncRequestProcessor.java:196) - SyncRequestProcessor exited!
+[2017-05-12 23:14:20,225] INFO  main (FinalRequestProcessor.java:422) - shutdown of request processor complete
+[2017-05-12 23:14:20,226] INFO  main (FourLetterWordMain.java:43) - connecting to 127.0.0.1 11221
+[2017-05-12 23:14:20,227] INFO  main (JMXEnv.java:146) - ensureOnly:[]
+[2017-05-12 23:14:20,231] INFO  main (ClientBase.java:556) - fdcount after test is: 76 at start it was 60
+[2017-05-12 23:14:20,231] INFO  main (ClientBase.java:558) - sleeping for 20 secs
+[2017-05-12 23:14:20,232] INFO  main (ZKTestCase.java:60) - SUCCEEDED testDeleteRecursive
+[2017-05-12 23:14:20,233] INFO  main (ZKTestCase.java:55) - FINISHED testDeleteRecursive
