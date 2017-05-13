@@ -27,6 +27,10 @@
  *
  * 4. Leader.toBeApplied Leader.outstandingProposals 的作用 ?
  *
+ * 5. zookeeper 权限控制
+ *
+ *
+ *
  * Created by xjk on 5/3/17.
  */
 package org.apache;
