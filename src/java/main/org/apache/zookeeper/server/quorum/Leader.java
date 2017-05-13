@@ -304,9 +304,10 @@ public class Leader {
      * This message type informs observers of a committed proposal.
      */
     final static int INFORM = 8;
-
+    // outstandingProposals 里面存储的就是 上个提交的 proposedId(其实 zxid 值) <--> Proposed, 当有过半的 Follower 回复 ack 值时就进行删除处理
+    // 具体操作在 Leader.processAck 中, 而后 Leader
     ConcurrentMap<Long, Proposal> outstandingProposals = new ConcurrentHashMap<Long, Proposal>();
-
+    // toBeApplied 里面的数据是 通过了 集群中的过半 ACK 确认, 但在本机上没有经过 FinalRequestProcessor 进行持久化处理的 Proposal, 一旦FinalRequestProcessor处理了, 则就会进行删除
     ConcurrentLinkedQueue<Proposal> toBeApplied = new ConcurrentLinkedQueue<Proposal>();
 
     Proposal newLeaderProposal = new Proposal();
@@ -612,7 +613,7 @@ public class Leader {
             outstandingProposals.remove(zxid);                                           // 从 outstandingProposals 里面删除那个可以提交的 Proposal
             if (p.request != null) {
                 toBeApplied.add(p);                                                       // 加入到 toBeApplied 队列里面, 这里的 toBeApplied 是 ToBeAppliedRequestProcessor, Leader 共用的队列, 在经过 CommitProcessor 处理过后, 就到 ToBeAppliedRequestProcessor 里面进行处理
-                LOG.info("toBeApplied:" + toBeApplied);
+                LOG.info("toBeApplied:" + toBeApplied);                                // toBeApplied 对应的删除操作在 ToBeAppliedRequestProcessor 里面, 在进行删除时, 其实已经经过 FinalRequestProcessor 处理过的
             }
 
             if (p.request == null) {
@@ -671,7 +672,7 @@ public class Leader {
         public void processRequest(Request request) throws RequestProcessorException {
             LOG.info("request:"+ request);
             // request.addRQRec(">tobe");
-            next.processRequest(request);                   // 交由 FinalRequestProcessor commit 到 ZKDatabase 里面s
+            next.processRequest(request);                   // 这里其实是一个同步的操作, 即 FinalRequestProcessor 处理好之后, 才进行下面的操作
             Proposal p = toBeApplied.peek();               // 进行 request 从 toBeApplied 删除
             if (p != null && p.request != null
                     && p.request.zxid == request.zxid) {
@@ -853,7 +854,7 @@ public class Leader {
         // new requests
         LOG.info("lastProposed :" + lastProposed +", lastSeenZxid:" + lastSeenZxid + ", handler:" + handler);
         if (lastProposed > lastSeenZxid) {
-            LOG.info("toBeApplied :" + toBeApplied);
+            LOG.info("toBeApplied :" + toBeApplied);                                        // toBeApplied 里面是 通过 过半 ACK 策略的 Proposal (都是在Leader.processAck 里面进行加入)
             for (Proposal p : toBeApplied) {
                 if (p.packet.getZxid() <= lastSeenZxid) {
                     continue;

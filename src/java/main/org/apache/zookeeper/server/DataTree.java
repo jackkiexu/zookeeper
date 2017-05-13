@@ -217,6 +217,8 @@ public class DataTree {
      * @return a list of ACLs that map to longs
      */
     public synchronized List<ACL> convertLong(Long longVal) {
+        LOG.info("longKeyMap:" + longKeyMap);
+        LOG.info("longVal:" + longVal);
         if (longVal == null)
             return null;
         if (longVal == -1L)
@@ -479,7 +481,7 @@ public class DataTree {
         int lastSlash = path.lastIndexOf('/');
         String parentName = path.substring(0, lastSlash);               // 1. 通过上面额 lastSlash 来获取 对应的 parent 的 path
         String childName = path.substring(lastSlash + 1);               // 2. 获取对应的 子 path
-        StatPersisted stat = new StatPersisted();
+        StatPersisted stat = new StatPersisted();                      // 构建 针对这个 DataNode 的 StatPersisted
         stat.setCtime(time);
         stat.setMtime(time);
         stat.setCzxid(zxid);

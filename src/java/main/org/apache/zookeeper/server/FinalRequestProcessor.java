@@ -102,10 +102,13 @@ public class FinalRequestProcessor implements RequestProcessor {
         LOG.info("zks.outstandingChanges:" + zks.outstandingChanges);
         LOG.info("zks.outstandingChangesForPath:" + zks.outstandingChangesForPath);
 
-        synchronized (zks.outstandingChanges) {
+        // 在 PrepRequestProcessor 中, 若进行事务类的操作, 则 会将上次的请求改变的信息组装成 放入ChangeRecord, 放入 outstandingChangesForPath 里
+        // 为什么要这么做呢? 因为在并发情况下, 可能有两 setData 操作连续进行操作, 而这时, 都会要改变 DataNode.stat 中的属性
+        synchronized (zks.outstandingChanges) {                                                    // 将 小于  request.zxid 的 ChangeRecord 都进行删除
             while (!zks.outstandingChanges.isEmpty()
                     && zks.outstandingChanges.get(0).zxid <= request.zxid) {                        // outstandingChanges 不为空, 且首个元素的 zxid < request.zxid
                 ChangeRecord cr = zks.outstandingChanges.remove(0);                                  // 移除首个元素
+
                 if (cr.zxid < request.zxid) {                                                          // 进行相应日志处理
                     LOG.warn("Zxid outstanding " + cr.zxid + " is less than current " + request.zxid);
                 }

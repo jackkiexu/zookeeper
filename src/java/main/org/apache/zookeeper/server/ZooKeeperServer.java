@@ -119,7 +119,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     static final private long superSecret = 0XB3415C00L;
 
     int requestsInProcess;
-
+    // DataNode n = zks.getZKDatabase().getNode(path);
+    // outstandingChanges, outstandingChangesForPath 可以看做 上面的又一个缓存, 当进行事务操作时, 先从 outstandingChangesForPath 里面获取 针对 path 的 lastChangeRecord 记录, 若没获取到, 则再从 zks.getZKDatabase().getNode(path) 里面获取到  DataNode, 然后组装成 ChangeRecord
     final List<ChangeRecord> outstandingChanges = new ArrayList<ChangeRecord>();
     // this data structure must be accessed under the outstandingChanges lock
     final HashMap<String, ChangeRecord> outstandingChangesForPath = new HashMap<String, ChangeRecord>();
@@ -513,12 +514,12 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
         long zxid;
 
-        String path;
+        String path;                            // ChangeRecord 针对的 path
 
         StatPersisted stat; /* Make sure to create a new object when changing */
 
-        int childCount;
-
+        int childCount;                       // 针对这个 path 下面的 childCount 个数
+                                                // path 针对的 DataNode 的 ACL
         List<ACL> acl; /* Make sure to create a new object when changing */
 
         @SuppressWarnings("unchecked")

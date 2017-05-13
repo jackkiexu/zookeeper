@@ -255,6 +255,7 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
     }
 
     synchronized public void addSession(long id, int sessionTimeout) {              // 这里的 sessionid 在集群中每个 QuorumPeer 上都不会出现相同, 详情见 (SessionTrackerImpl.initializeNextSession)
+        LOG.info("addSession  id :" + id + ", sessionTimeout:" + sessionTimeout);
         sessionsWithTimeout.put(id, sessionTimeout);                                  // 一个普通的 sessionId <-> sessionTimeout, 但其会在 takeSnapshot 时进行持久化
         if (sessionsById.get(id) == null) {                                           // 因为可能有重复请求, 所以加上这个判断
             SessionImpl s = new SessionImpl(id, sessionTimeout, 0);                      // 构建 session

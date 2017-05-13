@@ -405,7 +405,7 @@ public class LearnerHandler extends Thread {
             ReadLock rl = lock.readLock();
             try {
                 rl.lock();        
-                final long maxCommittedLog = leader.zk.getZKDatabase().getmaxCommittedLog();         // zookeeper 会缓存 maxCommittedLog -> minCommittedLog 之间的事务
+                final long maxCommittedLog = leader.zk.getZKDatabase().getmaxCommittedLog();         // Leader上将 最近已经提交的 Request 缓存到 ZKDatabase.committedLog里面(这个操作在 FinalRequestProcessor.processRequest 里面操作)  事务的 zxid 会 minCommittedLog -> maxCommittedLog 之间的事务
                 final long minCommittedLog = leader.zk.getZKDatabase().getminCommittedLog();
 
                 LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
@@ -416,7 +416,7 @@ public class LearnerHandler extends Thread {
 
                 /**
                  * http://www.jianshu.com/p/4cc1040b6a14
-                 *
+                 * 获取 Leader 已经提交的 Request 数据
                  * 1) 若 lastzxid 在 min 和 max 之间
                  *      循环 proposals
                  *      a) 当单个 proposal 的zxid <= 当前的 peerLastZxid 时, 说明已经提交过了, 直接跳过
@@ -428,10 +428,10 @@ public class LearnerHandler extends Thread {
 
                 LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 查看是否还有需要的投票
                 LOG.info("proposals:"+proposals);
-                if (proposals.size() != 0) {                                                            // 处理这些还需要的投票
-                    LOG.debug("proposal size is {}", proposals.size());                             // 如果 follower 还没有处理这个事务, 有可能是 down后又恢复了, 则继续处理
+                if (proposals.size() != 0) {
+                    LOG.debug("proposal size is {}", proposals.size());
 
-                    if ((maxCommittedLog >= peerLastZxid) && (minCommittedLog <= peerLastZxid)) {
+                    if ((maxCommittedLog >= peerLastZxid) && (minCommittedLog <= peerLastZxid)) {       // 若这个 If 条件成立, 说明 Follower 与 Leader 之间有少于 500 条数据
                         LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
                                 + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
                                 + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
@@ -464,7 +464,7 @@ public class LearnerHandler extends Thread {
                                 if (firstPacket) {                                                      // 在发起 Proposal 之前一定要确认 是否 follower 比 Leader 超前处理 Proposal
                                     firstPacket = false;
                                     // Does the peer have some proposals that the leader hasn't seen yet
-                                    if (prevProposalZxid < peerLastZxid) {                             // follower 的处理事务处理比 leader 多, 则发送 TRUC 进行 Proposal 数据同步
+                                    if (prevProposalZxid < peerLastZxid) {                             // follower 的处理事务处理比 leader 多, 也就是说prevProposalZxid这时就是maxCommittedLog,   则发送 TRUC 进行 Proposal 数据同步
                                         // send a trunc message before sending the diff
                                         packetToSend = Leader.TRUNC;                                        
                                         zxidToSend = prevProposalZxid;
@@ -474,7 +474,7 @@ public class LearnerHandler extends Thread {
                                 queuePacket(propose.packet);                                          // 将 事务发送到 发送队列里面
                                 QuorumPacket qcommit = new QuorumPacket(Leader.COMMIT, propose.packet.getZxid(),
                                         null, null);
-                                queuePacket(qcommit);
+                                queuePacket(qcommit);                                                  // 紧接着发送一个 commit, 让 Follower 来进行提交 request
                             }
                         }
                     } else if (peerLastZxid > maxCommittedLog) {                                      // follower 的处理事务处理比 leader 多, 则发送 TRUC 进行 Proposal 数据同步
@@ -514,9 +514,9 @@ public class LearnerHandler extends Thread {
                     LOG.debug("proposals is empty");
                 }               
 
-                // 将 Leader 中没有 commit 的数据 commit 掉
+
                 LOG.info("Sending " + Leader.getPacketType(packetToSend));
-                leaderLastZxid = leader.startForwarding(this, updates);
+                leaderLastZxid = leader.startForwarding(this, updates);                        // leader 将没有 commit 的 request commit 掉
                 LOG.info("leaderLastZxid : " + leaderLastZxid);
 
             } finally {

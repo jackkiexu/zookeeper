@@ -165,9 +165,10 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                         acl = n.acl;
                         children = n.getChildren();
                     }
-                    lastChange = new ChangeRecord(-1, path, n.stat,
+                    lastChange = new ChangeRecord(-1, path, n.stat,                     // 这里组建的是 针对 path 的上次更改记录
                         children != null ? children.size() : 0,
                             zks.getZKDatabase().convertLong(acl));
+                    LOG.info("lastChange:" + lastChange);
                 }
             }
         }
@@ -280,6 +281,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
 
     public static void checkACL(ZooKeeperServer zks, List<ACL> acl, int perm,
             List<Id> ids) throws KeeperException.NoAuthException {
+        LOG.info("acl:" + acl +", perm:" + perm + ", ids:" + ids);
         if (skipACL) {
             return;
         }
@@ -327,7 +329,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     protected void pRequest2Txn(int type, long zxid, Request request, Record record, boolean deserialize)
         throws KeeperException, IOException, RequestProcessorException
     {
-        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,                  // 1. 组装请求事物头 TxnHeader
+        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,                  // 1. 统一组装请求事务头 TxnHeader
                                     zks.getTime(), type);
 
         switch (type) {
@@ -377,7 +379,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     throw new KeeperException.NoChildrenForEphemeralsException(path);
                 }
                 int newCversion = parentRecord.stat.getCversion()+1;                        // 创建子节点的 version ++
-                request.txn = new CreateTxn(path, createRequest.getData(),                  // 构建 CreateTxn
+                request.txn = new CreateTxn(path, createRequest.getData(),                  // 构建 CreateTxn, 从这里也可以看出, newCversion 值是 通过 outstandingChangesForPath 获取到, 然后进行 ++ 操作
                         listACL,
                         createMode.isEphemeral(), newCversion);
                 StatPersisted s = new StatPersisted();
@@ -427,8 +429,8 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 if(deserialize)
                     ByteBufferInputStream.byteBuffer2Record(request.request, setDataRequest);
                 path = setDataRequest.getPath();
-                nodeRecord = getRecordForPath(path);
-                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.WRITE,
+                nodeRecord = getRecordForPath(path);                        // 获取 针对 path 的 ChangeRecord, 若 outstandingChangesForPath 没有的话, 则自己生成一个
+                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.WRITE,        // 针对这次 setData 请求进行权限的校验
                         request.authInfo);
                 version = setDataRequest.getVersion();
                 int currentVersion = nodeRecord.stat.getVersion();
@@ -468,7 +470,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
             case OpCode.createSession:                                                         // 创建 session
                 request.request.rewind();
                 int to = request.request.getInt();
-                request.txn = new CreateSessionTxn(to);
+                request.txn = new CreateSessionTxn(to);                                         // 组装事务体, 事务头在最前面已经弄好了
                 request.request.rewind();
                 zks.sessionTracker.addSession(request.sessionId, to);
                 zks.setOwner(request.sessionId, request.getOwner());
@@ -531,7 +533,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         // request.type + " id = 0x" + Long.toHexString(request.sessionId));
         request.hdr = null;
         request.txn = null;
-        
+        LOG.info("request:" + request);
         try {
             switch (request.type) {
                 case OpCode.create:                                                                     // 新建 path 请求

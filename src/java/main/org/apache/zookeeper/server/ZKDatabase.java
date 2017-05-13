@@ -233,20 +233,21 @@ public class ZKDatabase {
      * fast follower synchronization.
      * @param request committed request
      */
+    // committedLog 里面存储的就是 已提交的 Request 信息
     public void addCommittedProposal(Request request) {
         WriteLock wl = logLock.writeLock();
         try {
             wl.lock();
-            if (committedLog.size() > commitLogCount) {
-                committedLog.removeFirst();
-                minCommittedLog = committedLog.getFirst().packet.getZxid();
+            if (committedLog.size() > commitLogCount) {                             // committedLog 若超过阀值, 则进行将头部的 request 给删除掉
+                committedLog.removeFirst();                                            // 删除首个 Request
+                minCommittedLog = committedLog.getFirst().packet.getZxid();        // 更新 minCommittedLog
             }
-            if (committedLog.size() == 0) {
+            if (committedLog.size() == 0) {                                           // 初始化 minCommittedLog, maxCommittedLog
                 minCommittedLog = request.zxid;
                 maxCommittedLog = request.zxid;
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();                   // Request 序列化成 byte[]
             BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
             try {
                 request.hdr.serialize(boa, "hdr");
@@ -257,12 +258,12 @@ public class ZKDatabase {
             } catch (IOException e) {
                 LOG.error("This really should be impossible", e);
             }
-            QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid,
+            QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid,        // 构建  QuorumPacket
                     baos.toByteArray(), null);
             Proposal p = new Proposal();
             p.packet = pp;
             p.request = request;
-            committedLog.add(p);
+            committedLog.add(p);                                                     // 加入到 committedLog
             maxCommittedLog = p.packet.getZxid();
         } finally {
             wl.unlock();

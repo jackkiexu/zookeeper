@@ -1101,7 +1101,7 @@ public class ClientCnxn {
                     }
                     LOG.info("pendingQueue : " + pendingQueue);
                     LOG.info("outgoingQueue : " + outgoingQueue);
-                    clientCnxnSocket.doTransport(to, pendingQueue, outgoingQueue, ClientCnxn.this);
+                    clientCnxnSocket.doTransport(to, pendingQueue, outgoingQueue, ClientCnxn.this);             // 这里就是在做 IO 操作
                 } catch (Throwable e) {
                     if (closing) {
                         if (LOG.isDebugEnabled()) {

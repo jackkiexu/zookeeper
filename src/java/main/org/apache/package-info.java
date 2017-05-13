@@ -23,6 +23,7 @@
  * 2. SyncLimitCheck 的作用 ?
  *
  * 3. outstandingChanges, outstandingChangesForPath 的作用 ?
+ *      OK , 缓存 DataNode 的信息, 为下次改变数据做准备
  *
  * 4. Leader.toBeApplied Leader.outstandingProposals 的作用 ?
  *
