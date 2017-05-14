@@ -918,14 +918,14 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             ByteBufferInputStream.byteBuffer2Record(incomingBuffer, authPacket);
 
             LOG.info("AuthPacket: " + authPacket);
-
-            String scheme = authPacket.getScheme();
-            AuthenticationProvider ap = ProviderRegistry.getProvider(scheme);
+                                                                                    // zookeeper 权限验证可以参考这里 http://www.wuzesheng.com/?p=2438
+            String scheme = authPacket.getScheme();                                 // 获取 zookeeper 验证的 scheme(对应的 scheme 有 world, auth, digest, ip, super 这 4 种)
+            AuthenticationProvider ap = ProviderRegistry.getProvider(scheme);       // 根据 scheme 来获取验证类
             LOG.info("AuthenticationProvider : " + ap.getClass());
             Code authReturn = KeeperException.Code.AUTHFAILED;
             if(ap != null) {
                 try {
-                    authReturn = ap.handleAuthentication(cnxn, authPacket.getAuth());
+                    authReturn = ap.handleAuthentication(cnxn, authPacket.getAuth());   // 进行 auth 权限验证
                     LOG.info("authReturn:" + authReturn);
                 } catch(RuntimeException e) {
                     LOG.warn("Caught runtime exception from AuthenticationProvider: " + scheme + " due to " + e);
@@ -933,7 +933,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 }
             }
             LOG.info("authReturn:" + authReturn);
-            if (authReturn!= KeeperException.Code.OK) {
+            if (authReturn!= KeeperException.Code.OK) {                             // zookeeper 权限验证失败
                 if (ap == null) {
                     LOG.warn("No authentication provider for scheme: "
                             + scheme + " has "
@@ -942,7 +942,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                     LOG.warn("Authentication failed for scheme: " + scheme);
                 }
                 // send a response...
-                ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
+                ReplyHeader rh = new ReplyHeader(h.getXid(), 0,                    // 将权限验证失败的信息写回 client 端
                         KeeperException.Code.AUTHFAILED.intValue());
                 LOG.info("ReplyHeader:" + rh);
                 cnxn.sendResponse(rh, null, null);                      // 授权失败, 写回 client 端
