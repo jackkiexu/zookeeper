@@ -10,6 +10,9 @@
  * Leader/Follower初始化
  * http://www.aboutyun.com/thread-10286-1-1.html
  *
+ * ZooKeeper 权限控制
+ * http://www.wuzesheng.com/?p=2438
+ *
  * Zookeeper 集群常见问题
  *
  * 0. Follower 上创建 session, 如何通知 Leader ?
