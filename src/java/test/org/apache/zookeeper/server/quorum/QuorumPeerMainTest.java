@@ -202,7 +202,7 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
                         CONNECTION_TIMEOUT));
 
         Thread.sleep(5 * 1000);
-/*
+
 
         ZooKeeper zk = new ZooKeeper("127.0.0.1:" + CLIENT_PORT_QP1,
                 ClientBase.CONNECTION_TIMEOUT, this);
@@ -228,7 +228,7 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
                         ClientBase.CONNECTION_TIMEOUT));
         Assert.assertTrue("waiting for server 2 down",
                 ClientBase.waitForServerDown("127.0.0.1:" + CLIENT_PORT_QP2,
-                        ClientBase.CONNECTION_TIMEOUT));*/
+                        ClientBase.CONNECTION_TIMEOUT));
     }
 
     /**

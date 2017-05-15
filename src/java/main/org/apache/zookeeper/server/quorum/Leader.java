@@ -619,10 +619,10 @@ public class Leader {
             if (p.request == null) {
                 LOG.warn("Going to commmit null request for proposal: {}", p);
             }
-            commit(zxid);                                                                   // 向 集群中的 Followers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
-            inform(p);                                                                      // 向 集群中的 Observers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
+            commit(zxid);                                                               // 向 集群中的 Followers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
+            inform(p);                                                                  // 向 集群中的 Observers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
             zk.commitProcessor.commit(p.request);                                       // 自己进行 proposal 的提交 (直接调用 commitProcessor 进行提交 )
-
+                                                                                        // 其实这里隐藏一个细节, 就是有可能 有些 Proposal 在 Follower 上进行了 commit, 而 Leader 上还没来得及提交, 就有可能与集群间的其他节点断开连接
             LOG.info("pendingSyncs :" + pendingSyncs);
             if(pendingSyncs.containsKey(zxid)){
                 for(LearnerSyncRequest r: pendingSyncs.remove(zxid)) {
@@ -854,9 +854,9 @@ public class Leader {
         // new requests
         LOG.info("lastProposed :" + lastProposed +", lastSeenZxid:" + lastSeenZxid + ", handler:" + handler);
         if (lastProposed > lastSeenZxid) {
-            LOG.info("toBeApplied :" + toBeApplied);                                        // toBeApplied 里面是 通过 过半 ACK 策略的 Proposal (都是在Leader.processAck 里面进行加入)
+            LOG.info("toBeApplied :" + toBeApplied);                                        // toBeApplied 里面是 通过 过半 ACK 策略的 Proposal (都是在Leader.processAck 里面进行加入), 但这些 Proposal 在 Leader 端没有持久化, 而Follower可能有提交 (具体看 Leader.processAck)
             for (Proposal p : toBeApplied) {
-                if (p.packet.getZxid() <= lastSeenZxid) {
+                if (p.packet.getZxid() <= lastSeenZxid) {                                   // 只有大于 lastSeenZxid 的 Proposal, Leader 才通知 Follower提交
                     continue;
                 }
                 handler.queuePacket(p.packet);

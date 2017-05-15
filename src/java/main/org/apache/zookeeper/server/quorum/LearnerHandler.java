@@ -426,12 +426,12 @@ public class LearnerHandler extends Thread {
                  * 3) 剩下的不处理, 可能是新加入的节点, 所以事件类型为 SNAP, 同步数据时直接取快照
                  */
 
-                LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 查看是否还有需要的投票
+                LinkedList<Proposal> proposals = leader.zk.getZKDatabase().getCommittedLog();           // 获取Leader 上最近提交的Request, 查看是否还有需要的投票
                 LOG.info("proposals:"+proposals);
                 if (proposals.size() != 0) {
                     LOG.debug("proposal size is {}", proposals.size());
 
-                    if ((maxCommittedLog >= peerLastZxid) && (minCommittedLog <= peerLastZxid)) {       // 若这个 If 条件成立, 说明 Follower 与 Leader 之间有少于 500 条数据
+                    if ((maxCommittedLog >= peerLastZxid) && (minCommittedLog <= peerLastZxid)) {       // 若这个 If 条件成立, 说明 Follower 与 Leader 之间有少于 500 条数据未同步
                         LOG.info("sid:" + sid + ", maxCommittedLog:" + Long.toHexString(maxCommittedLog)
                                 + ", minCommittedLog:" +Long.toHexString(minCommittedLog)
                                 + " peerLastZxid=0x"+Long.toHexString(peerLastZxid)
@@ -456,7 +456,7 @@ public class LearnerHandler extends Thread {
                         for (Proposal propose: proposals) {
                             // skip the proposals the peer already has                                   // 这个 Propose 已经处理过了, continue
                             if (propose.packet.getZxid() <= peerLastZxid) {
-                                prevProposalZxid = propose.packet.getZxid();
+                                prevProposalZxid = propose.packet.getZxid();                             // 若 follower 已经处理过, 则更新 prevProposalZxid, 轮询下个 Proposal
                                 continue;
                             } else {
                                 // If we are sending the first packet, figure out whether to trunc
