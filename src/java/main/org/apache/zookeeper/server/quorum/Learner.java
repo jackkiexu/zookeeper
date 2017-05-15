@@ -574,14 +574,14 @@ public class Learner {
         // Send back the ping with our session data
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
-        HashMap<Long, Integer> touchTable = zk
+        HashMap<Long, Integer> touchTable = zk                          // 获取 Follower/Observer 的 touchTable(sessionId <-> sessionTimeout) 发给 Leader 进行session超时的检测s
                 .getTouchSnapshot();
         for (Entry<Long, Integer> entry : touchTable.entrySet()) {
             dos.writeLong(entry.getKey());
             dos.writeInt(entry.getValue());
         }
-        qp.setData(bos.toByteArray());
-        writePacket(qp, true);
+        qp.setData(bos.toByteArray());                                  // 转化成字节数组, 进行数据的写入
+        writePacket(qp, true);                                         // 发送数据包
     }
     
     

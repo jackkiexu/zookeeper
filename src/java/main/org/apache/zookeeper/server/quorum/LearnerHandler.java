@@ -115,7 +115,7 @@ public class LearnerHandler extends Thread {
             LOG.info("SyncLimitCheck started = true");
             started = true;
         }
-
+        // 每次 提出 Proposal 就会 进行 time 和 zxid 的更新
         public synchronized void updateProposal(long zxid, long time) {
             LOG.info("zxid :" + zxid + ", time:" + time);
             if (!started) {
@@ -129,7 +129,7 @@ public class LearnerHandler extends Thread {
                 nextZxid = zxid;
             }
         }
-
+        // 在收到 ACK 后, 会更新对应的 time zxid
         public synchronized void updateAck(long zxid) {
             LOG.info("currentZxid : " + currentZxid + ", zxid:" + zxid);
              if (currentZxid == zxid) {
@@ -143,7 +143,7 @@ public class LearnerHandler extends Thread {
                  nextZxid = 0;
              }
         }
-
+        // 上面两个 updateProposal, updateAck 里的动作都是为了下面的 check 检测, 每当 Leader 向 Learner 发送 PING 包时, 就会检测, 是否有: Leader 向 Learner 发送 Proposal, 而对应的 Learner 是否回ACK, 是否回 ACK 超时, 若超时, 则在 Leader 中会调用对应的 shutdown 方法
         public synchronized boolean check(long time) {
             if (currentTime == 0) {
                 return true;
@@ -753,6 +753,7 @@ public class LearnerHandler extends Thread {
      * ping calls from the leader to the peers
      */
     // 这里其实是 Leader 向 Follower 发送 ping 请求
+    // 在向 Learner 发送ping消息之前, 首先会通过 syncLimitCheck 来检查
     public void ping() {
         long id;
         if (syncLimitCheck.check(System.nanoTime())) {
