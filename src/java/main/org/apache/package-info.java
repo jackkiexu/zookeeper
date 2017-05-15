@@ -37,6 +37,8 @@
  *
  * 6. JMX 在 zookeeper 中的使用
  *
+ * 7. zookeeper 分布式锁, 分布式队列, leader 选举设计过程
+ *
  *
  *
  * Created by xjk on 5/3/17.
