@@ -41,7 +41,8 @@
  * 6.1 Leader.pendingSyncs 的原理 ?
  *
  * 7. zookeeper 分布式锁, 分布式队列, leader 选举设计过程
- *
+ *     curator 学习资料 (http://colobu.com/tags/Curator/)
+ *     curator (http://colobu.com/tags/Curator/)
  *
  *
  * Created by xjk on 5/3/17.
