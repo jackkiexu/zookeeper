@@ -826,7 +826,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public int getNumAliveConnections() {
         return serverCnxnFactory.getNumAliveConnections();
     }
-    
+
+    // 处理 来自 client 的信息
     public void processConnectRequest(ServerCnxn cnxn, ByteBuffer incomingBuffer) throws IOException {
         BinaryInputArchive bia = BinaryInputArchive.getArchive(new ByteBufferInputStream(incomingBuffer));
         ConnectRequest connReq = new ConnectRequest();
@@ -898,13 +899,15 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         return false; 
     }
+
+    // 处理 来自 client 端的 request 请求
     // NIOServerCnxnFactory.run -> NIOServerCnxn -> doIO -> readPayload -> readRequest/readConnectRequest(其中的 initialized 决定)
     public void processPacket(ServerCnxn cnxn, ByteBuffer incomingBuffer) throws IOException {
         // We have the request, now process and setup for next
         InputStream bais = new ByteBufferInputStream(incomingBuffer);
         BinaryInputArchive bia = BinaryInputArchive.getArchive(bais);
         RequestHeader h = new RequestHeader();
-        h.deserialize(bia, "header");
+        h.deserialize(bia, "header");                                               // 从数据流中读取出 请求头 RequestHeader
         // Through the magic of byte buffers, txn will not be
         // pointing
         // to the start of the txn

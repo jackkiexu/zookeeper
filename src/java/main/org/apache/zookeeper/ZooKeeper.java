@@ -687,7 +687,6 @@ public class ZooKeeper {
     }
 
     /**
-     * ������� path ǰ������ ��������ʱ���� �� chrootPath
      * Prepend the chroot to the client path (if present). The expectation of
      * this function is that the client path has been validated before this
      * function is called

@@ -76,6 +76,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
         return Collections.unmodifiableList(authInfo);
     }
 
+    // 在 ServerCnxn 中加入 权限授权类 ID (ServerCnxn 代表每个连接 ZooKeeperServer 的 client 的描述信息)
     public void addAuthInfo(Id id) {
         if (authInfo.contains(id) == false) {
             authInfo.add(id);

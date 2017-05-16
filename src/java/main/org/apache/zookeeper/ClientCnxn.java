@@ -1371,7 +1371,7 @@ public class ClientCnxn {
     }
 
     /**
-     * �ύ ���� head, request, response, �� watch
+     *
      */
     public ReplyHeader submitRequest(RequestHeader h, Record request,
             Record response, WatchRegistration watchRegistration)

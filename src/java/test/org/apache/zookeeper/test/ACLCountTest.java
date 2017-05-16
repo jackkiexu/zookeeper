@@ -31,6 +31,7 @@ import org.apache.zookeeper.common.PathTrie;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.*;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
+import org.apache.zookeeper.server.auth.KerberosName;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -232,4 +233,34 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
         }
     }
 
+
+    @Test
+    public void testKerberosName(){
+        new KerberosName("owen@foo/bar.com");
+        new KerberosName("user@KERB.REALM/server.com");
+        new KerberosName("user@KERB.REALM1@KERB.REALM2");
+
+    }
+
+    @Test
+    public void testParsing() throws Exception {
+        final String principalNameFull = "HTTP/abc.com@EXAMPLE.COM";
+        final String principalNameWoRealm = "HTTP/abc.com";
+        final String principalNameWoHost = "HTTP@EXAMPLE.COM";
+
+        final KerberosName kerbNameFull = new KerberosName(principalNameFull);
+        Assert.assertEquals("HTTP", kerbNameFull.getServiceName());
+        Assert.assertEquals("abc.com", kerbNameFull.getHostName());
+        Assert.assertEquals("EXAMPLE.COM", kerbNameFull.getRealm());
+
+        final KerberosName kerbNamewoRealm = new KerberosName(principalNameWoRealm);
+        Assert.assertEquals("HTTP", kerbNamewoRealm.getServiceName());
+        Assert.assertEquals("abc.com", kerbNamewoRealm.getHostName());
+        Assert.assertEquals(null, kerbNamewoRealm.getRealm());
+
+        final KerberosName kerbNameWoHost = new KerberosName(principalNameWoHost);
+        Assert.assertEquals("HTTP", kerbNameWoHost.getServiceName());
+        Assert.assertEquals(null, kerbNameWoHost.getHostName());
+        Assert.assertEquals("EXAMPLE.COM", kerbNameWoHost.getRealm());
+    }
 }
