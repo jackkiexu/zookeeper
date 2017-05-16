@@ -34,6 +34,7 @@
  *
  * 5. zookeeper 权限控制
  *      设计 SASL, jaas (http://tetsu.iteye.com/blog/82627)
+ *      http://www.cnblogs.com/linuxbug/p/5023677.html
  *
  * 6. JMX 在 zookeeper 中的使用
  *      具体的实现就在 MBeanRegistry 里面
