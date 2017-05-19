@@ -42,4 +42,9 @@ public class KerberosUtil {
          new Class[0]);
     return (String)getDefaultRealmMethod.invoke(kerbConf, new Object[0]);
   }
+
+
+    public static void main(String[] args) throws Exception{
+        System.out.println(KerberosUtil.getDefaultRealm());
+    }
 }

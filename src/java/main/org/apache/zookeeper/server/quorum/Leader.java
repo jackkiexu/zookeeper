@@ -808,10 +808,10 @@ public class Leader {
             
     /**
      * Process sync requests
-     * 
+     *
      * @param r the request
      */
-    
+
     synchronized public void processSync(LearnerSyncRequest r){
         if(outstandingProposals.isEmpty()){
             sendSync(r);

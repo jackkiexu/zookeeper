@@ -40,10 +40,8 @@
  *      具体的实现就在 MBeanRegistry 里面
  *
  * 6.1 Leader.pendingSyncs 的原理 ?
+ *      http://www.cnblogs.com/cxzdy/p/4531890.html
  *
- * 7. zookeeper 分布式锁, 分布式队列, leader 选举设计过程
- *     curator 学习资料 (http://colobu.com/tags/Curator/) (Leader 选举, 分布式锁, 栅栏, 计数器, 缓存, Queues)
- *     curator (http://colobu.com/tags/Curator/)
  *
  *
  * Created by xjk on 5/3/17.

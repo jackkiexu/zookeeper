@@ -178,5 +178,12 @@ public class OSMXBean
             LOG.warn("Not able to get the max number of file descriptors", ie);
         }
         return -1;
-    }  
+    }
+
+
+    public static void main(String[] args) {
+        OSMXBean osmxBean = new OSMXBean();
+        System.out.println(osmxBean.getMaxFileDescriptorCount());
+        System.out.println(osmxBean.getOpenFileDescriptorCount());
+    }
 }
