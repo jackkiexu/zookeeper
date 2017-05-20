@@ -368,6 +368,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         long id = cnxn.getSessionId();
         int to = cnxn.getSessionTimeout();
         if (!sessionTracker.touchSession(id, to)) {                             // 这里的touchSession 就是验证 Session 是否存活, 不存活返回 false, 存活 返回 true, 并且更新 SessionImpl 到新的 超时 bucket 里面 (SessionSet里面)
+            // 这里有个 特别的 Follower 里面只是将 sessionId 与 timeOut 放入一个 touchTable 中
+            // 而与之对应的 leader 中 则是进行 SessionImpl 的创建及维护操作
             throw new MissingSessionException("No session with sessionid 0x" + Long.toHexString(id) + " exists, probably expired and removed"); // session 已经超时, 进行报异常返回
         }
     }

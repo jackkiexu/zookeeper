@@ -40,6 +40,8 @@
  *      具体的实现就在 MBeanRegistry 里面
  *
  * 6.1 Leader.pendingSyncs 的原理 ?
+ *      无论 ZooKeeper.sync 的作用其实就是进行一次 空的 QuorumPacket 数据包处理,
+ *      详情见 FinalRequestProcessor 中对 sync 的处理已经 leader.pendingSyncs
  *      http://www.cnblogs.com/cxzdy/p/4531890.html
  *
  *
