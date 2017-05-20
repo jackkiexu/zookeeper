@@ -53,6 +53,16 @@ import org.slf4j.LoggerFactory;
  * 参考资料
  * http://blog.csdn.net/vinowan/article/details/22197461
  *
+ * Leader ZooKeeperServer 集群里面的主节点
+ * 主要方法:
+ *      Proposal: 对应集群里面的 事务, 主要在 Follower/Observer 之间进行事务请求传播
+ *      lead() : leader建立, 及通过 LearnerHandler.ping() 来与 Follower/Observer 来进行验证节点存活(Follower 在接收到 Ping之后会将本机的 sessionId 发到 Leader, 来进行校验是否超时)
+ *      LearnerCnxAcceptor: 内部类, 用于监听 Follower/Observer 的连接, 每当一个节点来进行连接 Leader 时会创建一个 LearnerHandler
+ *      LearnerHandler: 用于 Leader与Follower/Observer 之间进行消息发送及处理(方法 sendPackets)
+ *      processAck: 处理 Follower 发来的 ACK 消息
+ *      propose(Request request): 向集群中提出 Proposal, Follower 在接收到 Proposal 后会调用内部的 FollowerZooKeeperServer.logRequest() 来进行处理(之后 Follower 通过 SyncRequestProcessor 持久化 Proposal, 通过 SendAckRequestProcessor 向 Leader回复对应的 ACK, 而 Leader 在收到超过过半 ACK 后就会进行通知所有 Follower/Observer 进行 Proposal 提交, 见 Leader.processAck.最下面的 while loop 里面)
+ *
+ *
  * This class has the control logic for the Leader.
  */
 public class Leader {
