@@ -44,6 +44,14 @@
  *      详情见 FinalRequestProcessor 中对 sync 的处理已经 leader.pendingSyncs
  *      http://www.cnblogs.com/cxzdy/p/4531890.html
  *
+ *  1. ZooKeeperServer 集群中的各个角色及关系, Leader, Follower, Observer, RequestProcessor (每个 RequestProcessor 分开来进行讲解)
+ *  2. ZooKeeperServer 集群中数据的持久化
+ *  3. ZooKeeperServer 集群启动
+ *  4. ZooKeeperServer 集群 Leader 选举
+ *  5. ZooKeeperServer 集群 Leader 选举成功后 Leader&Follower 建立过程
+ *  6. ZooKeeperServer 集群中 session建立, 超时机制(涉及 Follower 与 Leader 之间通信)
+ *  7. ZooKeeperServer 集群 处理 Create
+ *  8. ZooKeeperServer 集群 动态增加节点 zookeeper dynamic add node
  *
  *
  * Created by xjk on 5/3/17.

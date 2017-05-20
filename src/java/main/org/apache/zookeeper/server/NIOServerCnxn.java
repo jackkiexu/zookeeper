@@ -837,7 +837,7 @@ public class NIOServerCnxn extends ServerCnxn {
          * socket channel and keep the socket alive to write the data to
          * and makes sure to close the socket after its done writing the data
          */
-        if (k != null) {
+        if (k != null) {                                                                        // 因为这里其实是 zookeeper 客户端通过 FourLetterWord 来获取服务信息
             try {
                 k.cancel();
             } catch(Exception e) {
@@ -846,7 +846,7 @@ public class NIOServerCnxn extends ServerCnxn {
         }
 
         final PrintWriter pwriter = new PrintWriter(
-                new BufferedWriter(new SendBufferWriter()));
+                new BufferedWriter(new SendBufferWriter()));                                    // 在 SendBufferWriter 里面封装了一个 SocketChannel 来进行数据的输出
         if (len == ruokCmd) {
             RuokCommand ruok = new RuokCommand(pwriter);
             ruok.start();
@@ -921,7 +921,7 @@ public class NIOServerCnxn extends ServerCnxn {
     private boolean readLength(SelectionKey k) throws IOException {
         // Read the length, now get the buffer
         int len = lenBuffer.getInt();                           // 数据包体的大小
-        if (!initialized && checkFourLetterWord(sk, len)) {
+        if (!initialized && checkFourLetterWord(sk, len)) {    // 若发送的数据内容在 FourLetterWord 中, 则进行处理
             return false;
         }
         if (len < 0 || len > BinaryInputArchive.maxBuffer) {    // 数据包长度是否正确

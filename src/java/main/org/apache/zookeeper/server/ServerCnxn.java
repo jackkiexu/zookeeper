@@ -251,7 +251,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
         cmd2String.put(isroCmd, "isro");
     }
 
-    protected void packetReceived() {
+    protected void packetReceived() {                                                       // 更新接收数据包
         incrPacketsReceived();
         ServerStats serverStats = serverStats();
         if (serverStats != null) {
@@ -259,7 +259,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
         }
     }
 
-    protected void packetSent() {
+    protected void packetSent() {                                                           // 更新发送数据包的个数
         incrPacketsSent();
         ServerStats serverStats = serverStats();
         if (serverStats != null) {
