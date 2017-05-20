@@ -52,6 +52,7 @@
  *  6. ZooKeeperServer 集群中 session建立, 超时机制(涉及 Follower 与 Leader 之间通信)
  *  7. ZooKeeperServer 集群 处理 Create
  *  8. ZooKeeperServer 集群 动态增加节点 zookeeper dynamic add node
+ *  9. ZooKeeper 强一致性体现在哪里
  *
  *
  * Created by xjk on 5/3/17.

@@ -369,7 +369,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 }
                 try {
                     if (getRecordForPath(path) != null) {
-                        throw new KeeperException.NodeExistsException(path);
+                        throw new KeeperException.NodeExistsException(path);                  // 检测创建的节点是否存在 (zookeeper 强一致性的提现 -> master选举)
                     }
                 } catch (KeeperException.NoNodeException e) {
                     // ignore this one
