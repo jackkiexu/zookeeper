@@ -69,6 +69,15 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
 
     /**
      * Follower 的 RequestProcessor 处理链 (2条)
+     * 第一条 链
+     * FollowerRequestProcessor: 区分处理 Request, 将 Request 交由下个 RequestProcessor, 而若涉及事务的操作, 则 交由 Follower 提交给 leader (zks.getFollower().request())
+     * CommitProcessor: 这条链决定这着 Request 能否提交, 里面主要有两条链 , queuedRequests : 存储着 等待 ACK 过半确认的 Request, committedRequests :存储着 已经经过 ACK 过半确认的 Request
+     * FinalRequestProcessor: 前面的 Request 只是在经过 SynRequestProcessor 持久化到 txnLog 里面, 而 这里做的就是真正的将数据改变到 ZKDataBase 里面(作为  Follower 一定会在 FollowerZooKeeperServer.logRequest 进行同步Request 数据到磁盘里面后再到 FinalRequestProcessor)
+     *
+     * 第二条 链
+     * SynRequestProcessor: 主要是将 Request 持久化到 TxnLog 里面, 其中涉及到 TxnLog 的滚动, 及 Snapshot 文件的生成
+     * AckRequestProcessor: 主要完成 针对 Request 的 ACK 回复, 对 在Leader中就是完成 leader 自己提交 Request, 自己回复 ACK
+     *
      * 1. FollowerRequestProcessor --> CommitProcessor --> FinalRequestProcessor
      * 2. SyncRequestProcessor --> SendAckRequestProcessor
      */
@@ -84,6 +93,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     }
 
     LinkedBlockingQueue<Request> pendingTxns = new LinkedBlockingQueue<Request>();
+
     // 在 Follower 的 processPacket 中进行处理
     public void logRequest(TxnHeader hdr, Record txn) {                          // 接收 Leader 发来的 Proposal
         LOG.info("hdr:" + hdr + ", txn:" + txn);                                // 构建出 Leader 发来的  Request

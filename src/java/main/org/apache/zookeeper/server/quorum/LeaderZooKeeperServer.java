@@ -59,7 +59,17 @@ public class LeaderZooKeeperServer extends QuorumZooKeeperServer {
     /**
      * Leader 的 RequestProcessor 处理链
      *
-     * PreRequestProcessor : 创建和修改
+     * 第一条 RequestProcessor 链
+     * PreRequestProcessor : 创建和修改 TxnRequest
+     * ProposalRequestProcessor : 提交  Proposal 给各个 Follower 包括 Leader自己 (Leader自己是在 ProposalRequestProcessor 里面通过 syncProcessor.processRequest(request) 直接提交 Proposal)
+     * CommitProcessor : 将 经过集群中的过半 Proposal 提交(提交的操作直接在 Leader.processAck -> zk.commitProcessor.commit(p.request))
+     * ToBeAppliedRequestProcessor: 这个处理链其实是 Request 处理时经过的最后一个 RequestProcessor, 其中最令人困惑的是 toBeApplied, 而 toBeApplied 中其实维护的是 集群中经过 过半 ACK 同意的 proposal, 只有经过 FinalRequestProcessor 处理过的 Request 才会在 toBeApplied 中进行删除
+     * FinalRequestProcessor: 前面的 Request 只是在经过 SynRequestProcessor 持久化到 txnLog 里面, 而 这里做的就是真正的将数据改变到 ZKDataBase 里面
+     *
+     * 第二条 RequestProcessor 链
+     * 在 leader 中, SynRequestProcessor, AckRequestProcessor 的创建其实是在 ProposalRequestProcessor 中完成的
+     * SynRequestProcessor: 主要是将 Request 持久化到 TxnLog 里面, 其中涉及到 TxnLog 的滚动, 及 Snapshot 文件的生成
+     * AckRequestProcessor: 主要完成 针对 Request 的 ACK 回复, 对 在Leader中就是完成 leader 自己提交 Request, 自己回复 ACK
      *
      * PrepRequestProcessor --> ProposalRequestProcessor --> CommitProcessor --> ToBeAppliedRequestProcessor --> FinalRequestProcessor
      *                                                    \

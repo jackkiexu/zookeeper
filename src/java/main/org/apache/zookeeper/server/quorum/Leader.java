@@ -744,7 +744,7 @@ public class Leader {
     
     /**
      * Create an inform packet and send it to all observers.
-     * @param proposal
+     * 直接将 Proposal 发送给 Observer, 让 Observer 直接 commit 这个 Proposal;
      */
     public void inform(Proposal proposal) {   
         QuorumPacket qp = new QuorumPacket(Leader.INFORM, proposal.request.zxid, proposal.packet.getData(), null);
