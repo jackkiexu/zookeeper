@@ -90,7 +90,7 @@ import org.slf4j.LoggerFactory;
 public class FileTxnLog implements TxnLog {
     private static final Logger LOG;
 
-    static long preAllocSize =  65536 * 1024;
+    public static long preAllocSize =  65536 * 1024;                                   //  预分配的 TxnLog 文件大小为 64M
 
     public final static int TXNLOG_MAGIC =
         ByteBuffer.wrap("ZKLG".getBytes()).getInt();
@@ -98,12 +98,12 @@ public class FileTxnLog implements TxnLog {
     public final static int VERSION = 2;
 
     /** Maximum time we allow for elapsed fsync before WARNing */
-    private final static long fsyncWarningThresholdMS;
+    private final static long fsyncWarningThresholdMS;                          // 持久化时间过长的报警阀值, 默认值 1秒
 
     static {
         LOG = LoggerFactory.getLogger(FileTxnLog.class);
 
-        String size = System.getProperty("zookeeper.preAllocSize");
+        String size = System.getProperty("zookeeper.preAllocSize");             // 解析出 TxnLog 预分配文件的大小
         if (size != null) {
             try {
                 preAllocSize = Long.parseLong(size) * 1024;
@@ -124,7 +124,7 @@ public class FileTxnLog implements TxnLog {
     long dbId;
     private LinkedList<FileOutputStream> streamsToFlush =
         new LinkedList<FileOutputStream>();
-    long currentSize;
+    long currentSize;                                                   // 记录当前文件 txnLogFile 的大小
     File logFileWrite = null;
 
     /**
@@ -158,10 +158,11 @@ public class FileTxnLog implements TxnLog {
      * rollover the current log file to a new one.
      * @throws IOException
      */
+    // 滚动
     public synchronized void rollLog() throws IOException {
         if (logStream != null) {
             this.logStream.flush(); // 将数据直接
-            this.logStream = null; // 因为每次进行 写 Txn 数据到 日志里面都会判断 logStream != null, 所以通过这种方式来新建 TxnLog
+            this.logStream = null;  // 因为每次进行 写 Txn 数据到 日志里面都会判断 logStream != null, 所以通过这种方式来新建 TxnLog
             oa = null;
         }
     }
@@ -189,38 +190,38 @@ public class FileTxnLog implements TxnLog {
     public synchronized boolean append(TxnHeader hdr, Record txn) throws IOException
     {
         if (hdr != null) {
-            if (hdr.getZxid() <= lastZxidSeen) {
+            if (hdr.getZxid() <= lastZxidSeen) {                                // 若接收到的 txn 的 zxid 小于已经处理的, 则进行 log 一下
                 LOG.warn("Current zxid " + hdr.getZxid()
                         + " is <= " + lastZxidSeen + " for "
                         + hdr.getType());
             }
-            if (logStream==null) {  // 组装 成 logStream
+            if (logStream==null) {                                              // 每次进行 append txn 时,  通过判断 logStream == null 来决定是否生成新的 TxnLogFile
                if(LOG.isInfoEnabled()){
                     LOG.info("Creating new log file: log." +  
                             Long.toHexString(hdr.getZxid()));
                }
-               
+                                                                                // 构建 TxnLogFile, 这里的文件名中含有的 zxid 其实就是 ZKDataTree 处理的最新的 Txn
                logFileWrite = new File(logDir, ("log." + Long.toHexString(hdr.getZxid())));
                fos = new FileOutputStream(logFileWrite);
                logStream = new BufferedOutputStream(fos);
-               oa = BinaryOutputArchive.getArchive(logStream);
-               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId); // 每个文件的文件头,
-               fhdr.serialize(oa, "fileheader");                               // 将 FileHeader 序列化到流里面
+               oa = BinaryOutputArchive.getArchive(logStream);                  // 构建对应的数据流
+               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId);    // 每个文件的文件头,
+               fhdr.serialize(oa, "fileheader");                                // 将 FileHeader 序列化到流里面
                // Make sure that the magic number is written before padding.
                logStream.flush();
                currentSize = fos.getChannel().position();
-               streamsToFlush.add(fos);                                       // 加入到 TxnFileStream 组里面
+               streamsToFlush.add(fos);                                         // 加入到 TxnFileStream 组里面
             }
-            padFile(fos);
-            byte[] buf = Util.marshallTxnEntry(hdr, txn);
+            padFile(fos);                                                       // 将 TxnLog 文件扩充到指定文件的大小 preAllocSize
+            byte[] buf = Util.marshallTxnEntry(hdr, txn);                       // 将 hdr, txn 序列化出 byte[]
             if (buf == null || buf.length == 0) {
                 throw new IOException("Faulty serialization for header " +
                         "and txn");
             }
-            Checksum crc = makeChecksumAlgorithm();             // 获取计算数据流校验码的算法
-            crc.update(buf, 0, buf.length);                    // 计算数据完整性的校验码
-            oa.writeLong(crc.getValue(), "txnEntryCRC");     // 将校验码写入数据流
-            Util.writeTxnBytes(oa, buf);
+            Checksum crc = makeChecksumAlgorithm();                             // 获取计算数据流校验码的算法
+            crc.update(buf, 0, buf.length);                                     // 计算数据( hdr, txn )完整性的校验码
+            oa.writeLong(crc.getValue(), "txnEntryCRC");                        // 将( hdr, txn )对应的校验码写入数据流
+            Util.writeTxnBytes(oa, buf);                                        // 将 hdr, txn 对应的字节数组 buf 写入数据流里面
             
             return true;
         }
@@ -233,7 +234,7 @@ public class FileTxnLog implements TxnLog {
      * @throws IOException
      */
     // 校验并且扩充文件的大小
-    private void padFile(FileOutputStream out) throws IOException {
+    private void padFile(FileOutputStream out) throws IOException {                         // 扩充文件
         currentSize = Util.padLogFile(out, currentSize, preAllocSize);
     }
 

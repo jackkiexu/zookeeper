@@ -110,10 +110,11 @@ public class SerializeUtils {
         return txn;
     }
 
+    // 从数据流中反序列化出 sessions的总个数 count, sessions (ConcurrentHashMap),  DataTree
     public static void deserializeSnapshot(DataTree dt,InputArchive ia, Map<Long, Integer> sessions) throws IOException {
-        int count = ia.readInt("count");            // 1. 反序列化出有多少个 session
+        int count = ia.readInt("count");            // 1. 反序列化出有多少个 session, 一个 session 就对应一个 sessionId <-> timeout
         while (count > 0) {
-            long id = ia.readLong("id");            // 2. 进行 sessions 的反序列化
+            long id = ia.readLong("id");            // 2. 进行 sessions 的反序列化 (sessions 是一个 ConcurrentHashMap)
             int to = ia.readInt("timeout");
             sessions.put(id, to);
             if (LOG.isTraceEnabled()) {

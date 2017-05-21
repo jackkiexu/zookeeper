@@ -19,14 +19,15 @@ package org.apache.zookeeper;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.jute.Utils;
 import org.apache.zookeeper.AsyncCallback.VoidCallback;
 import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.server.persistence.FileTxnLog;
+import org.apache.zookeeper.server.persistence.Util;
 import org.apache.zookeeper.test.ClientBase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -97,7 +98,7 @@ public class ZooKeeperTest extends ClientBase {
         zk.create("/a/c/v", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                 CreateMode.PERSISTENT);
 
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 1; ++i) {
             zk.create("/a/c/" + i, "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                     CreateMode.PERSISTENT);
         }
@@ -200,6 +201,14 @@ public class ZooKeeperTest extends ClientBase {
            if (errContent.toString().contains("ZooKeeper -server host:port cmd args")) {
                 fail("CLI commands (history, redo, connect, printwatches) display usage info!");
             }
+    }
+
+    @Test
+    public void padLogFile() throws Exception {
+        FileOutputStream fileOutputStream = new FileOutputStream("/tmp/file1.txt");
+        long currentSize = fileOutputStream.getChannel().position();
+        LOG.info("currentSize :" + currentSize);
+        Util.padLogFile(fileOutputStream, currentSize, FileTxnLog.preAllocSize);
     }
 
 }

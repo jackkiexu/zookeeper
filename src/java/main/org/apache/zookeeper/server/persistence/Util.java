@@ -130,8 +130,7 @@ public class Util {
    
     /**
      * Extracts zxid from the file name. The file name should have been created
-     * using one of the {@link makeLogName} or {@link makeSnapshotName}.
-     * 
+     *
      * @param name the file name to parse
      * @param prefix the file name prefix (snapshot or log)
      * @return zxid
@@ -217,9 +216,13 @@ public class Util {
      */
     public static long padLogFile(FileOutputStream f,long currentSize, long preAllocSize) throws IOException{
         long position = f.getChannel().position();                      // 获取数据流现在的位置
+        LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize);
         if (position + 4096 >= currentSize) {
             currentSize = currentSize + preAllocSize;
             fill.position(0);
+            long remaining = fill.remaining();
+            LOG.info("fill.remaining():" + fill.remaining());           // 将文件扩充 (currentSize-fill.remaining()) 大小
+            LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize + ", remaining:" + remaining);
             f.getChannel().write(fill, currentSize-fill.remaining());   // 这一步就是扩充 f 的大小, 直接到  (currentSize-fill.remaining()), 并且 这些扩充空间的内容不会指定
         }
         return currentSize;
@@ -287,6 +290,7 @@ public class Util {
      * Compare file file names of form "prefix.version". Sort order result
      * returned in order of version.
      */
+    // 构件出比较 文件名来排序 snapshotFile 的 comparator
     private static class DataDirFileComparator
         implements Comparator<File>, Serializable
     {
@@ -323,7 +327,7 @@ public class Util {
         if(files==null)
             return new ArrayList<File>(0);
         List<File> filelist = Arrays.asList(files);
-        Collections.sort(filelist, new DataDirFileComparator(prefix, ascending));
+        Collections.sort(filelist, new DataDirFileComparator(prefix, ascending)); // 排序 snapshotFile, 主要以文件名中的 zxid 来进行排序
         return filelist;
     }
     
