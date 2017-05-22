@@ -263,10 +263,11 @@ public class FileTxnLog implements TxnLog {
                 logZxid = fzxid;
             }
         }
+                                                                                    // 程序运行到这里, 其实logZxid 是小于 snapshotZxid 的最大的 zxid
         List<File> v=new ArrayList<File>(5);
         for (File f : files) {                                                      // 再次过滤 txn log, 通过 (fzxid < logZxid) 筛选出 要进行删除的 txn log 文件
             long fzxid = Util.getZxidFromName(f.getName(), "log");
-            if (fzxid < logZxid) {
+            if (fzxid < logZxid) {                                                  // 将大于这个的所有 TxnLog 获取出来
                 continue;
             }
             v.add(f);
@@ -280,9 +281,9 @@ public class FileTxnLog implements TxnLog {
      * @return the last zxid logged in the transaction logs
      */
     public long getLastLoggedZxid() {
-        File[] files = getLogFiles(logDir.listFiles(), 0);
+        File[] files = getLogFiles(logDir.listFiles(), 0);                          // 获取 大于 zxid = 0 的所有的 txn log 文件
         long maxLog=files.length>0?
-                Util.getZxidFromName(files[files.length-1].getName(),"log"):-1;
+                Util.getZxidFromName(files[files.length-1].getName(),"log"):-1;     // 获取最大一个文件的 zxid (PS: 这里有个注意点, 每个 txn log 文件名中的 zxid, 代表着这个 txn log 日志中存储的最小 zxid )
 
         // if a log file is more recent we must scan it to find
         // the highest zxid
