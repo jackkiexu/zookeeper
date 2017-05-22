@@ -723,7 +723,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             }
             return snapCount;
         } catch (Exception e) {
-            return 100000;
+            return 100;
         }
     }
 

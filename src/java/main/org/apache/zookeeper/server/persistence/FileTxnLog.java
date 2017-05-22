@@ -235,7 +235,7 @@ public class FileTxnLog implements TxnLog {
      */
     // 校验并且扩充文件的大小
     private void padFile(FileOutputStream out) throws IOException {                         // 扩充文件
-        currentSize = Util.padLogFile(out, currentSize, preAllocSize);
+        currentSize = Util.padLogFile(out, currentSize, preAllocSize);                      // 最终的大小是 currentSize(详情见 Util.padLogFile)
     }
 
     /**
@@ -245,6 +245,7 @@ public class FileTxnLog implements TxnLog {
      * @param logDirList array of files
      * @param snapshotZxid return files at, or before this zxid
      * @return
+     *
      */
     public static File[] getLogFiles(File[] logDirList,long snapshotZxid) {
         List<File> files = Util.sortDataDir(logDirList, "log", true);               // 将所有的 txn log 进行升续排序
@@ -252,8 +253,8 @@ public class FileTxnLog implements TxnLog {
         // Find the log file that starts before or at the same time as the
         // zxid of the snapshot
         for (File f : files) {
-            long fzxid = Util.getZxidFromName(f.getName(), "log");                  // 从 txn log 文件名获取 对应  zxid
-            if (fzxid > snapshotZxid) {                                              // fzxid > snapshotZxid 说明, 对应的 txn log 还需要保留
+            long fzxid = Util.getZxidFromName(f.getName(), "log");                  // 从 txn log 文件名获取 对应  zxid, 若前缀不是 log, 则直接返回 -1
+            if (fzxid > snapshotZxid) {                                             // fzxid > snapshotZxid 说明, 对应的 txn log 还需要保留
                 continue;
             }
             // the files
@@ -363,14 +364,14 @@ public class FileTxnLog implements TxnLog {
     public boolean truncate(long zxid) throws IOException {
         FileTxnIterator itr = null;
         try {
-            itr = new FileTxnIterator(this.logDir, zxid);
+            itr = new FileTxnIterator(this.logDir, zxid);                   // 获取 大于 zxid 的 txnLog 文件
             PositionInputStream input = itr.inputStream;
             long pos = input.getPosition();
             // now, truncate at the current position
             RandomAccessFile raf = new RandomAccessFile(itr.logFile, "rw");
             raf.setLength(pos);
             raf.close();
-            while (itr.goToNextLog()) {
+            while (itr.goToNextLog()) {                                     // 将 cursor 定位到 ArrayList 的尾部
                 if (!itr.logFile.delete()) {
                     LOG.warn("Unable to truncate {}", itr.logFile);
                 }
@@ -387,6 +388,7 @@ public class FileTxnLog implements TxnLog {
      * @return header that was read fomr the file
      * @throws IOException
      */
+    // 读取 txnLog 里面的 FileHeader
     private static FileHeader readHeader(File file) throws IOException {
         InputStream is =null;
         try {

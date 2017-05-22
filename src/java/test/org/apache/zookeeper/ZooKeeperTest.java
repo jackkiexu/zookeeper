@@ -98,7 +98,7 @@ public class ZooKeeperTest extends ClientBase {
         zk.create("/a/c/v", "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                 CreateMode.PERSISTENT);
 
-        for (int i = 0; i < 1; ++i) {
+        for (int i = 0; i < 5000; ++i) {
             zk.create("/a/c/" + i, "some".getBytes(), Ids.OPEN_ACL_UNSAFE,
                     CreateMode.PERSISTENT);
         }
@@ -209,6 +209,14 @@ public class ZooKeeperTest extends ClientBase {
         long currentSize = fileOutputStream.getChannel().position();
         LOG.info("currentSize :" + currentSize);
         Util.padLogFile(fileOutputStream, currentSize, FileTxnLog.preAllocSize);
+
+        fileOutputStream.write("123456".getBytes());
+
+        currentSize = fileOutputStream.getChannel().position();
+        LOG.info("currentSize :" + currentSize);
+        Util.padLogFile(fileOutputStream, currentSize, FileTxnLog.preAllocSize);
     }
+
+
 
 }

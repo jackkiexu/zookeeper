@@ -217,9 +217,9 @@ public class Util {
     public static long padLogFile(FileOutputStream f,long currentSize, long preAllocSize) throws IOException{
         long position = f.getChannel().position();                      // 获取数据流现在的位置
         LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize);
-        if (position + 4096 >= currentSize) {
-            currentSize = currentSize + preAllocSize;
-            fill.position(0);
+        if (position + 4096 >= currentSize) {                           // 这里经过第一次 padLogFile 调用后, currentSize 就变成了 64M了, 但是当position 够大时(position + 4096 > 64M), 则就进行再次扩充 64M
+            currentSize = currentSize + preAllocSize;                   // 扩充 64M, 每次扩充 64M
+            fill.position(0);                                           // The fill from which bytes are to be transferred to the f (FileOutputStream)
             long remaining = fill.remaining();
             LOG.info("fill.remaining():" + fill.remaining());           // 将文件扩充 (currentSize-fill.remaining()) 大小
             LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize + ", remaining:" + remaining);
@@ -327,6 +327,7 @@ public class Util {
         if(files==null)
             return new ArrayList<File>(0);
         List<File> filelist = Arrays.asList(files);
+        // ascending 若是 true, 则是按 zxid 升序进行排序
         Collections.sort(filelist, new DataDirFileComparator(prefix, ascending)); // 排序 snapshotFile, 主要以文件名中的 zxid 来进行排序
         return filelist;
     }

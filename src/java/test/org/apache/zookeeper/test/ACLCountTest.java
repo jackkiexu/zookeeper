@@ -33,6 +33,7 @@ import org.apache.zookeeper.server.*;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.apache.zookeeper.server.auth.KerberosName;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
+import org.apache.zookeeper.server.persistence.FileTxnLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
@@ -262,5 +263,14 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
         Assert.assertEquals("HTTP", kerbNameWoHost.getServiceName());
         Assert.assertEquals(null, kerbNameWoHost.getHostName());
         Assert.assertEquals("EXAMPLE.COM", kerbNameWoHost.getRealm());
+    }
+
+    @Test
+    public void testTxnLog(){
+        File file = new File("/Users/xjk/Documents/ideaworkspace/zookeeper/build/2017-05-22-23.dir/version-2");
+
+        File[] files = FileTxnLog.getLogFiles(file.listFiles(), 1089);
+        LOG.info("files:" + files);
+
     }
 }

@@ -338,7 +338,7 @@ public abstract class ClientBase extends ZKTestCase {
 
     // 返回今天的字符串形式
     public static String todayFormatDate(){
-        return formatDate(new Date(), "yyyy-MM-dd-HHmmssSSS");
+        return formatDate(new Date(), "yyyy-MM-dd-HH");
     }
 
     public static File createTmpDir() throws IOException {
@@ -348,6 +348,7 @@ public abstract class ClientBase extends ZKTestCase {
         @Deprecated
         File tmpFile = File.createTempFile("test", ".junit", parentDir);
         tmpFile = new File(parentDir.getCanonicalPath() + File.separatorChar + todayFormatDate() + File.separatorChar);
+        LOG.info("createTmpDir:" + tmpFile);
         if(!tmpFile.exists()) tmpFile.mkdirs();
         // don't delete tmpFile - this ensures we don't attempt to create
         // a tmpDir with a duplicate name
