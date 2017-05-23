@@ -57,7 +57,7 @@ public class PurgeTxnTest extends ZKTestCase implements  Watcher {
                 ClientBase.waitForServerUp(HOSTPORT,CONNECTION_TIMEOUT));
         ZooKeeper zk = new ZooKeeper(HOSTPORT, CONNECTION_TIMEOUT, this);
         try {
-            for (int i = 0; i< 2000; i++) {
+            for (int i = 0; i< 400; i++) {
                 zk.create("/invalidsnap-" + i, new byte[0], Ids.OPEN_ACL_UNSAFE,
                         CreateMode.PERSISTENT);
             }

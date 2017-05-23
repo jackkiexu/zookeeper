@@ -260,6 +260,7 @@ public class FileTxnSnapLog {
      * @return true if able to truncate the log, false if not
      * @throws IOException
      */
+    // 将 txn log 里面 大于 zxid 的事务信息进行删除(详情见 FileTxnLog.truncate())
     public boolean truncateLog(long zxid) throws IOException {
         // close the existing txnLog and snapLog
         close();
@@ -286,6 +287,7 @@ public class FileTxnSnapLog {
      * recent snapshot
      * @throws IOException
      */
+    // 找到最新的一个 snapshot 文件
     public File findMostRecentSnapshot() throws IOException {
         FileSnap snaplog = new FileSnap(snapDir);
         return snaplog.findMostRecentSnapshot();
@@ -311,6 +313,7 @@ public class FileTxnSnapLog {
      * zxid
      * @return
      */
+    // 获取所有大于 zxid 的 txn log 文件, 并且按 zxid 升续排序
     public File[] getSnapshotLogs(long zxid) {
         return FileTxnLog.getLogFiles(dataDir.listFiles(), zxid);
     }
@@ -321,6 +324,7 @@ public class FileTxnSnapLog {
      * returns true iff something appended, otw false 
      * @throws IOException
      */
+    // 最佳请求信息到 txnLog 文件,
     public boolean append(Request si) throws IOException {
         return txnLog.append(si.hdr, si.txn);
     }
@@ -329,6 +333,7 @@ public class FileTxnSnapLog {
      * commit the transaction of logs
      * @throws IOException
      */
+    // 将 txn log 日志进行提交
     public void commit() throws IOException {
         txnLog.commit();
     }
@@ -337,6 +342,7 @@ public class FileTxnSnapLog {
      * roll the transaction logs
      * @throws IOException 
      */
+    // 通过调用 rolllog 将 logStream == null, 下次ZKDatabase 进行提交数据时, 会判断 logStream 是否是 null, 来决定是否新创建新的文件s
     public void rollLog() throws IOException {          // 事务日志文件重新生成, 这里将 logStream == null 来判断是否需要重新生成 新的文件
         txnLog.rollLog();
     }

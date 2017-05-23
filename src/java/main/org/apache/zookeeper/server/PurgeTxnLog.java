@@ -71,11 +71,11 @@ public class PurgeTxnLog {
         
         // files to exclude from deletion
         Set<File> exc=new HashSet<File>();
-        List<File> snaps = txnLog.findNRecentSnapshots(num);                            // 找出最新的 num 个 snapshot 文件 (根据 zxid, snapshot 的文件名是用 zxid 来进行命名)
+        List<File> snaps = txnLog.findNRecentSnapshots(num);                            // 找出最新的 num 个 snapshot 文件 (根据 zxid, snapshot 的文件名是用 zxid 来进行命名), 这里利用 zxid 来进行倒序排序
         if (snaps.size() == 0) 
             return;
         File snapShot = snaps.get(snaps.size() -1);
-        for (File f: snaps) {
+        for (File f: snaps) {                                                          // 将最新的 num 个snapshot 文件加入 exc(排除删除的)
             exc.add(f);
         }
         long zxid = Util.getZxidFromName(snapShot.getName(),"snapshot");              // 获取最久的一个 snapshot 文件的 zxid (这里的  zxid 是开始进行 takesnap 时记录的第一个 txnLog, 其实就是保留下来的最小的 txnlog )

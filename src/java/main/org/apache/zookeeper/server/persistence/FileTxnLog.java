@@ -115,7 +115,7 @@ public class FileTxnLog implements TxnLog {
     }
 
     long lastZxidSeen;
-    volatile BufferedOutputStream logStream = null;
+    public volatile BufferedOutputStream logStream = null;
     volatile OutputArchive oa;
     volatile FileOutputStream fos = null;
 
@@ -247,8 +247,9 @@ public class FileTxnLog implements TxnLog {
      * @return
      *
      */
+    // 得到 大于 snapshotZxid 的所有 txn log 文件
     public static File[] getLogFiles(File[] logDirList,long snapshotZxid) {
-        List<File> files = Util.sortDataDir(logDirList, "log", true);               // 将所有的 txn log 进行升续排序
+        List<File> files = Util.sortDataDir(logDirList, "log", true);               // 将所有的 txn log 进行升续排序( true 代表升序)
         long logZxid = 0;
         // Find the log file that starts before or at the same time as the
         // zxid of the snapshot
@@ -280,8 +281,9 @@ public class FileTxnLog implements TxnLog {
      * get the last zxid that was logged in the transaction logs
      * @return the last zxid logged in the transaction logs
      */
+    // 基于 txn log file, 查找出 ZooKeeperServer
     public long getLastLoggedZxid() {
-        File[] files = getLogFiles(logDir.listFiles(), 0);                          // 获取 大于 zxid = 0 的所有的 txn log 文件
+        File[] files = getLogFiles(logDir.listFiles(), 0);                           // 获取 大于 zxid = 0 的所有的 txn log 文件
         long maxLog=files.length>0?
                 Util.getZxidFromName(files[files.length-1].getName(),"log"):-1;     // 获取最大一个文件的 zxid (PS: 这里有个注意点, 每个 txn log 文件名中的 zxid, 代表着这个 txn log 日志中存储的最小 zxid )
 
@@ -291,9 +293,9 @@ public class FileTxnLog implements TxnLog {
         TxnIterator itr = null;
         try {
             FileTxnLog txn = new FileTxnLog(logDir);
-            itr = txn.read(maxLog);
+            itr = txn.read(maxLog);                                                  // 在 FileTxnIterator 里面会构建一个降序排序的 txn log file
             while (true) {
-                if(!itr.next())
+                if(!itr.next())                                                     // 不断读取 txn log 里面的 txn 日志 (因为 lastzxid 的 txn log 信息是写在这个文件的最后一个)
                     break;
                 TxnHeader hdr = itr.getHeader();
                 zxid = hdr.getZxid();
@@ -330,10 +332,10 @@ public class FileTxnLog implements TxnLog {
             if (forceSync) {
                 long startSyncNS = System.nanoTime();
 
-                log.getChannel().force(false);
+                log.getChannel().force(false);                   // 强行将数据刷到磁盘上 (when this method returns it is guaranteed that all changes made to the file since this channel was created 详情见注解部分)
                                                                   // 监控是否落磁盘时间超限制
                 long syncElapsedMS = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
-                if (syncElapsedMS > fsyncWarningThresholdMS) {
+                if (syncElapsedMS > fsyncWarningThresholdMS) {  // 判断刷数据到磁盘是否超过系统的阀值
                     LOG.warn("fsync-ing the write ahead log in "
                             + Thread.currentThread().getName()
                             + " took " + syncElapsedMS
@@ -342,7 +344,7 @@ public class FileTxnLog implements TxnLog {
                 }
             }
         }
-        while (streamsToFlush.size() > 1) {                    // 将对应的 File Stream 都进行删除
+        while (streamsToFlush.size() > 1) {                    // 将对应的 File Stream 都进行删除(都已经将数据刷到磁盘上了, 没必要保留)
             streamsToFlush.removeFirst().close();
         }
     }
@@ -367,7 +369,7 @@ public class FileTxnLog implements TxnLog {
         try {
             itr = new FileTxnIterator(this.logDir, zxid);                   // 获取 大于 zxid 的 txnLog 文件
             PositionInputStream input = itr.inputStream;
-            long pos = input.getPosition();
+            long pos = input.getPosition();                                  // 这一步非常重要, 因为 下次写txn log 就会从这个地方开始写
             // now, truncate at the current position
             RandomAccessFile raf = new RandomAccessFile(itr.logFile, "rw");
             raf.setLength(pos);
@@ -411,6 +413,7 @@ public class FileTxnLog implements TxnLog {
      * the dbid of this transaction database
      * @return the dbid of this database
      */
+    // 获取文件的 dbId(这里是默认值 -1)
     public long getDbId() throws IOException {
         FileTxnIterator itr = new FileTxnIterator(logDir, 0);
         FileHeader fh=readHeader(itr.logFile);
@@ -532,7 +535,7 @@ public class FileTxnLog implements TxnLog {
          * @throws IOException
          */
         void init() throws IOException {
-            storedFiles = new ArrayList<File>();
+            storedFiles = new ArrayList<File>();                        // 获取 zxid 大于 0 的所有 txn 日志, 并且降序排序
             List<File> files = Util.sortDataDir(FileTxnLog.getLogFiles(logDir.listFiles(), 0), "log", false);
             for (File f: files) {
                 if (Util.getZxidFromName(f.getName(), "log") >= zxid) {
@@ -544,10 +547,10 @@ public class FileTxnLog implements TxnLog {
                     break;
                 }
             }
-            goToNextLog();
-            if (!next())
+            goToNextLog();                                              // 将刚才获取的  files取出, 并将 zxid 最小的初始化 PositionInputStream
+            if (!next())                                                // 每次调用 next 都会将 下个事务处理信息读取出来
                 return;
-            while (hdr.getZxid() < zxid) {
+            while (hdr.getZxid() < zxid) {                            // 这里就是在 通过 next() 方法, 不断轮训, 定位到 zxid 的位置
                 if (!next())
                     return;
             }
@@ -559,6 +562,7 @@ public class FileTxnLog implements TxnLog {
          * new file to be read
          * @throws IOException
          */
+        // 迭代到下个 Txn Log 文件
         private boolean goToNextLog() throws IOException {
             if (storedFiles.size() > 0) {
                 this.logFile = storedFiles.remove(storedFiles.size()-1);
@@ -574,6 +578,7 @@ public class FileTxnLog implements TxnLog {
          * @param is the inputstream
          * @throws IOException
          */
+        // 取出 Fileheader 并进行相应的校验
         protected void inStreamCreated(InputArchive ia, InputStream is)
             throws IOException{
             FileHeader header= new FileHeader();
@@ -591,6 +596,7 @@ public class FileTxnLog implements TxnLog {
          * @param is file input stream associated with the input archive.
          * @throws IOException
          **/
+        // 创建 logFile 对应的数据流
         protected InputArchive createInputArchive(File logFile) throws IOException {
             if(inputStream==null){
                 inputStream= new PositionInputStream(new BufferedInputStream(new FileInputStream(logFile)));
@@ -615,6 +621,7 @@ public class FileTxnLog implements TxnLog {
          * @return true if there is more transactions to be read
          * false if not.
          */
+        // 从数据流中不断读取 Txn log 记录, 一次读取一条 (若这里看不懂, 那就看一下数据写入的流程)
         public boolean next() throws IOException {
             if (ia == null) {
                 return false;

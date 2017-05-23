@@ -189,7 +189,7 @@ public class FileSnap implements SnapShot {
      * @throws IOException
      */
     public List<File> findNRecentSnapshots(int n) throws IOException {
-        List<File> files = Util.sortDataDir(snapDir.listFiles(), "snapshot", false);    // 通过 snapshotFile 里面含有的 zxid 的文件名来进行 snapshotFile 排序
+        List<File> files = Util.sortDataDir(snapDir.listFiles(), "snapshot", false);    // 通过 snapshotFile 里面含有的 zxid 的文件名来进行 snapshotFile 排序 (false 表示倒序)
         int i = 0;
         List<File> list = new ArrayList<File>();
         for (File f: files) {                                                           // 循环 snapDirFile 获取最新的 n 个文件

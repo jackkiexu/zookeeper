@@ -183,7 +183,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                         continue;
                     }
                     toFlush.add(si);
-                    if (toFlush.size() > 1000) {                                             // 将要刷新到 磁盘上的 Request 的数量 超过阈值, 将进行刷新到磁盘
+                    if (toFlush.size() > 10) {                                             // 将要刷新到 磁盘上的 Request 的数量 超过阈值, 将进行刷新到磁盘
                         flush(toFlush);
                     }
                 }

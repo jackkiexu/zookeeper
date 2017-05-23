@@ -57,14 +57,14 @@ public class TruncateTest extends ZKTestCase {
     File dataDir1, dataDir2, dataDir3;
     final int baseHostPort = PortAssignment.unique();
     
-    @Before
+//    @Before
     public void setUp() throws IOException {
         dataDir1 = ClientBase.createTmpDir();
         dataDir2 = ClientBase.createTmpDir();
         dataDir3 = ClientBase.createTmpDir();
     }
     
-    @After
+//    @After
     public void tearDown() {
         ClientBase.recursiveDelete(dataDir1);
         ClientBase.recursiveDelete(dataDir2);
