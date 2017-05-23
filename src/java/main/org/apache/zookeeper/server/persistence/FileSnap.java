@@ -85,20 +85,20 @@ public class FileSnap implements SnapShot {
             try {
                 LOG.info("Reading snapshot " + snap);
                 snapIS = new BufferedInputStream(new FileInputStream(snap));
-                crcIn = new CheckedInputStream(snapIS, new Adler32());          // 通过 Adler32 算法获取 checkSum
+                crcIn = new CheckedInputStream(snapIS, new Adler32());          // 1. 通过 Adler32 算法获取 checkSum
                 InputArchive ia = BinaryInputArchive.getArchive(crcIn);
-                deserialize(dt,sessions, ia);                                   // 从数据流反序列化出 DataTree 与 sessions
-                long checkSum = crcIn.getChecksum().getValue();                 // 获取文件对应的 checkSum ()
-                long val = ia.readLong("val");                                  // 对应的 checkSum 是一个 long 类型, 写在了文件的最后部分
-                if (val != checkSum) {                                          // 校验通过 Adler32 算法获取的 checkSum 与文件中存储的 checkSum 进行比较 ( 让我想起个项目 Jafka, 通过 CRC32 来进行数据可行性的校验)
+                deserialize(dt,sessions, ia);                                   // 2. 从数据流反序列化出 DataTree 与 sessions
+                long checkSum = crcIn.getChecksum().getValue();                 // 3. 获取文件对应的 checkSum ()
+                long val = ia.readLong("val");                                  // 4. 对应的 checkSum 是一个 long 类型, 写在了文件的最后部分
+                if (val != checkSum) {                                          // 5. 校验通过 Adler32 算法获取的 checkSum 与文件中存储的 checkSum 进行比较 ( 让我想起个项目 Jafka, 通过 CRC32 来进行数据可行性的校验)
                     throw new IOException("CRC corruption in snapshot :  " + snap);
                 }
                 foundValid = true;
-                break;                                                          // 从这个 break 可以看出, 只要在检测出有一个 snapshot文件有效, 则就退出
+                break;                                                          // 6. 从这个 break 可以看出, 只要在检测出有一个 snapshot文件有效, 则就退出
             } catch(IOException e) {
                 LOG.warn("problem reading snap file " + snap, e);
             } finally {
-                if (snapIS != null)                                             // 关闭对应数据流
+                if (snapIS != null)                                             // 7. 关闭对应数据流
                     snapIS.close();
                 if (crcIn != null)
                     crcIn.close();
@@ -108,8 +108,8 @@ public class FileSnap implements SnapShot {
         if (!foundValid) {      // 没有找到有效的 snapshot 文件
             throw new IOException("Not able to find valid snapshots in " + snapDir);
         }
-        dt.lastProcessedZxid = Util.getZxidFromName(snap.getName(), "snapshot"); // snapshot 的名字中包含里面存储的 Txn 的最大的 zxid
-        return dt.lastProcessedZxid;                                            // 返回 snapshot 中最新的 zxid(后期还要加载大于这个 zxid 的事务信息)
+        dt.lastProcessedZxid = Util.getZxidFromName(snap.getName(), "snapshot"); // 8. snapshot 的名字中包含里面存储的 Txn 的最大的 zxid
+        return dt.lastProcessedZxid;                                             // 9. 返回 snapshot 中最新的 zxid(后期还要加载大于这个 zxid 的事务信息)
     }
 
     /**
@@ -158,7 +158,7 @@ public class FileSnap implements SnapShot {
      */
     // 获取 最新的 n 个 snapshot 文件, 并且通过校验文件的末尾是否是 / 来确定文件是否是有效
     private List<File> findNValidSnapshots(int n) throws IOException {
-        // 根据文件的名称来进行排序 文件
+                                                // 根据文件的名称中的 zxid 来进行排序, false表示降序
         List<File> files = Util.sortDataDir(snapDir.listFiles(),"snapshot", false);
         int count = 0;
         List<File> list = new ArrayList<File>();
@@ -168,7 +168,7 @@ public class FileSnap implements SnapShot {
             // until we find a valid one
             try {
                 if (Util.isValidSnapshot(f)) { // 通过文件大小及文件最后5(1 与 '/')个字节来判断是否是有效的文件
-                    list.add(f);
+                    list.add(f);               // 将有效的文件加入集合
                     count++;
                     if (count == n) {
                         break;
@@ -232,13 +232,13 @@ public class FileSnap implements SnapShot {
             OutputStream sessOS = new BufferedOutputStream(new FileOutputStream(snapShot));
             CheckedOutputStream crcOut = new CheckedOutputStream(sessOS, new Adler32());
             //CheckedOutputStream cout = new CheckedOutputStream()
-            OutputArchive oa = BinaryOutputArchive.getArchive(crcOut);                      // 封装出对应的数据流
-            FileHeader header = new FileHeader(SNAP_MAGIC, VERSION, dbId);                  // snapshot 的文件头
-            serialize(dt,sessions,oa, header);                                              // 将 DataTree, sessions, FileHeader 序列化到 snapshot 文件里面
-            long val = crcOut.getChecksum().getValue();                                     // 通过 Adler32 算法来获取对应数据流的 checkSum, 用于校验数据的可信性
-            oa.writeLong(val, "val");                                                       // 这个是检测文件完整性的校验值
-            oa.writeString("/", "path");                                                    // 因为在进行 take snap shot 时, 可能进程被 kill, 所以用于校验文件的完整性
-            sessOS.flush();
+            OutputArchive oa = BinaryOutputArchive.getArchive(crcOut);     // 1. 封装出对应的数据流
+            FileHeader header = new FileHeader(SNAP_MAGIC, VERSION, dbId); // 2. snapshot 的文件头
+            serialize(dt,sessions,oa, header);                             // 3. 将 DataTree, sessions, FileHeader 序列化到 snapshot 文件里面
+            long val = crcOut.getChecksum().getValue();                    // 4. 通过 Adler32 算法来获取对应数据流的 checkSum, 用于校验数据的可信性
+            oa.writeLong(val, "val");                                      // 5. 这个是检测文件完整性的校验值
+            oa.writeString("/", "path");                                   // 6. 因为在进行 take snap shot 时, 可能进程被 kill, 所以用于校验文件的完整性
+            sessOS.flush();                                                // 7. 关闭对应的数据流
             crcOut.close();
             sessOS.close();
         }

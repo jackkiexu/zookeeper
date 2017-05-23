@@ -190,38 +190,38 @@ public class FileTxnLog implements TxnLog {
     public synchronized boolean append(TxnHeader hdr, Record txn) throws IOException
     {
         if (hdr != null) {
-            if (hdr.getZxid() <= lastZxidSeen) {                                // 若接收到的 txn 的 zxid 小于已经处理的, 则进行 log 一下
+            if (hdr.getZxid() <= lastZxidSeen) {                                // 1. 若接收到的 txn 的 zxid 小于已经处理的, 则进行 log 一下
                 LOG.warn("Current zxid " + hdr.getZxid()
                         + " is <= " + lastZxidSeen + " for "
                         + hdr.getType());
             }
-            if (logStream==null) {                                              // 每次进行 append txn 时,  通过判断 logStream == null 来决定是否生成新的 TxnLogFile
+            if (logStream==null) {                                              // 2. 每次进行 append txn 时,  通过判断 logStream == null 来决定是否生成新的 TxnLogFile
                if(LOG.isInfoEnabled()){
                     LOG.info("Creating new log file: log." +  
                             Long.toHexString(hdr.getZxid()));
                }
-                                                                                // 构建 TxnLogFile, 这里的文件名中含有的 zxid 其实就是 ZKDataTree 处理的最新的 Txn
+                                                                                // 3. 构建 TxnLogFile, 这里的文件名中含有的 zxid 其实就是 ZKDataTree 处理的最新的 Txn
                logFileWrite = new File(logDir, ("log." + Long.toHexString(hdr.getZxid())));
                fos = new FileOutputStream(logFileWrite);
                logStream = new BufferedOutputStream(fos);
-               oa = BinaryOutputArchive.getArchive(logStream);                  // 构建对应的数据流
-               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId);    // 每个文件的文件头,
-               fhdr.serialize(oa, "fileheader");                                // 将 FileHeader 序列化到流里面
+               oa = BinaryOutputArchive.getArchive(logStream);                  // 4. 构建对应的数据流
+               FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId);    // 5. 构建每个文件的文件头,
+               fhdr.serialize(oa, "fileheader");                                // 6. 将 FileHeader 序列化到流里面
                // Make sure that the magic number is written before padding.
                logStream.flush();
                currentSize = fos.getChannel().position();
-               streamsToFlush.add(fos);                                         // 加入到 TxnFileStream 组里面
+               streamsToFlush.add(fos);                                         // 7. 加入到 TxnFileStream 组里面
             }
-            padFile(fos);                                                       // 将 TxnLog 文件扩充到指定文件的大小 preAllocSize
-            byte[] buf = Util.marshallTxnEntry(hdr, txn);                       // 将 hdr, txn 序列化出 byte[]
+            padFile(fos);                                                       // 8. 将 TxnLog 文件扩充到指定文件的大小 preAllocSize
+            byte[] buf = Util.marshallTxnEntry(hdr, txn);                       // 9. 将 hdr, txn 序列化出 byte[]
             if (buf == null || buf.length == 0) {
                 throw new IOException("Faulty serialization for header " +
                         "and txn");
             }
-            Checksum crc = makeChecksumAlgorithm();                             // 获取计算数据流校验码的算法
-            crc.update(buf, 0, buf.length);                                     // 计算数据( hdr, txn )完整性的校验码
-            oa.writeLong(crc.getValue(), "txnEntryCRC");                        // 将( hdr, txn )对应的校验码写入数据流
-            Util.writeTxnBytes(oa, buf);                                        // 将 hdr, txn 对应的字节数组 buf 写入数据流里面
+            Checksum crc = makeChecksumAlgorithm();                             // 10. 获取计算数据流校验码的算法
+            crc.update(buf, 0, buf.length);                                     // 11. 计算数据( hdr, txn )完整性的校验码
+            oa.writeLong(crc.getValue(), "txnEntryCRC");                        // 12. 将( hdr, txn )对应的校验码写入数据流
+            Util.writeTxnBytes(oa, buf);                                        // 13. 将 hdr, txn 对应的字节数组 buf 写入数据流里面
             
             return true;
         }
@@ -249,26 +249,26 @@ public class FileTxnLog implements TxnLog {
      */
     // 得到 大于 snapshotZxid 的所有 txn log 文件
     public static File[] getLogFiles(File[] logDirList,long snapshotZxid) {
-        List<File> files = Util.sortDataDir(logDirList, "log", true);               // 将所有的 txn log 进行升续排序( true 代表升序)
+        List<File> files = Util.sortDataDir(logDirList, "log", true); // 1. 将所有的 txn log 进行升续排序( true 代表升序)
         long logZxid = 0;
         // Find the log file that starts before or at the same time as the
         // zxid of the snapshot
         for (File f : files) {
-            long fzxid = Util.getZxidFromName(f.getName(), "log");                  // 从 txn log 文件名获取 对应  zxid, 若前缀不是 log, 则直接返回 -1
-            if (fzxid > snapshotZxid) {                                             // fzxid > snapshotZxid 说明, 对应的 txn log 还需要保留
+            long fzxid = Util.getZxidFromName(f.getName(), "log");    // 2. 从 txn log 文件名获取 对应  zxid, 若前缀不是 log, 则直接返回 -1
+            if (fzxid > snapshotZxid) {                               // 3. fzxid > snapshotZxid 说明, 对应的 txn log 还需要保留
                 continue;
             }
             // the files
             // are sorted with zxid's
-            if (fzxid > logZxid) {                                                  // 获取要删除的 txn log 文件中 最大的 zxid 的值
+            if (fzxid > logZxid) {                                    // 4. 获取要删除的 txn log 文件中 最大的 zxid 的值
                 logZxid = fzxid;
             }
         }
-                                                                                    // 程序运行到这里, 其实logZxid 是小于 snapshotZxid 的最大的 zxid
+                                                                      // 5. 程序运行到这里, 其实logZxid 是小于 snapshotZxid 的最大的 zxid
         List<File> v=new ArrayList<File>(5);
-        for (File f : files) {                                                      // 再次过滤 txn log, 通过 (fzxid < logZxid) 筛选出 要进行删除的 txn log 文件
+        for (File f : files) {                                        // 6. 再次过滤 txn log, 通过 (fzxid >= logZxid) 筛选出 要进行删除的 txn log 文件
             long fzxid = Util.getZxidFromName(f.getName(), "log");
-            if (fzxid < logZxid) {                                                  // 将大于这个的所有 TxnLog 获取出来
+            if (fzxid < logZxid) {                                    // 7. 将大于这个的所有 TxnLog 获取出来
                 continue;
             }
             v.add(f);
@@ -281,11 +281,11 @@ public class FileTxnLog implements TxnLog {
      * get the last zxid that was logged in the transaction logs
      * @return the last zxid logged in the transaction logs
      */
-    // 基于 txn log file, 查找出 ZooKeeperServer
+    // 基于 txn log file, 查找出 最新处理的 zxid 值
     public long getLastLoggedZxid() {
-        File[] files = getLogFiles(logDir.listFiles(), 0);                           // 获取 大于 zxid = 0 的所有的 txn log 文件
+        File[] files = getLogFiles(logDir.listFiles(), 0);                     // 1. 获取 大于 zxid = 0 的所有的 txn log 文件
         long maxLog=files.length>0?
-                Util.getZxidFromName(files[files.length-1].getName(),"log"):-1;     // 获取最大一个文件的 zxid (PS: 这里有个注意点, 每个 txn log 文件名中的 zxid, 代表着这个 txn log 日志中存储的最小 zxid )
+                Util.getZxidFromName(files[files.length-1].getName(),"log"):-1;// 2. 获取最大一个文件的 zxid (PS: 这里有个注意点, 每个 txn log 文件名中的 zxid, 代表着这个 txn log 日志中存储的最小 zxid )
 
         // if a log file is more recent we must scan it to find
         // the highest zxid
@@ -293,9 +293,9 @@ public class FileTxnLog implements TxnLog {
         TxnIterator itr = null;
         try {
             FileTxnLog txn = new FileTxnLog(logDir);
-            itr = txn.read(maxLog);                                                  // 在 FileTxnIterator 里面会构建一个降序排序的 txn log file
+            itr = txn.read(maxLog);                                            // 3. 在 FileTxnIterator 里面会构建一个降序排序的 txn log file(一开始 感觉这里有个 bug, 取出的应该是 zxid 最大的TxnLog 而不是最小的, 后来发现原来在 next() 方法中有调用 goToNextLog 方法来获取下一个TxnLog 文件)
             while (true) {
-                if(!itr.next())                                                     // 不断读取 txn log 里面的 txn 日志 (因为 lastzxid 的 txn log 信息是写在这个文件的最后一个)
+                if(!itr.next())                                                // 4. 不断读取 txn log 里面的 txn 日志 (因为 lastzxid 的 txn log 信息是写在这个文件的最后一个)
                     break;
                 TxnHeader hdr = itr.getHeader();
                 zxid = hdr.getZxid();
@@ -327,15 +327,15 @@ public class FileTxnLog implements TxnLog {
         if (logStream != null) {
             logStream.flush();
         }
-        for (FileOutputStream log : streamsToFlush) {           // 将FileStream 里面的 Txn Log 文件落磁盘
+        for (FileOutputStream log : streamsToFlush) {           // 1. 将FileStream 里面的 Txn Log 文件落磁盘
             log.flush();
             if (forceSync) {
                 long startSyncNS = System.nanoTime();
 
-                log.getChannel().force(false);                   // 强行将数据刷到磁盘上 (when this method returns it is guaranteed that all changes made to the file since this channel was created 详情见注解部分)
-                                                                  // 监控是否落磁盘时间超限制
+                log.getChannel().force(false);                  // 2. 强行将数据刷到磁盘上 (when this method returns it is guaranteed that all changes made to the file since this channel was created 详情见注解部分)
+                                                                // 3.  监控是否落磁盘时间超限制
                 long syncElapsedMS = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
-                if (syncElapsedMS > fsyncWarningThresholdMS) {  // 判断刷数据到磁盘是否超过系统的阀值
+                if (syncElapsedMS > fsyncWarningThresholdMS) {  // 4. 判断刷数据到磁盘是否超过系统的阀值
                     LOG.warn("fsync-ing the write ahead log in "
                             + Thread.currentThread().getName()
                             + " took " + syncElapsedMS
@@ -344,7 +344,7 @@ public class FileTxnLog implements TxnLog {
                 }
             }
         }
-        while (streamsToFlush.size() > 1) {                    // 将对应的 File Stream 都进行删除(都已经将数据刷到磁盘上了, 没必要保留)
+        while (streamsToFlush.size() > 1) {                    // 5. 将对应的 File Stream 都进行删除(都已经将数据刷到磁盘上了, 没必要保留)
             streamsToFlush.removeFirst().close();
         }
     }
@@ -539,7 +539,7 @@ public class FileTxnLog implements TxnLog {
             List<File> files = Util.sortDataDir(FileTxnLog.getLogFiles(logDir.listFiles(), 0), "log", false);
             for (File f: files) {
                 if (Util.getZxidFromName(f.getName(), "log") >= zxid) {
-                    storedFiles.add(f);
+                    storedFiles.add(f);                                 // storedFiles 最终存储的也是降序的文件
                 }
                 // add the last logfile that is less than the zxid
                 else if (Util.getZxidFromName(f.getName(), "log") < zxid) {
@@ -547,10 +547,11 @@ public class FileTxnLog implements TxnLog {
                     break;
                 }
             }
+            // 上面是降序的, 这里 goToNextLog 取出的是最小zxid 的一个文件
             goToNextLog();                                              // 将刚才获取的  files取出, 并将 zxid 最小的初始化 PositionInputStream
             if (!next())                                                // 每次调用 next 都会将 下个事务处理信息读取出来
                 return;
-            while (hdr.getZxid() < zxid) {                            // 这里就是在 通过 next() 方法, 不断轮训, 定位到 zxid 的位置
+            while (hdr.getZxid() < zxid) {                              // 这里就是在 通过 next() 方法, 不断轮训, 定位到 zxid 的位置
                 if (!next())
                     return;
             }
@@ -592,8 +593,6 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * Invoked to indicate that the input stream has been created.
-         * @param ia input archive
-         * @param is file input stream associated with the input archive.
          * @throws IOException
          **/
         // 创建 logFile 对应的数据流

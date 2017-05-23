@@ -273,4 +273,12 @@ public class ACLCountTest extends ZKTestCase implements Watcher {
         LOG.info("files:" + files);
 
     }
+
+
+    @Test
+    public void testFileIterator() throws Exception{
+        File file = new File("/Users/xjk/Documents/ideaworkspace/zookeeper/build/2017-05-23-23.dir/version-2");
+        FileTxnLog.FileTxnIterator fileTxnIterator = new FileTxnLog.FileTxnIterator(file, 0);
+
+    }
 }

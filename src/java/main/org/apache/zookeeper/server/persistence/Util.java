@@ -170,20 +170,20 @@ public class Util {
             // including the header and the last / bytes
             // the snapshot should be atleast 10 bytes
             // 文件的大小小于 10, 则说明文件不正确 (文件有对应的文件头)
-            if (raf.length() < 10) {
+            if (raf.length() < 10) {                      // 1.文件过小, 直接返回 false
                 return false;
             }
-            // 磁盘seek 到最后 5个字节的地方
+                                                          // 2.磁盘seek(定位) 到最后 5个字节的地方
             raf.seek(raf.length() - 5);
             byte bytes[] = new byte[5];
             int readlen = 0;
             int l;
-            // 读取文件的最后 5 个字节
+                                                          // 3.读取文件的最后 5 个字节
             while(readlen < 5 &&
                   (l = raf.read(bytes, readlen, bytes.length - readlen)) >= 0) {
                 readlen += l;
             }
-            if (readlen != bytes.length) {
+            if (readlen != bytes.length) {                 // 4.是否读取出正确的字节数
                 LOG.info("Invalid snapshot " + f + " too short, len = " + readlen);
                 return false;
             }
@@ -191,7 +191,7 @@ public class Util {
             int len = bb.getInt();
             byte b = bb.get();
             // 校验这个 5 个字节是否是 1 和 '/'
-            if (len != 1 || b != '/') {
+            if (len != 1 || b != '/') {                     // 5.判断是否获取了 5个字节, 并且是否取出的是 "/"
                 LOG.info("Invalid snapshot " + f + " len = " + len + " byte = " + (b & 0xff));
                 return false;
             }
@@ -215,15 +215,15 @@ public class Util {
      * @throws IOException
      */
     public static long padLogFile(FileOutputStream f,long currentSize, long preAllocSize) throws IOException{
-        long position = f.getChannel().position();                      // 获取数据流现在的位置
+        long position = f.getChannel().position();                      // 1. 获取数据流现在的位置
         LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize);
-        if (position + 4096 >= currentSize) {                           // 这里经过第一次 padLogFile 调用后, currentSize 就变成了 64M了, 但是当position 够大时(position + 4096 > 64M), 则就进行再次扩充 64M
-            currentSize = currentSize + preAllocSize;                   // 扩充 64M, 每次扩充 64M
-            fill.position(0);                                           // The fill from which bytes are to be transferred to the f (FileOutputStream)
+        if (position + 4096 >= currentSize) {                           // 2. 这里经过第一次 padLogFile 调用后, currentSize 就变成了 64M了, 但是当position 够大时(position + 4096 > 64M), 则就进行再次扩充 64M
+            currentSize = currentSize + preAllocSize;                   // 3. 扩充 64M, 每次扩充 64M
+            fill.position(0);                                           // 4. The fill from which bytes are to be transferred to the f (FileOutputStream)
             long remaining = fill.remaining();
-            LOG.info("fill.remaining():" + fill.remaining());           // 将文件扩充 (currentSize-fill.remaining()) 大小
+            LOG.info("fill.remaining():" + fill.remaining());           // 5. 将文件扩充 (currentSize-fill.remaining()) 大小
             LOG.info("padLogFile_position:" + position + ", currentSize:" + currentSize + ", remaining:" + remaining);
-            f.getChannel().write(fill, currentSize-fill.remaining());   // 这一步就是扩充 f 的大小, 直接到  (currentSize-fill.remaining()), 并且 这些扩充空间的内容不会指定
+            f.getChannel().write(fill, currentSize-fill.remaining());   // 6. 这一步就是扩充 f 的大小, 直接到  (currentSize-fill.remaining()), 并且 这些扩充空间的内容不会指定
         }
         return currentSize;
     }
