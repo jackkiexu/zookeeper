@@ -332,15 +332,15 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,                  // 1. 统一组装请求事务头 TxnHeader
                                     zks.getTime(), type);
 
-        switch (type) {
-            case OpCode.create:                                                                // 创建 path 请求
-                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());        //  进行校验 session 是否是 createSession 时的 owner
+        switch (type) {                                                                        // 下面的操作都是线程安全的, 每个操作处理过后才会从 queue 里面取出下一个 request 来进行处理
+            case OpCode.create:                                                               // 创建 path 请求
+                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());    //  进行校验 session 是否是 createSession 时的 owner
                 CreateRequest createRequest = (CreateRequest)record;   
                 if(deserialize)
-                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);   // 从 request.request 里面发序列化出 createRequest
-                String path = createRequest.getPath();                                          // 获取路径
+                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);  // 从 request.request 里面发序列化出 createRequest
+                String path = createRequest.getPath();                                         // 获取路径
                 int lastSlash = path.lastIndexOf('/');
-                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {               // 校验 path 路径
+                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {              // 校验 path 路径
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
                     throw new KeeperException.BadArgumentsException(path);
@@ -358,7 +358,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 CreateMode createMode =
                     CreateMode.fromFlag(createRequest.getFlags());
                 if (createMode.isSequential()) {                                                // 判断是否是 sequential 模式 创建 path
-                    path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);
+                    path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);    // 从这里可以看出, 所有创建的子节点若是 sequential 类型的, 则直接使用 parentNode 里面的 Cversion 作为 序列号 (如 0000000099, 0000000999, 10位数字)
                 }
                 try {
                     PathUtils.validatePath(path);                                               // path 校验
@@ -388,7 +388,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 }
                 parentRecord = parentRecord.duplicate(request.hdr.getZxid());
                 parentRecord.childCount++;                                                // 父 path 的 子节点数 ++
-                parentRecord.stat.setCversion(newCversion);                                // 设置新的 cversion
+                parentRecord.stat.setCversion(newCversion);                                // 设置新的 Cversion, childCount,
                 addChangeRecord(parentRecord);                                              // 添加父节点要改变的事件到对应的队列里面
                 addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,           // 将子节点新生成的事件添加到对应的对立里面
                         0, listACL));

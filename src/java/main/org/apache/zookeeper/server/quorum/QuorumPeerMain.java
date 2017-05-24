@@ -136,8 +136,8 @@ public class QuorumPeerMain {
           quorumPeer = new QuorumPeer();
           quorumPeer.setClientPortAddress(config.getClientPortAddress());
           quorumPeer.setTxnFactory(new FileTxnSnapLog(
-                      new File(config.getDataLogDir()),
-                      new File(config.getDataDir())));
+                  new File(config.getDataLogDir()),
+                  new File(config.getDataDir())));
           quorumPeer.setQuorumPeers(config.getServers());                            // 集群中所有机器
           quorumPeer.setElectionType(config.getElectionAlg());
           quorumPeer.setMyid(config.getServerId());
@@ -154,7 +154,9 @@ public class QuorumPeerMain {
           quorumPeer.setQuorumListenOnAllIPs(config.getQuorumListenOnAllIPs());
   
           quorumPeer.start();                                                       // 开启服务
-          quorumPeer.join();                                                        // 等到 上面的程序执行结束后, 再执行
+          LOG.info("quorumPeer.join begin");
+          quorumPeer.join();                                                        // 等到 线程 quorumPeer 执行完成, 程序才会继续向下再执行, 详情见方法注解 (Waits for this thread to die.)
+          LOG.info("quorumPeer.join end");
       } catch (InterruptedException e) {
           // warn, but generally this is ok
           LOG.warn("Quorum Peer interrupted", e);

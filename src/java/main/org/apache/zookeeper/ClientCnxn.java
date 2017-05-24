@@ -797,7 +797,7 @@ public class ClientCnxn {
             }
 
             Packet packet;
-            synchronized (pendingQueue) {
+            synchronized (pendingQueue) {                                       // 从 pendingQueue 头部 pop 出请求时发送的 Packet
                 if (pendingQueue.size() == 0) {
                     throw new IOException("Nothing in the queue, but got "
                             + replyHdr.getXid());
@@ -836,7 +836,7 @@ public class ClientCnxn {
                             + Long.toHexString(sessionId) + ", packet:: " + packet);
                 }
             } finally {
-                finishPacket(packet);
+                finishPacket(packet);                                               // 此处调用 p.notifyAll() 来实现唤醒 p.await() 中的客户
             }
         }
 

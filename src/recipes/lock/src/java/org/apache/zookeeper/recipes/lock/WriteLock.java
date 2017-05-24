@@ -232,7 +232,7 @@ public class WriteLock extends ProtocolSupport {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("watching less than me node: " + lastChildId);
                             }
-                            Stat stat = zookeeper.exists(lastChildId, new LockWatcher());
+                            Stat stat = zookeeper.exists(lastChildId, new LockWatcher());               // 对 已存在的 最小 sequent 的节点上加一个 watcher
                             if (stat != null) {
                                 return Boolean.FALSE;
                             } else {
@@ -266,7 +266,7 @@ public class WriteLock extends ProtocolSupport {
         }
         ensurePathExists(dir);
 
-        return (Boolean) retryOperation(zop);
+        return (Boolean) retryOperation(zop);           // 出发再次获取 lock
     }
 
     /**
