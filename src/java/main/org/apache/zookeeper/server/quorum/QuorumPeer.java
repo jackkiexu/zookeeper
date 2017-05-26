@@ -698,8 +698,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         LOG.debug("Starting quorum peer");
         try {
             jmxQuorumBean = new QuorumBean(this);
-            MBeanRegistry.getInstance().register(jmxQuorumBean, null);
-            for(QuorumServer s: getView().values()){                            // 将 QuorumPeer 包裹成 RemotePeerBean 注册 JMX 服务
+            MBeanRegistry.getInstance().register(jmxQuorumBean, null);        // 在 QuorumPeer 上包装 QuorumBean 注入到 JMX
+            for(QuorumServer s: getView().values()){                            // 遍历每个 ZooKeeperServer 节点
                 ZKMBeanInfo p;
                 if (getId() == s.id) {
                     p = jmxLocalPeerBean = new LocalPeerBean(this);
