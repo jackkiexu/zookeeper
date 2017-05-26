@@ -136,16 +136,17 @@ public class FileTxnSnapLog {
      * @return the highest zxid restored
      * @throws IOException
      */
+    // 将 Sessions 与 DataTree 从 数据流中恢复过来
     public long restore(DataTree dt, Map<Long, Integer> sessions,  PlayBackListener listener) throws IOException {
 
-        snapLog.deserialize(dt, sessions);                              // 将对应的 sessions 与 DataTree 序列化出来
+        snapLog.deserialize(dt, sessions);                              // 将对应的 sessions 与 DataTree 从 snapsot 中反序列化出来
 
-        FileTxnLog txnLog = new FileTxnLog(dataDir);
-        TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
+        FileTxnLog txnLog = new FileTxnLog(dataDir);                    // 初始化事务日志
+        TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);          // 将 cursor 定位到 DataTree 中处理的 lastProcessedZxid + 1 (为什么呢? 因为从事务日志里面还有些事务处理信息没有来得及存储到 DataTree, 接下来就是重新发到 DataTree 里面)
         long highestZxid = dt.lastProcessedZxid;
         TxnHeader hdr;
         try {
-            while (true) {
+            while (true) {                                              // 迭代 TxnLog 里面的事务(这些事务信息还没在)
                 // iterator points to 
                 // the first valid txn when initialized
                 hdr = itr.getHeader();
@@ -158,15 +159,15 @@ public class FileTxnSnapLog {
                             new Object[] { highestZxid, hdr.getZxid(),
                                     hdr.getType() });
                 } else {
-                    highestZxid = hdr.getZxid();
+                    highestZxid = hdr.getZxid();                        // 记录处理过的最大 zxid
                 }
                 try {
-                    processTransaction(hdr,dt,sessions, itr.getTxn());
+                    processTransaction(hdr,dt,sessions, itr.getTxn());  // 将事务信息给 DataTree 处理
                 } catch(KeeperException.NoNodeException e) {
                    throw new IOException("Failed to process transaction type: " +
                          hdr.getType() + " error: " + e.getMessage(), e);
                 }
-                listener.onTxnLoaded(hdr, itr.getTxn());
+                listener.onTxnLoaded(hdr, itr.getTxn());                // 这里的 listener 会将集群节点最近处理掉 500 个事务信息放入其中, 在 Follower 与 Leader 同步事务时, 首先会从这里面去拿数据
                 if (!itr.next()) 
                     break;
             }
@@ -190,7 +191,7 @@ public class FileTxnSnapLog {
         throws KeeperException.NoNodeException {
         ProcessTxnResult rc;
         switch (hdr.getType()) {
-        case OpCode.createSession:
+        case OpCode.createSession:                      // 若是 createSession, 则在 sessions 中放入数据
             sessions.put(hdr.getClientId(),
                     ((CreateSessionTxn) txn).getTimeOut());
             if (LOG.isTraceEnabled()) {
@@ -201,16 +202,16 @@ public class FileTxnSnapLog {
                                 + ((CreateSessionTxn) txn).getTimeOut());
             }
             // give dataTree a chance to sync its lastProcessedZxid
-            rc = dt.processTxn(hdr, txn);
+            rc = dt.processTxn(hdr, txn);               // DataTree 处理事务
             break;
         case OpCode.closeSession:
-            sessions.remove(hdr.getClientId());
+            sessions.remove(hdr.getClientId());        // 移除 session 信息
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG,ZooTrace.SESSION_TRACE_MASK,
                         "playLog --- close session in log: 0x"
                                 + Long.toHexString(hdr.getClientId()));
             }
-            rc = dt.processTxn(hdr, txn);
+            rc = dt.processTxn(hdr, txn);               // 执行事务
             break;
         default:
             rc = dt.processTxn(hdr, txn);

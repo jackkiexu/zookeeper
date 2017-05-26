@@ -458,17 +458,17 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 
     // 经过下面的操作, 就会存在 currentEpoch, acceptEpoch 文件, 并且 DataTree 文件也会进行加载
     private void loadDataBase() {
-        File updating = new File(getTxnFactory().getSnapDir(),                      // 在 snap shot 文件目录下面有对应的 updateEpoch 文件
+        File updating = new File(getTxnFactory().getSnapDir(),                // 在 snap shot 文件目录下面有对应的 updateEpoch 文件
                                  UPDATING_EPOCH_FILENAME);
 		try {
-            zkDb.loadDataBase();
+            zkDb.loadDataBase();                                              // 从 snapshot, TxnLog 里面加载出 dataTree 及 sessionsWithTimeouts
 
             // load the epochs
-            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;      // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
-     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid);       // 将 zxid 的高 32 位当做 epoch 值, 低 32 位才是 zxid
+            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;    // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
+     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid); // 将 zxid 的高 32 位当做 epoch 值, 低 32 位才是 zxid
             try {
-            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);       // 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
-                if (epochOfZxid > currentEpoch && updating.exists()) {            // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
+            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);      // 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
+                if (epochOfZxid > currentEpoch && updating.exists()) {        // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
                     LOG.info("{} found. The server was terminated after " +
                              "taking a snapshot but before updating current " +
                              "epoch. Setting current epoch to {}.",
@@ -483,7 +483,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	currentEpoch = epochOfZxid;                                     // 遇到的是 currentEpoch 文件不存在, 直接运行到这里了
+            	currentEpoch = epochOfZxid;                                    // 遇到的是 currentEpoch 文件不存在, 直接运行到这里了
             	LOG.info(CURRENT_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        currentEpoch);
@@ -493,16 +493,16 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + ", is older than the last zxid, " + lastProcessedZxid);
             }
             try {
-            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME); // 从文件中读取当前接收到的 epoch 值
+            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME);     // 从文件中读取当前接收到的 epoch 值
             } catch(FileNotFoundException e) {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	acceptedEpoch = epochOfZxid;                                     // 当从 acceptEpoch 文件里面读取数据失败时, 就直接运行这边的代码
+            	acceptedEpoch = epochOfZxid;                                   // 当从 acceptEpoch 文件里面读取数据失败时, 就直接运行这边的代码
             	LOG.info(ACCEPTED_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        acceptedEpoch);
-            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);     // 将 acceptEpoch 值直接写入到对应的文件里面
+            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);       // 将 acceptEpoch 值直接写入到对应的文件里面
             }
             if (acceptedEpoch < currentEpoch) {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + " is less than the accepted epoch, " + ZxidUtils.zxidToString(acceptedEpoch));
@@ -692,24 +692,24 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 
     @Override
     public void run() {
-        setName("QuorumPeer" + "[myid=" + getId() + "]" +
+        setName("QuorumPeer" + "[myid=" + getId() + "]" +                   // 设置当前线程的名称
                 cnxnFactory.getLocalAddress());
 
         LOG.debug("Starting quorum peer");
         try {
             jmxQuorumBean = new QuorumBean(this);
-            MBeanRegistry.getInstance().register(jmxQuorumBean, null);        // 在 QuorumPeer 上包装 QuorumBean 注入到 JMX
-            for(QuorumServer s: getView().values()){                            // 遍历每个 ZooKeeperServer 节点
+            MBeanRegistry.getInstance().register(jmxQuorumBean, null);      // 在 QuorumPeer 上包装 QuorumBean 注入到 JMX
+            for(QuorumServer s: getView().values()){                        // 遍历每个 ZooKeeperServer 节点
                 ZKMBeanInfo p;
                 if (getId() == s.id) {
                     p = jmxLocalPeerBean = new LocalPeerBean(this);
-                    try {
+                    try {                                                   // 将 LocalPeerBean 注入到 JMX 里面
                         MBeanRegistry.getInstance().register(p, jmxQuorumBean);
                     } catch (Exception e) {
                         LOG.warn("Failed to register with JMX", e);
                         jmxLocalPeerBean = null;
                     }
-                } else {
+                } else {                                                    // 若myid不是本机, 也注入到 JMX 里面
                     p = new RemotePeerBean(s);
                     try {
                         MBeanRegistry.getInstance().register(p, jmxQuorumBean);
