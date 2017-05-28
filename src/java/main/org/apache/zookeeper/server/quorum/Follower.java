@@ -65,15 +65,15 @@ public class Follower extends Learner{
         self.end_fle = 0;
         fzk.registerJMX(new FollowerBean(this, zk), self.jmxLocalPeerBean);
         try {
-            InetSocketAddress addr = findLeader();                                  // 根据当前的 QuorumPeer 的 Vote 获取 leader.myid, 从而获取其对应的 Leader.port
+            InetSocketAddress addr = findLeader();                               // 根据当前的 QuorumPeer 的 Vote 获取 leader.myid, 从而获取其对应的 Leader.port
             try {
-                connectToLeader(addr);                                              // 连接 Leader
+                connectToLeader(addr);                                           // 连接 Leader
                 long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);     // 与 leader 同步选举的 epoch (This message type is sent by a follower to pass the last zxid)
                 LOG.info("newEpochZxid:" + newEpochZxid);
 
                 //check to see if the leader zxid is lower than ours
                 //this should never happen but is just a safety check
-                long newEpoch = ZxidUtils.getEpochFromZxid(newEpochZxid);           // 返回 leader 的 zxid
+                long newEpoch = ZxidUtils.getEpochFromZxid(newEpochZxid);        // 返回 leader 的 zxid
                 LOG.info("newEpoch :" + newEpoch);
                 if (newEpoch < self.getAcceptedEpoch()) {
                     LOG.error("Proposed leader epoch " + ZxidUtils.zxidToString(newEpochZxid)
@@ -81,12 +81,12 @@ public class Follower extends Learner{
                     throw new IOException("Error: Epoch of leader is lower");
                 }
                 LOG.info("syncWithLeader :" + newEpochZxid);
-                syncWithLeader(newEpochZxid);                                       // 与 leader 进行数据同步
+                syncWithLeader(newEpochZxid);                                    // 与 leader 进行数据同步
                 QuorumPacket qp = new QuorumPacket();
-                while (self.isRunning()) {                                        // 获取 leader 发来的消息, 并进行相应处理, 线程一直在这边循环
-                    readPacket(qp);                                                 // 对应的 leader 方, 消息的发送是通过 LearnerHandler.sendPackets
+                while (self.isRunning()) {                                       // 获取 leader 发来的消息, 并进行相应处理, 线程一直在这边循环
+                    readPacket(qp);                                              // 对应的 leader 方, 消息的发送是通过 LearnerHandler.sendPackets
                     LOG.info("qp:" + qp);
-                    processPacket(qp);                                             // 处理 Leader 发送过来的数据包
+                    processPacket(qp);                                           // 处理 Leader 发送过来的数据包
                 }
             } catch (IOException e) {
                 LOG.warn("Exception when following the leader", e);

@@ -450,10 +450,10 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     
     @Override
     public synchronized void start() {
-        loadDataBase();             // 从SnapShot，TxnFile 加载数据到 DataTree
+        loadDataBase();           // 从SnapShot，TxnFile 加载数据到 DataTree
         cnxnFactory.start();      // 开启服务端的 端口监听
-        startLeaderElection();      // 开启 Leader 选举线程
-        super.start();             // 这一步 开启 Thread.run() 方法
+        startLeaderElection();    // 开启 Leader 选举线程
+        super.start();            // 这一步 开启 Thread.run() 方法
     }
 
     // 经过下面的操作, 就会存在 currentEpoch, acceptEpoch 文件, 并且 DataTree 文件也会进行加载
@@ -529,7 +529,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     		re.setStackTrace(e.getStackTrace());
     		throw re;
     	}
-        for (QuorumServer p : getView().values()) {                                 // 获取集群里面的所有的机器
+        for (QuorumServer p : getView().values()) {                         // 获取集群里面的所有的机器
             if (p.id == myid) {
                 myQuorumAddr = p.addr;
                 break;
@@ -547,7 +547,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 throw new RuntimeException(e);
             }
         }
-        this.electionAlg = createElectionAlgorithm(electionType);
+        this.electionAlg = createElectionAlgorithm(electionType);           // 创建 Election
     }
     
     /**
@@ -727,12 +727,12 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             /*
              * Main loop
              */
-            while (running) {
+            while (running) {                                                       // QuorumPeer 会一直在这个 while 里面 (一般先是 LOOKING, LEADING/FOLLOWING)
                 switch (getPeerState()) {
-                case LOOKING:                                                                // QuorumPeer 是 LOOKING 状态, 正在寻找 Leader 机器
+                case LOOKING:                                                       // QuorumPeer 是 LOOKING 状态, 正在寻找 Leader 机器
                     LOG.info("LOOKING, and myid is " + myid);
 
-                    if (Boolean.getBoolean("readonlymode.enabled")) {                       // 判断启动服务是否是 readOnly 模式
+                    if (Boolean.getBoolean("readonlymode.enabled")) {               // 判断启动服务是否是 readOnly 模式
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
 
                         // Create read-only server but don't start it immediately
@@ -763,9 +763,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                             }
                         };
                         try {
-                            roZkMgr.start();
-                            setBCVote(null);
-                            setCurrentVote(makeLEStrategy().lookForLeader());                       // 选举算法, 在这里可能需要消耗一点时间
+                            roZkMgr.start();                                          // 这里分两部(1. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
+                            setBCVote(null);                                          // 2. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
+                            setCurrentVote(makeLEStrategy().lookForLeader());         // 创建选举 Leader 德策略)选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception",e);
                             setPeerState(ServerState.LOOKING);
@@ -776,9 +776,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                             roZk.shutdown();
                         }
                     } else {
-                        try {
-                            setBCVote(null);
-                            setCurrentVote(makeLEStrategy().lookForLeader());                       // 选举算法, 在这里可能需要消耗一点时间
+                        try {                                                         // 这里分两部(1. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
+                            setBCVote(null);                                          // 2. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
+                            setCurrentVote(makeLEStrategy().lookForLeader());         // 选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception", e);
                             setPeerState(ServerState.LOOKING);
@@ -800,9 +800,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     break;
                 case FOLLOWING:
                     try {
-                        LOG.info("FOLLOWING, and myid is " + myid);     // 最上层还是 QuorumPeer
-                        setFollower(makeFollower(logFactory));              // 初始化 follower, 在 Follower 里面引用 FollowerZooKeeperServer
-                        follower.followLeader();                            // follower 在此等待
+                        LOG.info("FOLLOWING, and myid is " + myid);       // 最上层还是 QuorumPeer
+                        setFollower(makeFollower(logFactory));            // 初始化 follower, 在 Follower 里面引用 FollowerZooKeeperServer
+                        follower.followLeader();                          // 带用 follower.followLeader, 程序会阻塞在这里
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);
                     } finally {
@@ -814,8 +814,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case LEADING:
                     LOG.info("LEADING, and myid is " + myid);
                     try {
-                        setLeader(makeLeader(logFactory));                  // 初始化 Leader 对象
-                        leader.lead();                                       // Leader 线程阻塞在这里
+                        setLeader(makeLeader(logFactory));                 // 初始化 Leader 对象
+                        leader.lead();                                     // Leader 程序会阻塞在这里
                         setLeader(null);
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);

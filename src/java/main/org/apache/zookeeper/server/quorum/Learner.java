@@ -206,10 +206,10 @@ public class Learner {
     protected InetSocketAddress findLeader() {
         InetSocketAddress addr = null;
         // Find the leader by id
-        Vote current = self.getCurrentVote();
+        Vote current = self.getCurrentVote();            // 获取 QuorumPeer 的投票信息, 里面包含自己Leader选举所投的信息
         for (QuorumServer s : self.getView().values()) {
             if (s.id == current.getId()) {
-                addr = s.addr;
+                addr = s.addr;                          // 获取 Leader 的 addr
                 break;
             }
         }
@@ -228,15 +228,15 @@ public class Learner {
      * @throws ConnectException
      * @throws InterruptedException
      */
-    // 连接 leader
+    // 连接 leader, 建立成功后, 在 Leader 端会有一个 LearnerHandler 处理与之的通信
     protected void connectToLeader(InetSocketAddress addr) throws IOException, ConnectException, InterruptedException {
 
         sock = new Socket();        
-        sock.setSoTimeout(self.tickTime * self.initLimit);                  // 这里的 SoTimeout 很重要, 若 InputStream.read 超过这个时间,则会报出 SocketTimeoutException 异常
-        for (int tries = 0; tries < 5; tries++) {                               // 连接 Leader 尝试 5次, 若还是失败, 则抛出异常, 一直往外抛出, 直到 QuorumPeer 的重新开始选举 leader run 方法里面 -> 进行选举 Leader
+        sock.setSoTimeout(self.tickTime * self.initLimit);          // 这里的 SoTimeout 很重要, 若 InputStream.read 超过这个时间,则会报出 SocketTimeoutException 异常
+        for (int tries = 0; tries < 5; tries++) {                   // 连接 Leader 尝试 5次, 若还是失败, 则抛出异常, 一直往外抛出, 直到 QuorumPeer 的重新开始选举 leader run 方法里面 -> 进行选举 Leader
             try {
-                sock.connect(addr, self.tickTime * self.syncLimit);         // 连接 leader
-                sock.setTcpNoDelay(nodelay);                                   // 设置 tcpnoDelay <- 这里其实就是禁止 tcp 底层合并小数据包, 一次发送所有数据的 算法
+                sock.connect(addr, self.tickTime * self.syncLimit); // 连接 leader
+                sock.setTcpNoDelay(nodelay);                        // 设置 tcpnoDelay <- 这里其实就是禁止 tcp 底层合并小数据包, 一次发送所有数据的 算法
                 break;
             } catch (IOException e) {
                 if (tries == 4) {
@@ -253,7 +253,7 @@ public class Learner {
         }
         leaderIs = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));   // 封装对应的 I/O 数据流
         bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
-        leaderOs = BinaryOutputArchive.getArchive(bufferedOutput);                                 // 封装输出数据流
+        leaderOs = BinaryOutputArchive.getArchive(bufferedOutput);                                  // 封装输出数据流
     }   
     
     /**
@@ -269,31 +269,31 @@ public class Learner {
         /*
          * Send follower info, including last zxid and sid
          */
-    	long lastLoggedZxid = self.getLastLoggedZxid();                        // 获取 Follower 的最后处理的 zxid
+    	long lastLoggedZxid = self.getLastLoggedZxid();                     // 获取 Follower 的最后处理的 zxid
         QuorumPacket qp = new QuorumPacket();                
-        qp.setType(pktType);                                                    // 若是 Follower ,则当前的角色是  Leader.FOLLOWERINFO
-        qp.setZxid(ZxidUtils.makeZxid(self.getAcceptedEpoch(), 0));             // Follower 的 lastZxid 的值
+        qp.setType(pktType);                                                // 若是 Follower ,则当前的角色是  Leader.FOLLOWERINFO
+        qp.setZxid(ZxidUtils.makeZxid(self.getAcceptedEpoch(), 0));         // Follower 的 lastZxid 的值
         
         /*
          * Add sid to payload
          */
-        LearnerInfo li = new LearnerInfo(self.getId(), 0x10000);               // 将 Follower 的信息封装成 LearnerInfo
+        LearnerInfo li = new LearnerInfo(self.getId(), 0x10000);            // 将 Follower 的信息封装成 LearnerInfo
         LOG.info("li:" + li);
 
         ByteArrayOutputStream bsid = new ByteArrayOutputStream();
         BinaryOutputArchive boa = BinaryOutputArchive.getArchive(bsid);
         boa.writeRecord(li, "LearnerInfo");
-        qp.setData(bsid.toByteArray());                                        // 在 QuorumPacket 里面添加 Follower 的信息
+        qp.setData(bsid.toByteArray());                                     // 在 QuorumPacket 里面添加 Follower 的信息
         LOG.info("qp:" + qp);
         
-        writePacket(qp, true);                                                  // 发送 QuorumPacket 包括 learnerInfo 与 pktType, 通过 self.getAcceptedEpoch() 构成的 zxid
-        readPacket(qp);                                                          // 读取 leader 返回的数据 (这里读取的数据包是 Leader 的数据信息 (LEADERINFO) )
+        writePacket(qp, true);                                              // 发送 QuorumPacket 包括 learnerInfo 与 Leader.FOLLOWERINFO, 通过 self.getAcceptedEpoch() 构成的 zxid
+        readPacket(qp);                                                     // 读取 leader 返回的数据 (这里读取的数据包是 Leader 的数据信息 (LEADERINFO) )
 
         LOG.info("qp:" + qp);
         final long newEpoch = ZxidUtils.getEpochFromZxid(qp.getZxid());
 
         LOG.info("newEpoch:" + newEpoch);
-		if (qp.getType() == Leader.LEADERINFO) {                              // 处理 Leader 发来的 leader 信息 (里面包括 集群中 Leader 选举的 epoch 值)
+		if (qp.getType() == Leader.LEADERINFO) {                            // 处理 Leader 发来的 leader 信息 (里面包括 集群中 Leader 选举的 epoch 值)
         	// we are connected to a 1.0 server so accept the new epoch and read the next packet
         	leaderProtocolVersion = ByteBuffer.wrap(qp.getData()).getInt();
             LOG.info("leaderProtocolVersion:" + leaderProtocolVersion);
@@ -301,7 +301,7 @@ public class Learner {
         	final ByteBuffer wrappedEpochBytes = ByteBuffer.wrap(epochBytes);
 
             LOG.info("newEpoch:" + newEpoch + ", self.getAcceptedEpoch():" + self.getAcceptedEpoch());
-        	if (newEpoch > self.getAcceptedEpoch()) {                           // 若 Follower 的 election 的 epoch 值小于自己, 则用 Leader 的
+        	if (newEpoch > self.getAcceptedEpoch()) {                       // 若 Follower 的 election 的 epoch 值小于自己, 则用 Leader 的
         		wrappedEpochBytes.putInt((int)self.getCurrentEpoch());
         		self.setAcceptedEpoch(newEpoch);
         	} else if (newEpoch == self.getAcceptedEpoch()) {
@@ -310,16 +310,15 @@ public class Learner {
         		// sync with it if it does assume leadership of the epoch.
         		// the -1 indicates that this reply should not count as an ack for the new epoch
                 wrappedEpochBytes.putInt(-1);
-        	} else {                                                            // 若 Follower.epoch > Leader.epoch 则说明前面的 Leader 选举出错了
+        	} else {                                                         // 若 Follower.epoch > Leader.epoch 则说明前面的 Leader 选举出错了
         		throw new IOException("Leaders epoch, " + newEpoch + " is less than accepted epoch, " + self.getAcceptedEpoch());
-        	}                                                                   // 在 接收到 Leader.LEADERINFO 的消息后, 进行回复 Leader.ACKEPOCH 的消息, 并且加上 lastLargestZxid 值
+        	}                                                                // 在 接收到 Leader.LEADERINFO 的消息后, 进行回复 Leader.ACKEPOCH 的消息, 并且加上 lastLargestZxid 值
         	QuorumPacket ackNewEpoch = new QuorumPacket(Leader.ACKEPOCH, lastLoggedZxid, epochBytes, null);
 
             LOG.info("ackNewEpoch:" + ackNewEpoch);
-        	writePacket(ackNewEpoch, true);                                     // 将 ACKEPOCH 信息发送给对方
+        	writePacket(ackNewEpoch, true);                                  // 将 ACKEPOCH 信息发送给对方 用于回复Leader发过来的LEADERINFO
             return ZxidUtils.makeZxid(newEpoch, 0);
         } else {
-
             LOG.info("newEpoch :" + newEpoch + ", self.getAcceptedEpoch():" + self.getAcceptedEpoch());
         	if (newEpoch > self.getAcceptedEpoch()) {
         		self.setAcceptedEpoch(newEpoch);
