@@ -128,34 +128,33 @@ public class QuorumPeerMain {
       }
   
       LOG.info("Starting quorum peer");
-      try {
-                                                                                        // 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
+      try {                                                                         // 1. 在 ZooKeeper 集群中, 每个 QuorumPeer 代表一个 服务
           ServerCnxnFactory cnxnFactory = ServerCnxnFactory.createFactory();
           cnxnFactory.configure(config.getClientPortAddress(), config.getMaxClientCnxns());
   
           quorumPeer = new QuorumPeer();
           quorumPeer.setClientPortAddress(config.getClientPortAddress());
-          quorumPeer.setTxnFactory(new FileTxnSnapLog(                              // 设置 FileTxnSnapLog(这个类包裹 TxnLog, SnapShot)
+          quorumPeer.setTxnFactory(new FileTxnSnapLog(                              // 2. 设置 FileTxnSnapLog(这个类包裹 TxnLog, SnapShot)
                   new File(config.getDataLogDir()),
                   new File(config.getDataDir())));
-          quorumPeer.setQuorumPeers(config.getServers());                           // 集群中所有机器
-          quorumPeer.setElectionType(config.getElectionAlg());                      // 设置集群 Leader 选举所使用的的算法(默认值 3, 代表 FastLeaderElection)
-          quorumPeer.setMyid(config.getServerId());                                 // 每个 QuorumPeer 设置一个 myId 用于区分集群中的各个节点
+          quorumPeer.setQuorumPeers(config.getServers());                           // 3. 集群中所有机器
+          quorumPeer.setElectionType(config.getElectionAlg());                      // 4. 设置集群 Leader 选举所使用的的算法(默认值 3, 代表 FastLeaderElection)
+          quorumPeer.setMyid(config.getServerId());                                 // 5. 每个 QuorumPeer 设置一个 myId 用于区分集群中的各个节点
           quorumPeer.setTickTime(config.getTickTime());
-          quorumPeer.setMinSessionTimeout(config.getMinSessionTimeout());           // 客户端最小的 sessionTimeout 时间(若不设置的话, 就是 tickTime * 2)
-          quorumPeer.setMaxSessionTimeout(config.getMaxSessionTimeout());           // 客户端最小的 sessionTimeout 时间(若不设置的话, 就是 tickTime * 20)
-          quorumPeer.setInitLimit(config.getInitLimit());                           // 最常用的就是 initLimit * tickTime, getEpochToPropose(等待集群中所有节点的 Epoch值 ) waitForEpochAck(在 Leader 建立过程中, Leader 会向所有节点发送 LEADERINFO, 而Follower 节点会回复ACKEPOCH) waitForNewLeaderAck(在 Leader 建立的过程中, Leader 会向 Follower 发送 NEWLEADER, waitForNewLeaderAck 就是等候所有Follower 回复对应的 ACK 值)
-          quorumPeer.setSyncLimit(config.getSyncLimit());                           // 常用方法 self.tickTime * self.syncLimit 用于限制集群中各个节点相互连接的 socket 的soTimeout
-          quorumPeer.setQuorumVerifier(config.getQuorumVerifier());                 // 投票方法, 默认超过半数就通过 (默认值 QuorumMaj)
-          quorumPeer.setCnxnFactory(cnxnFactory);                                   // 设置集群节点接收client端连接使用的 nioCnxnFactory(用 基于原生 java nio, netty nio) (PS 在原生 NIO 的类中发现代码中没有处理 java nio CPU 100% 的bug)
-          quorumPeer.setZKDatabase(new ZKDatabase(quorumPeer.getTxnFactory()));   // 设置 ZKDataBase
-          quorumPeer.setLearnerType(config.getPeerType());                          // 设置节点的类别 (参与者/观察者)
-          quorumPeer.setSyncEnabled(config.getSyncEnabled());                       // 这个参数主要用于 (Observer Enables/Disables sync request processor. This option is enable by default and is to be used with observers.) 就是 Observer 是否使用 SyncRequestProcessor
+          quorumPeer.setMinSessionTimeout(config.getMinSessionTimeout());           // 6. 客户端最小的 sessionTimeout 时间(若不设置的话, 就是 tickTime * 2)
+          quorumPeer.setMaxSessionTimeout(config.getMaxSessionTimeout());           // 7. 客户端最小的 sessionTimeout 时间(若不设置的话, 就是 tickTime * 20)
+          quorumPeer.setInitLimit(config.getInitLimit());                           // 8. 最常用的就是 initLimit * tickTime, getEpochToPropose(等待集群中所有节点的 Epoch值 ) waitForEpochAck(在 Leader 建立过程中, Leader 会向所有节点发送 LEADERINFO, 而Follower 节点会回复ACKEPOCH) waitForNewLeaderAck(在 Leader 建立的过程中, Leader 会向 Follower 发送 NEWLEADER, waitForNewLeaderAck 就是等候所有Follower 回复对应的 ACK 值)
+          quorumPeer.setSyncLimit(config.getSyncLimit());                           // 9. 常用方法 self.tickTime * self.syncLimit 用于限制集群中各个节点相互连接的 socket 的soTimeout
+          quorumPeer.setQuorumVerifier(config.getQuorumVerifier());                 // 10.投票方法, 默认超过半数就通过 (默认值 QuorumMaj)
+          quorumPeer.setCnxnFactory(cnxnFactory);                                   // 11.设置集群节点接收client端连接使用的 nioCnxnFactory(用 基于原生 java nio, netty nio) (PS 在原生 NIO 的类中发现代码中没有处理 java nio CPU 100% 的bug)
+          quorumPeer.setZKDatabase(new ZKDatabase(quorumPeer.getTxnFactory()));     // 12.设置 ZKDataBase
+          quorumPeer.setLearnerType(config.getPeerType());                          // 13.设置节点的类别 (参与者/观察者)
+          quorumPeer.setSyncEnabled(config.getSyncEnabled());                       // 14.这个参数主要用于 (Observer Enables/Disables sync request processor. This option is enable by default and is to be used with observers.) 就是 Observer 是否使用 SyncRequestProcessor
           quorumPeer.setQuorumListenOnAllIPs(config.getQuorumListenOnAllIPs());
   
-          quorumPeer.start();                                                       // 开启服务
+          quorumPeer.start();                                                       // 15.开启服务
           LOG.info("quorumPeer.join begin");
-          quorumPeer.join();                                                        // 等到 线程 quorumPeer 执行完成, 程序才会继续向下再执行, 详情见方法注解 (Waits for this thread to die.)
+          quorumPeer.join();                                                        // 16.等到 线程 quorumPeer 执行完成, 程序才会继续向下再执行, 详情见方法注解 (Waits for this thread to die.)
           LOG.info("quorumPeer.join end");
       } catch (InterruptedException e) {
           // warn, but generally this is ok

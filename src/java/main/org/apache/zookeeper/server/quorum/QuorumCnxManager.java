@@ -241,27 +241,27 @@ public class QuorumCnxManager {
      * possible long value to lose the challenge.
      * 
      */
-    public boolean receiveConnection(Socket sock) { // 接收 集群之间各个节点的相互的连接
+    public boolean receiveConnection(Socket sock) {                 // 1.接收 集群之间各个节点的相互的连接
         Long sid = null;
         LOG.info("sock:"+sock);
         try {
             // Read server id
             DataInputStream din = new DataInputStream(sock.getInputStream());
-            sid = din.readLong();   // 读取对应的 myid (这里第一次读取的可能是一个协议的版本号)
+            sid = din.readLong();                                   // 2.读取对应的 myid (这里第一次读取的可能是一个协议的版本号)
             LOG.info("sid:"+sid);
             if (sid < 0) { // this is not a server id but a protocol version (see ZOOKEEPER-1633)
                 sid = din.readLong();
                 LOG.info("sid:"+sid);
                 // next comes the #bytes in the remainder of the message
-                int num_remaining_bytes = din.readInt();            // 读取这整条消息的长度
-                byte[] b = new byte[num_remaining_bytes];          // 构建要读取数据长度的字节数组
+                int num_remaining_bytes = din.readInt();            // 3.读取这整条消息的长度
+                byte[] b = new byte[num_remaining_bytes];           // 4.构建要读取数据长度的字节数组
                 // remove the remainder of the message from din
-                int num_read = din.read(b);                         // 读取消息的内容 (疑惑来了, 这里会不会有拆包断包的情况出现)
-                if (num_read != num_remaining_bytes) {              // 数据没有读满, 进行日志记录
+                int num_read = din.read(b);                         // 5.读取消息的内容 (疑惑来了, 这里会不会有拆包断包的情况出现)
+                if (num_read != num_remaining_bytes) {              // 6.数据没有读满, 进行日志记录
                     LOG.error("Read only " + num_read + " bytes out of " + num_remaining_bytes + " sent by server " + sid);
                 }
             }
-            if (sid == QuorumPeer.OBSERVER_ID) { // 连接过来的是一个观察者
+            if (sid == QuorumPeer.OBSERVER_ID) {                    // 7.连接过来的是一个观察者
                 /*
                  * Choose identifier at random. We need a value to identify
                  * the connection.
@@ -270,20 +270,20 @@ public class QuorumCnxManager {
                 sid = observerCounter--;
                 LOG.info("Setting arbitrary identifier to observer: " + sid);
             }
-        } catch (IOException e) { // 这里可能会有 EOFException 表示读取数据到文件尾部, 客户端已经断开, 没什么数据可以读取了, 所以直接关闭 socket
+        } catch (IOException e) {                                   // 8.这里可能会有 EOFException 表示读取数据到文件尾部, 客户端已经断开, 没什么数据可以读取了, 所以直接关闭 socket
             closeSocket(sock);
             LOG.warn("Exception reading or writing challenge: " + e.toString() + ", sock:"+sock);
             return false;
         }
         
         //If wins the challenge, then close the new connection.
-        if (sid < self.getId()) {                               // 在集群中为了防止重复连接, 只能允许大的 myid 连接小的
+        if (sid < self.getId()) {                                   // 9.在集群中为了防止重复连接, 只能允许大的 myid 连接小的
             /*
              * This replica might still believe that the connection to sid is
              * up, so we have to shut down the workers before trying to open a
              * new connection.
              */
-            SendWorker sw = senderWorkerMap.get(sid);         // 看看是否已经有 SendWorker, 有的话就进行关闭
+            SendWorker sw = senderWorkerMap.get(sid);               // 10.看看是否已经有 SendWorker, 有的话就进行关闭
             if (sw != null) {
                 sw.finish();
             }
@@ -292,28 +292,28 @@ public class QuorumCnxManager {
              * Now we start a new connection
              */
             LOG.debug("Create new connection to server: " + sid);
-            closeSocket(sock);                                  // 关闭 socket
-            connectOne(sid);                                    // 因为自己的 myid 比对方的大, 所以进行主动连接
+            closeSocket(sock);                                      // 11.关闭 socket
+            connectOne(sid);                                        // 12.因为自己的 myid 比对方的大, 所以进行主动连接
 
             // Otherwise start worker threads to receive data.
-        } else {                                               // 自己的 myid 比对方小
-            SendWorker sw = new SendWorker(sock, sid);         // 建立 SendWorker
-            RecvWorker rw = new RecvWorker(sock, sid, sw);     // 建立 RecvWorker
+        } else {                                                    // 13.自己的 myid 比对方小
+            SendWorker sw = new SendWorker(sock, sid);              // 14.建立 SendWorker
+            RecvWorker rw = new RecvWorker(sock, sid, sw);          // 15.建立 RecvWorker
             sw.setRecv(rw);
 
-            SendWorker vsw = senderWorkerMap.get(sid);       // 若以前存在 SendWorker, 则进行关闭
+            SendWorker vsw = senderWorkerMap.get(sid);              // 16.若以前存在 SendWorker, 则进行关闭
             
             if(vsw != null)
                 vsw.finish();
             
             senderWorkerMap.put(sid, sw);
             
-            if (!queueSendMap.containsKey(sid)) {           // 若不存在 myid 对应的 消息发送 queue, 则就构建一个
+            if (!queueSendMap.containsKey(sid)) {                   // 17.若不存在 myid 对应的 消息发送 queue, 则就构建一个
                 queueSendMap.put(sid, new ArrayBlockingQueue<ByteBuffer>(
                         SEND_CAPACITY));
             }
             
-            sw.start();                                       // 开启 消息发送 及 接收的线程
+            sw.start();                                             // 开启 消息发送 及 接收的线程
             rw.start();
             
             return true;    
@@ -516,11 +516,11 @@ public class QuorumCnxManager {
         public void run() {
             int numRetries = 0;
             InetSocketAddress addr;
-            while((!shutdown) && (numRetries < 3)){     // 有个疑惑 若真的出现 numRetries >= 3 从而退出了, 怎么办
+            while((!shutdown) && (numRetries < 3)){       // 1. 有个疑惑 若真的出现 numRetries >= 3 从而退出了, 怎么办
                 try {
                     ss = new ServerSocket();
                     ss.setReuseAddress(true);
-                    if (self.getQuorumListenOnAllIPs()) { // 这里的默认值 quorumListenOnAllIPs 是 false
+                    if (self.getQuorumListenOnAllIPs()) { // 2. 这里的默认值 quorumListenOnAllIPs 是 false
                         int port = self.quorumPeers.get(self.getId()).electionAddr.getPort();
                         addr = new InetSocketAddress(port);
                     } else {
@@ -531,8 +531,8 @@ public class QuorumCnxManager {
                             .toString());
                     ss.bind(addr);
                     while (!shutdown) {
-                        Socket client = ss.accept();  // 这里会阻塞, 直到有请求到达
-                        setSockOpts(client);          // 设置 socket 的连接属性
+                        Socket client = ss.accept();     // 3. 这里会阻塞, 直到有请求到达
+                        setSockOpts(client);             // 4. 设置 socket 的连接属性
                         LOG.info("Received connection request " + client.getRemoteSocketAddress());
                         receiveConnection(client);
                         numRetries = 0;
@@ -817,7 +817,7 @@ public class QuorumCnxManager {
      * Inserts an element in the specified queue. If the Queue is full, this
      * method removes an element from the head of the Queue and then inserts
      * the element at the tail. It can happen that the an element is removed
-     * by another thread in {@link SendWorker#processMessage() processMessage}
+     * by another thread in {@link SendWorker() processMessage}
      * method before this method attempts to remove an element from the queue.
      * This will cause {@link ArrayBlockingQueue#remove() remove} to throw an
      * exception, which is safe to ignore.

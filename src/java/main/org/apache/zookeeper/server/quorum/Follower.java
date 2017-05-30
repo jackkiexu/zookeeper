@@ -114,19 +114,19 @@ public class Follower extends Learner{
         case Leader.PING:                                                       // 处理Leader 发来的PING 包(这里有个注意点, 就是 每次 PING 都是 Leader.lead 里面进行主动发送PING, 而对应的 FOLLOWER 也是会进行 PING 的额回复 ), Follower 会将 自己的 session 信息发送给 Leader, 让 Leader 来进行校验 sessionId 是否超时
             ping(qp);            
             break;
-        case Leader.PROPOSAL:                                                  // 处理 Leader 发来的 Proposal 包, 投票处理
+        case Leader.PROPOSAL:                                             // 1. 处理 Leader 发来的 Proposal 包, 投票处理
             TxnHeader hdr = new TxnHeader();
-            Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);      // 反序列化出 Request
-            if (hdr.getZxid() != lastQueued + 1) {                            // 这里说明什么呢, 说明 Follower 可能少掉了 Proposal
+            Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);// 2. 反序列化出 Request
+            if (hdr.getZxid() != lastQueued + 1) {                        // 3. 这里说明什么呢, 说明 Follower 可能少掉了 Proposal
                 LOG.warn("Got zxid 0x"
                         + Long.toHexString(hdr.getZxid())
                         + " expected 0x"
                         + Long.toHexString(lastQueued + 1));
             }
             lastQueued = hdr.getZxid();
-            fzk.logRequest(hdr, txn);                                           // 将 Request 交给 FollowerZooKeeperServer 来进行处理
+            fzk.logRequest(hdr, txn);                                     // 4. 将 Request 交给 FollowerZooKeeperServer 来进行处理
             break;
-        case Leader.COMMIT:                                                    // 处理 Leader 发来的 COMMIT 包投票处理 Proposal 在 Follower 上进行 Proposal 提交
+        case Leader.COMMIT:                                               // 处理 Leader 发来的 COMMIT 包投票处理 Proposal 在 Follower 上进行 Proposal 提交
             fzk.commit(qp.getZxid());
             break;
         case Leader.UPTODATE:

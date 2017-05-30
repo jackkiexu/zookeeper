@@ -381,24 +381,24 @@ public class Leader {
         self.start_fle = 0;
         self.end_fle = 0;
 
-        zk.registerJMX(new LeaderBean(this, zk), self.jmxLocalPeerBean);        // 将自己封装成 LeaderBean 注入到JMX里面
+        zk.registerJMX(new LeaderBean(this, zk), self.jmxLocalPeerBean);        // 1.将自己封装成 LeaderBean 注入到JMX里面
 
         try {
             self.tick = 0;
-            zk.loadData();                                                      // 从 snapshot, txn log 里面进行数据的恢复
-                                                                                // 生成 Leader 的状态信息
+            zk.loadData();                                                      // 2. 从 snapshot, txn log 里面进行恢复 zxid
+            // 3. 生成 Leader 的状态信息
             leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());
             LOG.info("leaderStateSummary:" + leaderStateSummary);
-            // Start thread that waits for connection requests from 
+            // Start thread that waits for connection requests from
             // new followers.
-            cnxAcceptor = new LearnerCnxAcceptor();                             // LearnerCnxAcceptor 它会监听在对应端口, 一有 follower 连接上, 就开启一个 LearnerHandler 来处理对应的事件
+            cnxAcceptor = new LearnerCnxAcceptor();                             // 4. LearnerCnxAcceptor 它会监听在对应端口, 一有 follower 连接上, 就开启一个 LearnerHandler 来处理对应的事件
             LOG.info("cnxAcceptor start");
             cnxAcceptor.start();
-            
-            readyToStart = true;                                                // 一开始这个 getAcceptedEpoch 是直接从文件中恢复过来的, 指的是处理过的 Propose
+
+            readyToStart = true;                                                // 5. 一开始这个 getAcceptedEpoch 是直接从文件中恢复过来的, 指的是处理过的 Propose
             LOG.info("self.getId() :" + self.getId() + ",  self.getAcceptedEpoch():" +  self.getAcceptedEpoch());
-                                                                                // 等待足够多de Follower进来, 代表自己确实是 leader, 此处 lead 线程可能在 while 循环处等待
-                                                                                // 而在对应的 LearnerHandler 里面， 也会收到对应的 FOLLOWERINFO 数据包, 里面包含 acceptEpoch 数据
+            // 6. 等待足够多de Follower进来, 代表自己确实是 leader, 此处 lead 线程可能在 while 循环处等待
+            // 7. 而在对应的 LearnerHandler 里面， 也会收到对应的 FOLLOWERINFO 数据包, 里面包含 acceptEpoch 数据
             long epoch = getEpochToPropose(self.getId(), self.getAcceptedEpoch());
             LOG.info("epoch:"+epoch);
             zk.setZxid(ZxidUtils.makeZxid(epoch, 0));
@@ -408,7 +408,7 @@ public class Leader {
                 LOG.info("lastProposed:"+lastProposed);
             }
             
-            newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(),// 构建一个 NEWLEADER 的数据包
+            newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(),// 8. 构建一个 NEWLEADER 的数据包
                     null, null);
 
 
@@ -417,7 +417,7 @@ public class Leader {
                         + Long.toHexString(newLeaderProposal.packet.getZxid()));
             }
             
-            waitForEpochAck(self.getId(), leaderStateSummary);                  // 等待投票满足过半ed原则
+            waitForEpochAck(self.getId(), leaderStateSummary);                  // 9. 等待投票满足过半ed原则
             self.setCurrentEpoch(epoch);
 
             // We have to get at least a majority of servers in sync with
@@ -440,7 +440,7 @@ public class Leader {
                 self.tick++;
                 return;
             }
-                                                                               // 在所有 Follower 与 Leader 进行 选举 epoch, 数据内容同步好之后, Leader 开启 ZooKeeperServer 服务
+                                                                               // 10. 在所有 Follower 与 Leader 进行 选举 epoch, 数据内容同步好之后, Leader 开启 ZooKeeperServer 服务
             startZkServer();
             
             /**
@@ -476,7 +476,7 @@ public class Leader {
             boolean tickSkip = true;
     
             while (true) {
-                Thread.sleep(self.tickTime / 2);                                                 //
+                Thread.sleep(self.tickTime / 2);
                 if (!tickSkip) {
                     self.tick++;
                 }
@@ -485,16 +485,16 @@ public class Leader {
                 // lock on the followers when we use it.
                 syncedSet.add(self.getId());
 
-                for (LearnerHandler f : getLearners()) {                       // 检查每个 follower 是否存活
+                for (LearnerHandler f : getLearners()) {                       // 11.检查每个 follower 是否存活
                     // Synced set is used to check we have a supporting quorum, so only
                     // PARTICIPANT, not OBSERVER, learners should be used
                     if (f.synced() && f.getLearnerType() == LearnerType.PARTICIPANT) {
                         syncedSet.add(f.getSid());
                     }
-                    f.ping();                                                  // 这里的 ping 其实就是 Follower 将 session 发送给 Leader 来进行校验超时
+                    f.ping();                                                  // 12.这里的 ping 其实就是 Follower 将 session 发送给 Leader 来进行校验超时
                 }
-
-              if (!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)) {// 如果有 follower 挂掉导致投票不通过, 则退出 lead 流程, 重新选举
+                                                                               // 13.如果有 follower 挂掉导致投票不通过, 则退出 lead 流程, 重新选举
+              if (!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)) {
                 //if (!tickSkip && syncedCount < self.quorumPeers.size() / 2) {
                     // Lost quorum, shutdown
                     shutdown("Not sufficient followers synced, only synced with sids: [ "
@@ -575,7 +575,7 @@ public class Leader {
         }
 
         LOG.info("(zxid & 0xffffffffL) == 0 :" + ((zxid & 0xffffffffL) == 0));
-        if ((zxid & 0xffffffffL) == 0) {                                                // zxid 全是 0
+        if ((zxid & 0xffffffffL) == 0) {                              // 1. zxid 全是 0
             /*
              * We no longer process NEWLEADER ack by this method. However,
              * the learner sends ack back to the leader after it gets UPTODATE
@@ -585,21 +585,21 @@ public class Leader {
         }
 
         LOG.info("outstandingProposals :" + outstandingProposals);
-        if (outstandingProposals.size() == 0) {                                     // 没有要回应 ack 的 Proposal 存在
+        if (outstandingProposals.size() == 0) {                       // 2. 没有要回应 ack 的 Proposal 存在
             if (LOG.isDebugEnabled()) {
                 LOG.debug("outstanding is 0");
             }
             return;
         }
         LOG.info("lastCommitted :" + lastCommitted + ", zxid:" + zxid);
-        if (lastCommitted >= zxid) {                                                // Leader 端处理的 lastCommited >= zxid, 说明 zxid 对应的 proposal 已经处理过了
+        if (lastCommitted >= zxid) {                                  // 3. Leader 端处理的 lastCommited >= zxid, 说明 zxid 对应的 proposal 已经处理过了
             if (LOG.isDebugEnabled()) {
                 LOG.debug("proposal has already been committed, pzxid: 0x{} zxid: 0x{}", Long.toHexString(lastCommitted), Long.toHexString(zxid));
             }
             // The proposal has already been committed
             return;
         }
-        Proposal p = outstandingProposals.get(zxid);                               // 从投票箱 outstandingProposals 获取 zxid 对应的 Proposal
+        Proposal p = outstandingProposals.get(zxid);                  // 4. 从投票箱 outstandingProposals 获取 zxid 对应的 Proposal
         LOG.info("p:" + p);
         if (p == null) {
             LOG.warn("Trying to commit future proposal: zxid 0x{} from {}", Long.toHexString(zxid), followerAddr);
@@ -607,13 +607,13 @@ public class Leader {
         }
         LOG.info("p:" + p + ", sid:" + sid);
 
-        p.ackSet.add(sid);                                                                  // 将 follower 的 myid 加入结果列表
+        p.ackSet.add(sid);                                            // 5. 将 follower 的 myid 加入结果列表
         if (LOG.isDebugEnabled()) {
             LOG.info("Count for zxid: 0x{} is {}", Long.toHexString(zxid), p.ackSet.size());
         }
 
         LOG.info("self.getQuorumVerifier().containsQuorum(p.ackSet):" + self.getQuorumVerifier().containsQuorum(p.ackSet));
-        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){                            // 判断是否票数够了, 则启动  leader 的 CommitProcessor 来进行处理
+        if (self.getQuorumVerifier().containsQuorum(p.ackSet)){       // 6. 判断是否票数够了, 则启动  leader 的 CommitProcessor 来进行处理
 
             LOG.info("zxid:" + zxid + ", lastCommitted:" + lastCommitted);
             if (zxid != lastCommitted+1) {
@@ -622,19 +622,19 @@ public class Leader {
             }
 
             LOG.info("outstandingProposals:" + outstandingProposals);
-            outstandingProposals.remove(zxid);                                           // 从 outstandingProposals 里面删除那个可以提交的 Proposal
+            outstandingProposals.remove(zxid);                        // 7. 从 outstandingProposals 里面删除那个可以提交的 Proposal
             if (p.request != null) {
-                toBeApplied.add(p);                                                       // 加入到 toBeApplied 队列里面, 这里的 toBeApplied 是 ToBeAppliedRequestProcessor, Leader 共用的队列, 在经过 CommitProcessor 处理过后, 就到 ToBeAppliedRequestProcessor 里面进行处理
-                LOG.info("toBeApplied:" + toBeApplied);                                // toBeApplied 对应的删除操作在 ToBeAppliedRequestProcessor 里面, 在进行删除时, 其实已经经过 FinalRequestProcessor 处理过的
+                toBeApplied.add(p);                                   // 8. 加入到 toBeApplied 队列里面, 这里的 toBeApplied 是 ToBeAppliedRequestProcessor, Leader 共用的队列, 在经过 CommitProcessor 处理过后, 就到 ToBeAppliedRequestProcessor 里面进行处理
+                LOG.info("toBeApplied:" + toBeApplied);               // 9. toBeApplied 对应的删除操作在 ToBeAppliedRequestProcessor 里面, 在进行删除时, 其实已经经过 FinalRequestProcessor 处理过的
             }
 
             if (p.request == null) {
                 LOG.warn("Going to commmit null request for proposal: {}", p);
             }
-            commit(zxid);                                                               // 向 集群中的 Followers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
-            inform(p);                                                                  // 向 集群中的 Observers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
-            zk.commitProcessor.commit(p.request);                                       // 自己进行 proposal 的提交 (直接调用 commitProcessor 进行提交 )
-                                                                                        // 其实这里隐藏一个细节, 就是有可能 有些 Proposal 在 Follower 上进行了 commit, 而 Leader 上还没来得及提交, 就有可能与集群间的其他节点断开连接
+            commit(zxid);                                             // 10. 向 集群中的 Followers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
+            inform(p);                                                // 11. 向 集群中的 Observers 发送 commit 消息, 来通知大家, zxid 对应的 Proposal 可以 commit 了
+            zk.commitProcessor.commit(p.request);                     // 12. 自己进行 proposal 的提交 (直接调用 commitProcessor 进行提交 )
+                                                                      // 13. 其实这里隐藏一个细节, 就是有可能 有些 Proposal 在 Follower 上进行了 commit, 而 Leader 上还没来得及提交, 就有可能与集群间的其他节点断开连接
             LOG.info("pendingSyncs :" + pendingSyncs);
             if(pendingSyncs.containsKey(zxid)){
                 for(LearnerSyncRequest r: pendingSyncs.remove(zxid)) {

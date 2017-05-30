@@ -458,17 +458,17 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 
     // 经过下面的操作, 就会存在 currentEpoch, acceptEpoch 文件, 并且 DataTree 文件也会进行加载
     private void loadDataBase() {
-        File updating = new File(getTxnFactory().getSnapDir(),                // 在 snap shot 文件目录下面有对应的 updateEpoch 文件
+        File updating = new File(getTxnFactory().getSnapDir(),                // 1. 在 snap shot 文件目录下面有对应的 updateEpoch 文件
                                  UPDATING_EPOCH_FILENAME);
 		try {
-            zkDb.loadDataBase();                                              // 从 snapshot, TxnLog 里面加载出 dataTree 及 sessionsWithTimeouts
+            zkDb.loadDataBase();                                              // 2. 从 snapshot, TxnLog 里面加载出 dataTree 及 sessionsWithTimeouts
 
             // load the epochs
-            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;    // 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
-     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid); // 将 zxid 的高 32 位当做 epoch 值, 低 32 位才是 zxid
+            long lastProcessedZxid = zkDb.getDataTree().lastProcessedZxid;    // 3. 获取 zkDb 对应的处理过的 最新的一个 zxid 的值
+     		long epochOfZxid = ZxidUtils.getEpochFromZxid(lastProcessedZxid); // 4. 将 zxid 的高 32 位当做 epoch 值, 低 32 位才是 zxid
             try {
-            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);      // 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
-                if (epochOfZxid > currentEpoch && updating.exists()) {        // 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
+            	currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);      // 5. 从文件中加载 epoch 值 (若不存在 currentEpoch 文件, 则直接在 catch 中执行代码, 而且一般都是这样)
+                if (epochOfZxid > currentEpoch && updating.exists()) {        // 6. 此处说明 QuorumPeer 在进行 takeSnapShot 后, 进程直接挂了, 还没来得及更新 currentEpoch
                     LOG.info("{} found. The server was terminated after " +
                              "taking a snapshot but before updating current " +
                              "epoch. Setting current epoch to {}.",
@@ -483,7 +483,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	currentEpoch = epochOfZxid;                                    // 遇到的是 currentEpoch 文件不存在, 直接运行到这里了
+            	currentEpoch = epochOfZxid;                                    // 7. 遇到的是 currentEpoch 文件不存在, 直接运行到这里了
             	LOG.info(CURRENT_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        currentEpoch);
@@ -493,16 +493,16 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + ", is older than the last zxid, " + lastProcessedZxid);
             }
             try {
-            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME);     // 从文件中读取当前接收到的 epoch 值
+            	acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME);     // 8. 从文件中读取当前接收到的 epoch 值
             } catch(FileNotFoundException e) {
             	// pick a reasonable epoch number
             	// this should only happen once when moving to a
             	// new code version
-            	acceptedEpoch = epochOfZxid;                                   // 当从 acceptEpoch 文件里面读取数据失败时, 就直接运行这边的代码
+            	acceptedEpoch = epochOfZxid;                                   // 9. 当从 acceptEpoch 文件里面读取数据失败时, 就直接运行这边的代码
             	LOG.info(ACCEPTED_EPOCH_FILENAME
             	        + " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
             	        acceptedEpoch);
-            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);       // 将 acceptEpoch 值直接写入到对应的文件里面
+            	writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);       // 10 将 acceptEpoch 值直接写入到对应的文件里面
             }
             if (acceptedEpoch < currentEpoch) {
             	throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + " is less than the accepted epoch, " + ZxidUtils.zxidToString(acceptedEpoch));
@@ -523,13 +523,13 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
     // 开启 leader 的选举操作
     synchronized public void startLeaderElection() {
     	try {
-    		currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());  // 生成投给自己的选票
+    		currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());  // 1. 生成投给自己的选票
     	} catch(IOException e) {
     		RuntimeException re = new RuntimeException(e.getMessage());
     		re.setStackTrace(e.getStackTrace());
     		throw re;
     	}
-        for (QuorumServer p : getView().values()) {                         // 获取集群里面的所有的机器
+        for (QuorumServer p : getView().values()) {                                // 2. 获取集群里面的所有的机器
             if (p.id == myid) {
                 myQuorumAddr = p.addr;
                 break;
@@ -538,7 +538,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         if (myQuorumAddr == null) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
         }
-        if (electionType == 0) {                                            // 现在默认的选举算法是 FastLeaderElection
+        if (electionType == 0) {                                                   // 3. 现在默认的选举算法是 FastLeaderElection
             try {
                 udpSocket = new DatagramSocket(myQuorumAddr.getPort());
                 responder = new ResponderThread();
@@ -547,7 +547,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 throw new RuntimeException(e);
             }
         }
-        this.electionAlg = createElectionAlgorithm(electionType);           // 创建 Election
+        this.electionAlg = createElectionAlgorithm(electionType);                  // 4. 创建 Election
     }
     
     /**
@@ -643,9 +643,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
         case 2:
             le = new AuthFastLeaderElection(this, true);
             break;
-        case 3:                                                                  // 默认的 leader 选举的算法
+        case 3:                                                                 // 1. 默认的 leader 选举的算法
             qcm = new QuorumCnxManager(this);
-            QuorumCnxManager.Listener listener = qcm.listener;                  // 等待集群中的其他的机器进行连接
+            QuorumCnxManager.Listener listener = qcm.listener;                  // 2. 等待集群中的其他的机器进行连接
             if(listener != null){
                 listener.start();
                 le = new FastLeaderElection(this, qcm);
@@ -692,24 +692,24 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
 
     @Override
     public void run() {
-        setName("QuorumPeer" + "[myid=" + getId() + "]" +                   // 设置当前线程的名称
+        setName("QuorumPeer" + "[myid=" + getId() + "]" +                    // 1. 设置当前线程的名称
                 cnxnFactory.getLocalAddress());
 
         LOG.debug("Starting quorum peer");
         try {
             jmxQuorumBean = new QuorumBean(this);
-            MBeanRegistry.getInstance().register(jmxQuorumBean, null);      // 在 QuorumPeer 上包装 QuorumBean 注入到 JMX
-            for(QuorumServer s: getView().values()){                        // 遍历每个 ZooKeeperServer 节点
+            MBeanRegistry.getInstance().register(jmxQuorumBean, null);       // 2. 在 QuorumPeer 上包装 QuorumBean 注入到 JMX
+            for(QuorumServer s: getView().values()){                         // 3. 遍历每个 ZooKeeperServer 节点
                 ZKMBeanInfo p;
                 if (getId() == s.id) {
                     p = jmxLocalPeerBean = new LocalPeerBean(this);
-                    try {                                                   // 将 LocalPeerBean 注入到 JMX 里面
+                    try {                                                    // 4. 将 LocalPeerBean 注入到 JMX 里面
                         MBeanRegistry.getInstance().register(p, jmxQuorumBean);
                     } catch (Exception e) {
                         LOG.warn("Failed to register with JMX", e);
                         jmxLocalPeerBean = null;
                     }
-                } else {                                                    // 若myid不是本机, 也注入到 JMX 里面
+                } else {                                                     // 5. 若myid不是本机, 也注入到 JMX 里面
                     p = new RemotePeerBean(s);
                     try {
                         MBeanRegistry.getInstance().register(p, jmxQuorumBean);
@@ -727,12 +727,12 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
             /*
              * Main loop
              */
-            while (running) {                                                       // QuorumPeer 会一直在这个 while 里面 (一般先是 LOOKING, LEADING/FOLLOWING)
+            while (running) {                                               // 6. QuorumPeer 会一直在这个 while 里面 (一般先是 LOOKING, LEADING/FOLLOWING)
                 switch (getPeerState()) {
-                case LOOKING:                                                       // QuorumPeer 是 LOOKING 状态, 正在寻找 Leader 机器
+                case LOOKING:                                               // 7. QuorumPeer 是 LOOKING 状态, 正在寻找 Leader 机器
                     LOG.info("LOOKING, and myid is " + myid);
 
-                    if (Boolean.getBoolean("readonlymode.enabled")) {               // 判断启动服务是否是 readOnly 模式
+                    if (Boolean.getBoolean("readonlymode.enabled")) {       // 8. 判断启动服务是否是 readOnly 模式
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
 
                         // Create read-only server but don't start it immediately
@@ -763,9 +763,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                             }
                         };
                         try {
-                            roZkMgr.start();                                          // 这里分两部(1. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
-                            setBCVote(null);                                          // 2. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
-                            setCurrentVote(makeLEStrategy().lookForLeader());         // 创建选举 Leader 德策略)选举算法, 在这里可能需要消耗一点时间
+                            roZkMgr.start();                                 // 9.  这里分两部(a.. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
+                            setBCVote(null);                                 // b. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
+                            setCurrentVote(makeLEStrategy().lookForLeader());// 10. 创建选举 Leader 德策略)选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception",e);
                             setPeerState(ServerState.LOOKING);
@@ -776,9 +776,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                             roZk.shutdown();
                         }
                     } else {
-                        try {                                                         // 这里分两部(1. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
-                            setBCVote(null);                                          // 2. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
-                            setCurrentVote(makeLEStrategy().lookForLeader());         // 选举算法, 在这里可能需要消耗一点时间
+                        try {                                                // 11. 这里分两部(a. QuorumPeer.start().startLeaderElection().createElectionAlgorithm()
+                            setBCVote(null);                                 // b. 调用 Election.lookForLeader方法开始选举, 直至 选举成功/其中发生异常
+                            setCurrentVote(makeLEStrategy().lookForLeader());// 12. 选举算法, 在这里可能需要消耗一点时间
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception", e);
                             setPeerState(ServerState.LOOKING);
@@ -800,9 +800,9 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                     break;
                 case FOLLOWING:
                     try {
-                        LOG.info("FOLLOWING, and myid is " + myid);       // 最上层还是 QuorumPeer
-                        setFollower(makeFollower(logFactory));            // 初始化 follower, 在 Follower 里面引用 FollowerZooKeeperServer
-                        follower.followLeader();                          // 带用 follower.followLeader, 程序会阻塞在这里
+                        LOG.info("FOLLOWING, and myid is " + myid);         // 13. 最上层还是 QuorumPeer
+                        setFollower(makeFollower(logFactory));              // 14. 初始化 follower, 在 Follower 里面引用 FollowerZooKeeperServer
+                        follower.followLeader();                            // 15. 带用 follower.followLeader, 程序会阻塞在这里
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);
                     } finally {
@@ -814,8 +814,8 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                 case LEADING:
                     LOG.info("LEADING, and myid is " + myid);
                     try {
-                        setLeader(makeLeader(logFactory));                 // 初始化 Leader 对象
-                        leader.lead();                                     // Leader 程序会阻塞在这里
+                        setLeader(makeLeader(logFactory));                  // 16. 初始化 Leader 对象
+                        leader.lead();                                      // 17. Leader 程序会阻塞在这里
                         setLeader(null);
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e);

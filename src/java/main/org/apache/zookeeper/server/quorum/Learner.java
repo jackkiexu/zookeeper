@@ -180,7 +180,7 @@ public class Learner {
      * @throws IOException
      */
     void request(Request request) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();       // 将要发送给 Leader 的数据包序列化
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();       // 1. 将要发送给 Leader 的数据包序列化
         DataOutputStream oa = new DataOutputStream(baos);
         oa.writeLong(request.sessionId);
         oa.writeInt(request.cxid);
@@ -193,10 +193,10 @@ public class Learner {
             request.request.rewind();
             oa.write(b);
         }
-        oa.close();                                                     // 封装请求数据包
+        oa.close();                                                     // 2. 封装请求数据包
         QuorumPacket qp = new QuorumPacket(Leader.REQUEST, -1, baos.toByteArray(), request.authInfo);
 
-        writePacket(qp, true);                                         // 将 事务请求 request 发送给 Leader
+        writePacket(qp, true);                                         // 3. 将 事务请求 request 发送给 Leader
     }
     
     /**
@@ -232,11 +232,11 @@ public class Learner {
     protected void connectToLeader(InetSocketAddress addr) throws IOException, ConnectException, InterruptedException {
 
         sock = new Socket();        
-        sock.setSoTimeout(self.tickTime * self.initLimit);          // 这里的 SoTimeout 很重要, 若 InputStream.read 超过这个时间,则会报出 SocketTimeoutException 异常
-        for (int tries = 0; tries < 5; tries++) {                   // 连接 Leader 尝试 5次, 若还是失败, 则抛出异常, 一直往外抛出, 直到 QuorumPeer 的重新开始选举 leader run 方法里面 -> 进行选举 Leader
+        sock.setSoTimeout(self.tickTime * self.initLimit);          // 1. 这里的 SoTimeout 很重要, 若 InputStream.read 超过这个时间,则会报出 SocketTimeoutException 异常
+        for (int tries = 0; tries < 5; tries++) {                   // 2. 连接 Leader 尝试 5次, 若还是失败, 则抛出异常, 一直往外抛出, 直到 QuorumPeer 的重新开始选举 leader run 方法里面 -> 进行选举 Leader
             try {
-                sock.connect(addr, self.tickTime * self.syncLimit); // 连接 leader
-                sock.setTcpNoDelay(nodelay);                        // 设置 tcpnoDelay <- 这里其实就是禁止 tcp 底层合并小数据包, 一次发送所有数据的 算法
+                sock.connect(addr, self.tickTime * self.syncLimit); // 3. 连接 leader
+                sock.setTcpNoDelay(nodelay);                        // 4. 设置 tcpnoDelay <- 这里其实就是禁止 tcp 底层合并小数据包, 一次发送所有数据的 算法
                 break;
             } catch (IOException e) {
                 if (tries == 4) {
@@ -250,10 +250,10 @@ public class Learner {
                 }
             }
             Thread.sleep(1000);
-        }
-        leaderIs = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));   // 封装对应的 I/O 数据流
+        }                                                           // 5. 封装对应的 I/O 数据流
+        leaderIs = BinaryInputArchive.getArchive(new BufferedInputStream(sock.getInputStream()));
         bufferedOutput = new BufferedOutputStream(sock.getOutputStream());
-        leaderOs = BinaryOutputArchive.getArchive(bufferedOutput);                                  // 封装输出数据流
+        leaderOs = BinaryOutputArchive.getArchive(bufferedOutput); //  6. 封装输出数据流
     }   
     
     /**
@@ -350,10 +350,10 @@ public class Learner {
         LOG.info("qp:" + qp);
 
         synchronized (zk) {
-            if (qp.getType() == Leader.DIFF) {                              // DIFF 数据包
+            if (qp.getType() == Leader.DIFF) {                              // DIFF 数据包(DIFF数据包显示集群中两个节点的 lastZxid 相同)
                 LOG.info("Getting a diff from the leader 0x" + Long.toHexString(qp.getZxid()));                
             }
-            else if (qp.getType() == Leader.SNAP) {                         // 收到的信息是 snap, 则从 leader 复制一份 镜像数据到本地
+            else if (qp.getType() == Leader.SNAP) {                         // 收到的信息是 snap, 则从 leader 复制一份 镜像数据到本地(Leader比Follower处理的Proposal多至少500个)
                 LOG.info("Getting a snapshot from leader");
                 // The leader is going to dump the database
                 // clear our own database and read
@@ -364,7 +364,7 @@ public class Learner {
                     LOG.error("Missing signature. Got " + signature);
                     throw new IOException("Missing signature");                   
                 }
-            } else if (qp.getType() == Leader.TRUNC) {                     // 回滚到对应的事务
+            } else if (qp.getType() == Leader.TRUNC) {                     // 回滚到对应的事务到 qp.getZxid()(Follower处理的事务比Leader多)
                 //we need to truncate the log to the lastzxid of the leader
                 LOG.warn("Truncating log to get in sync with the leader 0x" + Long.toHexString(qp.getZxid()));
                 boolean truncated=zk.getZKDatabase().truncateLog(qp.getZxid());
@@ -384,7 +384,7 @@ public class Learner {
 
             }
             zk.getZKDatabase().setlastProcessedZxid(qp.getZxid());          // 因为这里的 ZKDatatree 是从 Leader 的 SnapShot 的 InputStream 里面获取的, 所以调用这里通过 set 进行赋值
-            zk.createSessionTracker();                                      // Learner 创建对应的 SessionTracker (Follower/Observer)
+            zk.createSessionTracker();                                      // Learner 创建对应的 SessionTracker (Follower/Observer)(LearnerSessionTracker)
             
             long lastQueued = 0;
 
@@ -394,7 +394,7 @@ public class Learner {
             boolean snapshotTaken = false;
             // we are now going to start getting transactions to apply followed by an UPTODATE
             outerLoop:
-            while (self.isRunning()) {                                     // 同步完数据后, 准备执行投票 这里的 self.isRunning() 默认就是 true
+            while (self.isRunning()) {                                     // 这里的 self.isRunning() 默认就是 true
                 readPacket(qp);
 
                 LOG.info("qp:" + qp);
@@ -486,12 +486,12 @@ public class Learner {
                 }
             }
         }
-        ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));                                           // 更新 zixd newLeaderZxid & ~0xffffffffL, 表明已经切换到新的 epoch
+        ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));                                          // 更新 zixd newLeaderZxid & ~0xffffffffL, 表明已经切换到新的 epoch
 
         LOG.info("ack:" + ack);
         writePacket(ack, true);                                                                // 回复 leader ack 消息 (针对 数据包 Leader.UPTODATE )
-        sock.setSoTimeout(self.tickTime * self.syncLimit);                                  // 设置 InputStream.read 的超时时间
-        zk.startup();                                                                           // 启动 Learner zookeeper server
+        sock.setSoTimeout(self.tickTime * self.syncLimit);                                     // 设置 InputStream.read 的超时时间
+        zk.startup();                                                                          // 启动 Learner zookeeper server
         /*
          * Update the election vote here to ensure that all members of the
          * ensemble report the same vote to new servers that start up and
@@ -499,20 +499,20 @@ public class Learner {
          * 
          * @see https://issues.apache.org/jira/browse/ZOOKEEPER-1732
          */
-        self.updateElectionVote(newEpoch);                                                      // 更新最新的 newEpoch
+        self.updateElectionVote(newEpoch);                                                     // 更新本机的 newEpoch
 
         // We need to log the stuff that came in between the snapshot and the uptodate
         if (zk instanceof FollowerZooKeeperServer) {
             FollowerZooKeeperServer fzk = (FollowerZooKeeperServer)zk;
 
-            LOG.info("packetsNotCommitted:" + packetsNotCommitted);
+            LOG.info("packetsNotCommitted:" + packetsNotCommitted);                            // 这里的 packetsNotCommitted 是从 Leader 同步过来的
             for(PacketInFlight p: packetsNotCommitted) {
                 fzk.logRequest(p.hdr, p.rec);
             }
 
             LOG.info("packetsCommitted:" + packetsCommitted);
             for(Long zxid: packetsCommitted) {
-                fzk.commit(zxid);
+                fzk.commit(zxid);                                                              // commit Leader发来的Proposal
             }
         } else if (zk instanceof ObserverZooKeeperServer) {
             // Similar to follower, we need to log requests between the snapshot
@@ -573,14 +573,14 @@ public class Learner {
         // Send back the ping with our session data
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
-        HashMap<Long, Integer> touchTable = zk                          // 获取 Follower/Observer 的 touchTable(sessionId <-> sessionTimeout) 发给 Leader 进行session超时的检测s
+        HashMap<Long, Integer> touchTable = zk   // 1. 获取 Follower/Observer 的 touchTable(sessionId <-> sessionTimeout) 发给 Leader 进行session超时的检测
                 .getTouchSnapshot();
         for (Entry<Long, Integer> entry : touchTable.entrySet()) {
             dos.writeLong(entry.getKey());
             dos.writeInt(entry.getValue());
         }
-        qp.setData(bos.toByteArray());                                  // 转化成字节数组, 进行数据的写入
-        writePacket(qp, true);                                         // 发送数据包
+        qp.setData(bos.toByteArray());          // 2. 转化成字节数组, 进行数据的写入
+        writePacket(qp, true);                  // 3. 发送数据包
     }
     
     

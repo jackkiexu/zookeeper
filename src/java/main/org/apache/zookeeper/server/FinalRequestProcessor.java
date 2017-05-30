@@ -106,29 +106,29 @@ public class FinalRequestProcessor implements RequestProcessor {
         // 为什么要这么做呢? 因为在并发情况下, 可能有两 setData 操作连续进行操作, 而这时, 都会要改变 DataNode.stat 中的属性, 将这次改变的 ChangeRecord 记录在 outstandingChanges/outstandingChangesForPath, 从而为下次相同 PATH 的操作做准备
         synchronized (zks.outstandingChanges) {                                                    // 将 小于  request.zxid 的 ChangeRecord 都进行删除
             while (!zks.outstandingChanges.isEmpty()
-                    && zks.outstandingChanges.get(0).zxid <= request.zxid) {                        // outstandingChanges 不为空, 且首个元素的 zxid < request.zxid
-                ChangeRecord cr = zks.outstandingChanges.remove(0);                                  // 移除首个元素
+                    && zks.outstandingChanges.get(0).zxid <= request.zxid) {                       // outstandingChanges 不为空, 且首个元素的 zxid < request.zxid
+                ChangeRecord cr = zks.outstandingChanges.remove(0);                                // 移除首个元素
 
-                if (cr.zxid < request.zxid) {                                                          // 进行相应日志处理
+                if (cr.zxid < request.zxid) {                                                      // 进行相应日志处理
                     LOG.warn("Zxid outstanding " + cr.zxid + " is less than current " + request.zxid);
                 }
                 if (zks.outstandingChangesForPath.get(cr.path) == cr) {                            // 移除 ChangeRecord 对应的路径
                     zks.outstandingChangesForPath.remove(cr.path);
                 }
             }
-            if (request.hdr != null) {                                                                 // 这里的 request.hdr != null 说明请求是事务请求
+            if (request.hdr != null) {                                                             // 这里的 request.hdr != null 说明请求是事务请求
                TxnHeader hdr = request.hdr;
                Record txn = request.txn;
 
-               rc = zks.processTxn(hdr, txn);                                                           // 调用 ZKDatabase 进行事务处理
+               rc = zks.processTxn(hdr, txn);                                                      // 调用 ZKDatabase 进行事务处理
             }
             // do not add non quorum packets to the queue.
-            if (Request.isQuorum(request.type)) {                                                      // 若是事务请求, 加入 ZKDatabase 的 committedLog 队列, 这个 commit 队列是在 Follower 快速同步时使用的
+            if (Request.isQuorum(request.type)) {                                                  // 若是事务请求, 加入 ZKDatabase 的 committedLog 队列, 这个 commit 队列是在 Follower 快速同步时使用的
                 zks.getZKDatabase().addCommittedProposal(request);
             }
         }
 
-        if (request.hdr != null && request.hdr.getType() == OpCode.closeSession) {                  // 进行会话关闭处理
+        if (request.hdr != null && request.hdr.getType() == OpCode.closeSession) {                 // 进行会话关闭处理
             ServerCnxnFactory scxn = zks.getServerCnxnFactory();
             // this might be possible since
             // we might just be playing diffs from the leader
@@ -167,7 +167,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 LOG.debug("{}",request);
             }
             switch (request.type) {
-            case OpCode.ping: {                                                                               // PING 请求
+            case OpCode.ping: {                                                                         // PING 请求
                 zks.serverStats().updateLatency(request.createTime);
 
                 lastOp = "PING";
@@ -179,13 +179,13 @@ public class FinalRequestProcessor implements RequestProcessor {
                 return;
             }
             case OpCode.createSession: {
-                zks.serverStats().updateLatency(request.createTime);                                        // 根据这次的请求, 更新整个系统的 minLatency maxLatency
+                zks.serverStats().updateLatency(request.createTime);                                    // 根据这次的请求, 更新整个系统的 minLatency maxLatency
 
                 lastOp = "SESS";
                 cnxn.updateStatsForResponse(request.cxid, request.zxid, lastOp,
                         request.createTime, System.currentTimeMillis());
 
-                zks.finishSessionInit(request.cnxn, true);                                                   // 将对应的相应信息写回客户端
+                zks.finishSessionInit(request.cnxn, true);                                              // 将对应的相应信息写回客户端
                 return;
             }
             case OpCode.multi: {

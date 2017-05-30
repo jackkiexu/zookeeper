@@ -74,9 +74,12 @@ public class QuorumPeerTestBase extends ZKTestCase implements Watcher {
             fwriter.write("syncLimit=5\n");
 
             dataDir = new File(tmpDir, "data");
-            if (!dataDir.mkdir()) {
-                throw new IOException("Unable to mkdir " + dataDir);
+            if(!dataDir.exists()){
+                if (!dataDir.mkdir()) {
+                    throw new IOException("Unable to mkdir " + dataDir);
+                }
             }
+
 
             // Convert windows path to UNIX to avoid problems with "\"
             String dir = dataDir.toString();

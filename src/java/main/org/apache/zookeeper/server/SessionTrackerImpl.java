@@ -186,27 +186,27 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
                 "SessionTrackerImpl --- Touch session: 0x"
                         + Long.toHexString(sessionId) + " with timeout " + timeout);
 
-        SessionImpl s = sessionsById.get(sessionId);                            // 从 sessionsById 获取 session, sessionsById 是一个 SessionId <-> SessionImpl 的 map
+        SessionImpl s = sessionsById.get(sessionId);    // 1. 从 sessionsById 获取 session, sessionsById 是一个 SessionId <-> SessionImpl 的 map
         // Return false, if the session doesn't exists or marked as closing
         if (s == null || s.isClosing()) {
             return false;
-        }
-        long expireTime = roundToInterval(System.currentTimeMillis() + timeout); // 计算过期时间
+        }                                               // 2. 计算过期时间
+        long expireTime = roundToInterval(System.currentTimeMillis() + timeout);
         if (s.tickTime >= expireTime) {
             // Nothing needs to be done
             return true;
         }
-        SessionSet set = sessionSets.get(s.tickTime);                         // 这里的 SessionSet 就是一个 timeout 对应额 Bucket, 将有一个线程, 在超时时间点检查这个 SessionSet
+        SessionSet set = sessionSets.get(s.tickTime);   // 3. 这里的 SessionSet 就是一个 timeout 对应额 Bucket, 将有一个线程, 在超时时间点检查这个 SessionSet
         if (set != null) {
             set.sessions.remove(s);
         }
-        s.tickTime = expireTime;                                               // 下面的步骤就是将 session 以 tickTime 为单位放入 sessionSets 中
+        s.tickTime = expireTime;                        // 4. 下面的步骤就是将 session 以 tickTime 为单位放入 sessionSets 中
         set = sessionSets.get(s.tickTime);
         if (set == null) {
             set = new SessionSet();
             sessionSets.put(expireTime, set);
         }
-        set.sessions.add(s);                                                   // 将 SessionImpl 放入对应的 SessionSets 里面
+        set.sessions.add(s);                            // 5. 将 SessionImpl 放入对应的 SessionSets 里面
         return true;
     }
 

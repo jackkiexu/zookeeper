@@ -67,7 +67,7 @@ public class FollowerRequestProcessor extends Thread implements
                 // We want to queue the request to be processed before we submit
                 // the request to the leader so that we are ready to receive
                 // the response
-                nextProcessor.processRequest(request);            // 将提交给 FollowerRequestProcessor 的请求交给 CommitProcessor 来进行处理
+                nextProcessor.processRequest(request);            // 1. 将提交给 FollowerRequestProcessor 的请求交给 CommitProcessor 来进行处理
                 
                 // We now ship the request to the leader. As with all
                 // other quorum operations, sync also follows this code
@@ -75,18 +75,18 @@ public class FollowerRequestProcessor extends Thread implements
                 // of the sync operations this follower has pending, so we
                 // add it to pendingSyncs.
                 switch (request.type) {
-                case OpCode.sync:                                 // 处理同步数据
+                case OpCode.sync:                                // 2. 处理同步数据
                     zks.pendingSyncs.add(request);
                     zks.getFollower().request(request);
                     break;
-                case OpCode.create:                              // 从这里 看出 path 创建/删除/设置数据/设置访问权限/创建,关闭session, 多个操作 -> 都 是 Follower 交给 leader 进行处理
+                case OpCode.create:                              // 3. 从这里 看出 path 创建/删除/设置数据/设置访问权限/创建,关闭session, 多个操作 -> 都 是 Follower 交给 leader 进行处理
                 case OpCode.delete:
                 case OpCode.setData:
                 case OpCode.setACL:
                 case OpCode.createSession:
                 case OpCode.closeSession:
                 case OpCode.multi:
-                    zks.getFollower().request(request);             // 将事务类的请求都交给 Leader 处理
+                    zks.getFollower().request(request);          // 4. 将事务类的请求都交给 Leader 处理
                     break;
                 }
             }

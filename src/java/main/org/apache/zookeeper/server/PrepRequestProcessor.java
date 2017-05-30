@@ -467,12 +467,12 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 nodeRecord.stat.setAversion(version);
                 addChangeRecord(nodeRecord);
                 break;
-            case OpCode.createSession:                                                         // 创建 session
+            case OpCode.createSession:                                  // 创建 session
                 request.request.rewind();
                 int to = request.request.getInt();
-                request.txn = new CreateSessionTxn(to);                                         // 组装事务体, 事务头在最前面已经弄好了
+                request.txn = new CreateSessionTxn(to);                 // 组装事务体, 事务头在最前面已经弄好了
                 request.request.rewind();
-                zks.sessionTracker.addSession(request.sessionId, to);
+                zks.sessionTracker.addSession(request.sessionId, to);   // 调用 sessionTracker.addSession() 将follower里的session加入到Leader的sessionsWithTimeout里面
                 zks.setOwner(request.sessionId, request.getOwner());
                 break;
             case OpCode.closeSession:

@@ -565,14 +565,14 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     // 创建 session
     long createSession(ServerCnxn cnxn, byte passwd[], int timeout) {
-        long sessionId = sessionTracker.createSession(timeout);     // 创建 会话 Session, 生成 SessionImpl 放入对应的 sessionsById, sessionsWithTimeout, sessionSets 里面, 返回 sessionid
+        long sessionId = sessionTracker.createSession(timeout);     // 1. 创建 会话 Session, 生成 SessionImpl 放入对应的 sessionsById, sessionsWithTimeout, sessionSets 里面, 返回 sessionid
         Random r = new Random(sessionId ^ superSecret);
-        r.nextBytes(passwd);                                           // 生成一个随机的 byte[] passwd
+        r.nextBytes(passwd);                                        // 2. 生成一个随机的 byte[] passwd
         ByteBuffer to = ByteBuffer.allocate(4);
         to.putInt(timeout);
-        cnxn.setSessionId(sessionId);
+        cnxn.setSessionId(sessionId);                               // 3. 提交 Request 到RequestProcessor 处理链
         submitRequest(cnxn, sessionId, OpCode.createSession, 0, to, null);
-        return sessionId;                                             // 返回此回话对应的 sessionId
+        return sessionId;                                           // 4. 返回此回话对应的 sessionId
     }
 
     /**

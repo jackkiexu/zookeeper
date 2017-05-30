@@ -85,15 +85,15 @@ public class ProposalRequestProcessor implements RequestProcessor {
         if(request instanceof LearnerSyncRequest){
             zks.getLeader().processSync((LearnerSyncRequest)request);
         } else {
-                nextProcessor.processRequest(request);                        // 这里的 nextProcessor 其实就是 CommitProcessor
-            if (request.hdr != null) {                                        // 若是 事务请求
+                nextProcessor.processRequest(request);         // 1. 这里的 nextProcessor 其实就是 CommitProcessor
+            if (request.hdr != null) {                         // 2. 若是 事务请求
                 // We need to sync and get consensus on any transactions
                 try {
-                    zks.getLeader().propose(request);                          // Leader 进行 Request 的投票 (Proposal) 将 request 发送给 Follower
+                    zks.getLeader().propose(request);          // 3. Leader 进行 Request 的投票 (Proposal) 将 request 发送给 Follower
                 } catch (XidRolloverException e) {
                     throw new RequestProcessorException(e.getMessage(), e);
                 }
-                syncProcessor.processRequest(request);                       // 将 request 交给 syncProcessor 进行落磁盘
+                syncProcessor.processRequest(request);         // 4. 将 request 交给 syncProcessor 进行落磁盘
             }
         }
     }
