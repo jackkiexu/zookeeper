@@ -528,10 +528,10 @@ public class DataTree {
             // now check if its the limit node
             if (Quotas.limitNode.equals(childName)) {
                 // this is the limit node
-                // get the parent and add it to the trie
+                // get the parent and add it to the trie                // 16. 这里的pTire是专门统计 /zookeeper里面的节点信息(the path trie that keeps track fo the quota nodes in this datatree)
                 pTrie.addPath(parentName.substring(quotaZookeeper.length()));
             }
-            if (Quotas.statNode.equals(childName)) {
+            if (Quotas.statNode.equals(childName)) {                    // 17. 更新 /zookeeper/quota下面 节点de data 的信息
                 updateQuotaForPath(parentName.substring(quotaZookeeper.length()));
             }
         }
@@ -542,8 +542,8 @@ public class DataTree {
             updateCount(lastPrefix, 1);
             updateBytes(lastPrefix, data == null ? 0 : data.length);
         }
-        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);        // 16. 节点创建事件触发 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
-        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName, // 17. parent节点数据变化事件通知 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
+        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);        // 20. 节点创建事件触发 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
+        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName, // 21. parent节点数据变化事件通知 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
                 Event.EventType.NodeChildrenChanged);
         return path;
     }
