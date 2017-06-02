@@ -481,7 +481,7 @@ public class DataTree {
         int lastSlash = path.lastIndexOf('/');
         String parentName = path.substring(0, lastSlash);               // 1. 通过上面额 lastSlash 来获取 对应的 parent 的 path
         String childName = path.substring(lastSlash + 1);               // 2. 获取对应的 子 path
-        StatPersisted stat = new StatPersisted();                      // 构建 针对这个 DataNode 的 StatPersisted
+        StatPersisted stat = new StatPersisted();                       // 3. 构建 针对这个 DataNode 的 StatPersisted
         stat.setCtime(time);
         stat.setMtime(time);
         stat.setCzxid(zxid);
@@ -489,14 +489,14 @@ public class DataTree {
         stat.setPzxid(zxid);
         stat.setVersion(0);
         stat.setAversion(0);
-        stat.setEphemeralOwner(ephemeralOwner);
-        DataNode parent = nodes.get(parentName);                        // 3. 对应的 parent DataNode
+        stat.setEphemeralOwner(ephemeralOwner);                         // 4. 若是临时节点, 则ephemeralOwner不为0， 会在ephemerals里面存储sessionId存放在 closeSession时需要删除的 path
+        DataNode parent = nodes.get(parentName);                        // 5. 对应的 parent DataNode
         if (parent == null) {
             throw new KeeperException.NoNodeException();
         }
         synchronized (parent) {
             Set<String> children = parent.getChildren();
-            if (children != null) {                                     // 4. 通过上面获取的 parent 查看是否 其下面已经设置过了 相同的 child_path
+            if (children != null) {                                     // 6. 通过上面获取的 parent 查看是否 其下面已经设置过了 相同的 child_path
                 if (children.contains(childName)) {
                     throw new KeeperException.NodeExistsException();
                 }
@@ -506,15 +506,15 @@ public class DataTree {
                 parentCVersion = parent.stat.getCversion();
                 parentCVersion++;
             }    
-            parent.stat.setCversion(parentCVersion);                    // 5. 每个 parent 里面都有一个 stat, 来进行维护 对应的信息
-            parent.stat.setPzxid(zxid);                                 // 6. 设置 pZxid (每次子节点变化, 都需要更新这个值)
-            Long longval = convertAcls(acl);
-            DataNode child = new DataNode(parent, data, longval, stat);
-            parent.addChild(childName);                                 // 6.1 parent 节点只将对应的 子 path 的名称加入到对应的 children(HashSet) 中
-            nodes.put(path, child);                                    // 7. 加入到 nodes(一个以 path 为key, DataNode 为 value 的 ConcurrentHashMap)中
-            if (ephemeralOwner != 0) {                                  // 8. 判断是否是 临时节点
-                HashSet<String> list = ephemerals.get(ephemeralOwner); // 9. ephemeralOwner 其实就是是 sessionId, 下面的就是一个 sessionId 对应一个 临时 path 的 ConcurrentHashMap
-                if (list == null) {
+            parent.stat.setCversion(parentCVersion);                    // 7. 每个 parent 里面都有一个 stat, 来进行维护 对应的信息
+            parent.stat.setPzxid(zxid);                                 // 8. 设置 pZxid (每次子节点变化, 都需要更新这个值)
+            Long longval = convertAcls(acl);                            // 9. 将acl权限转化成 longval
+            DataNode child = new DataNode(parent, data, longval, stat); // 10. 构建 DataNode
+            parent.addChild(childName);                                 // 11. parent 节点只将对应的 子 path 的名称加入到对应的 children(HashSet) 中
+            nodes.put(path, child);                                     // 12. 加入到 nodes(一个以 path 为key, DataNode 为 value 的 ConcurrentHashMap)中
+            if (ephemeralOwner != 0) {                                  // 13. 判断是否是 临时节点
+                HashSet<String> list = ephemerals.get(ephemeralOwner);  // 14. ephemeralOwner 其实就是是 sessionId, 下面的就是一个 sessionId 对应一个 临时 path 的 ConcurrentHashMap
+                if (list == null) {                                     // 在 closeSession时会进行删除 sessionId对应的 临时 path
                     list = new HashSet<String>();
                     ephemerals.put(ephemeralOwner, list);
                 }
@@ -524,7 +524,7 @@ public class DataTree {
             }
         }
         // now check if its one of the zookeeper node child
-        if (parentName.startsWith(quotaZookeeper)) {                // 10. 判断是否是 /zookeeper/quota 下面的节点
+        if (parentName.startsWith(quotaZookeeper)) {                    // 15. 判断是否是 /zookeeper/quota 下面的节点
             // now check if its the limit node
             if (Quotas.limitNode.equals(childName)) {
                 // this is the limit node
@@ -542,8 +542,8 @@ public class DataTree {
             updateCount(lastPrefix, 1);
             updateBytes(lastPrefix, data == null ? 0 : data.length);
         }
-        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);        // 11. 节点创建事件触发
-        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName,  // 12. parent节点数据变化事件通知
+        dataWatches.triggerWatch(path, Event.EventType.NodeCreated);        // 16. 节点创建事件触发 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
+        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName, // 17. parent节点数据变化事件通知 (这里有个注意点 一旦path对应的 watcher 事件触发, 则就删除对应的 watcher)
                 Event.EventType.NodeChildrenChanged);
         return path;
     }
@@ -1051,7 +1051,7 @@ public class DataTree {
     private void updateQuotaForPath(String path) {
         Counts c = new Counts();
         getCounts(path, c);
-        StatsTrack strack = new StatsTrack();
+        StatsTrack strack = new StatsTrack();       // 统计path存储的 bytes 大小, 及其下子节点的节点个数
         strack.setBytes(c.bytes);
         strack.setCount(c.count);
         String statPath = Quotas.quotaZookeeper + path + "/" + Quotas.statNode;

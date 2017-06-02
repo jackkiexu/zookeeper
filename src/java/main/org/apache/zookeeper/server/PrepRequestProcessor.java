@@ -332,65 +332,65 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,                  // 1. 统一组装请求事务头 TxnHeader
                                     zks.getTime(), type);
 
-        switch (type) {                                                                        // 下面的操作都是线程安全的, 每个操作处理过后才会从 queue 里面取出下一个 request 来进行处理
-            case OpCode.create:                                                               // 创建 path 请求
-                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());    //  进行校验 session 是否是 createSession 时的 owner
+        switch (type) {                                                                     // 2. 下面的操作都是线程安全的, 每个操作处理过后才会从 queue 里面取出下一个 request 来进行处理
+            case OpCode.create:                                                             // 3. 创建 path 请求
+                zks.sessionTracker.checkSession(request.sessionId, request.getOwner());     // 4. 进行校验 session 是否是 createSession 时的 owner
                 CreateRequest createRequest = (CreateRequest)record;   
                 if(deserialize)
-                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);  // 从 request.request 里面发序列化出 createRequest
-                String path = createRequest.getPath();                                         // 获取路径
+                    ByteBufferInputStream.byteBuffer2Record(request.request, createRequest); //5. 从 request.request 里面发序列化出 createRequest
+                String path = createRequest.getPath();                                      // 6. 获取路径
                 int lastSlash = path.lastIndexOf('/');
-                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {              // 校验 path 路径
+                if (lastSlash == -1 || path.indexOf('\0') != -1 || failCreate) {            // 7. 校验 path 路径 (这里的 failCreate 只是在 test unit 里面用到)
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
                     throw new KeeperException.BadArgumentsException(path);
                 }
-                List<ACL> listACL = removeDuplicates(createRequest.getAcl());                   // ACL 去重
-                if (!fixupACL(request.authInfo, listACL)) {                                   // 权限校验
+                List<ACL> listACL = removeDuplicates(createRequest.getAcl());               // 8. ACL 去重
+                if (!fixupACL(request.authInfo, listACL)) {                                 // 9. 权限校验
                     throw new KeeperException.InvalidACLException(path);
                 }
-                String parentPath = path.substring(0, lastSlash);                               // 获取父节点
-                ChangeRecord parentRecord = getRecordForPath(parentPath);
+                String parentPath = path.substring(0, lastSlash);                           // 10. 获取父节点
+                ChangeRecord parentRecord = getRecordForPath(parentPath);                   // 12. 获取父节点的ChangeRecord, 若outstandingChangesForPath里面没有,则通过ZKDatabase组装
 
-                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE,                         // 检查 acl
+                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE,                       // 13. 检查 acl
                         request.authInfo);
-                int parentCVersion = parentRecord.stat.getCversion();                          // 获取父节点的 子节点创建的版本
+                int parentCVersion = parentRecord.stat.getCversion();                       // 14. 获取父节点的 子节点创建的版本
                 CreateMode createMode =
-                    CreateMode.fromFlag(createRequest.getFlags());
-                if (createMode.isSequential()) {                                                // 判断是否是 sequential 模式 创建 path
-                    path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);    // 从这里可以看出, 所有创建的子节点若是 sequential 类型的, 则直接使用 parentNode 里面的 Cversion 作为 序列号 (如 0000000099, 0000000999, 10位数字)
+                    CreateMode.fromFlag(createRequest.getFlags());                          // 15. 判断是否是 sequential(节点的尾缀是单调递增的数字)
+                if (createMode.isSequential()) {
+                    path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);   // 16. 从这里可以看出, 所有创建的子节点若是 sequential 类型的, 则直接使用 parentNode 里面的 Cversion 作为 序列号 (如 0000000099, 0000000999, 10位数字)
                 }
                 try {
-                    PathUtils.validatePath(path);                                               // path 校验
+                    PathUtils.validatePath(path);                                           // 17. path 校验和否正确
                 } catch(IllegalArgumentException ie) {
                     LOG.info("Invalid path " + path + " with session 0x" +
                             Long.toHexString(request.sessionId));
                     throw new KeeperException.BadArgumentsException(path);
                 }
                 try {
-                    if (getRecordForPath(path) != null) {
-                        throw new KeeperException.NodeExistsException(path);                  // 检测创建的节点是否存在 (zookeeper 强一致性的提现 -> master选举)
+                    if (getRecordForPath(path) != null) {                                   // 18. 检测创建的节点是否存在(outstandingChangesForPath在这里其实起着ZKDatabase的缓存的作用)
+                        throw new KeeperException.NodeExistsException(path);
                     }
                 } catch (KeeperException.NoNodeException e) {
                     // ignore this one
                 }
-                boolean ephemeralParent = parentRecord.stat.getEphemeralOwner() != 0;       // 父节点是否是临时节点 (不允许在临时节点下面创建节点)
+                boolean ephemeralParent = parentRecord.stat.getEphemeralOwner() != 0;       // 19. 父节点是否是临时节点 (不允许在临时节点下面创建节点)
                 if (ephemeralParent) {
                     throw new KeeperException.NoChildrenForEphemeralsException(path);
                 }
-                int newCversion = parentRecord.stat.getCversion()+1;                        // 创建子节点的 version ++
-                request.txn = new CreateTxn(path, createRequest.getData(),                  // 构建 CreateTxn, 从这里也可以看出, newCversion 值是 通过 outstandingChangesForPath 获取到, 然后进行 ++ 操作
+                int newCversion = parentRecord.stat.getCversion()+1;                        // 20. 将父节点的 stat 中 创建子节点的属性 Cversion ++
+                request.txn = new CreateTxn(path, createRequest.getData(),                  // 21. 构建 CreateTxn, 从这里也可以看出, newCversion 值是 通过 outstandingChangesForPath 获取到, 然后进行 ++ 操作
                         listACL,
                         createMode.isEphemeral(), newCversion);
                 StatPersisted s = new StatPersisted();
-                if (createMode.isEphemeral()) {                                             // 判断创建的 path 是否是 临时节点
+                if (createMode.isEphemeral()) {                                             // 22. 判断创建的 path 是否是 临时节点(为什么这里要 setEphemeralOwner 呢, 因为在 closeSession 会从ephemerals里面找出需要删除的path, 进行删除)
                     s.setEphemeralOwner(request.sessionId);
                 }
                 parentRecord = parentRecord.duplicate(request.hdr.getZxid());
-                parentRecord.childCount++;                                                // 父 path 的 子节点数 ++
-                parentRecord.stat.setCversion(newCversion);                                // 设置新的 Cversion, childCount,
-                addChangeRecord(parentRecord);                                              // 添加父节点要改变的事件到对应的队列里面
-                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,           // 将子节点新生成的事件添加到对应的对立里面
+                parentRecord.childCount++;                                                  // 23. 父 path 的 子节点数 ++
+                parentRecord.stat.setCversion(newCversion);                                 // 24. 父节点 设置新的 Cversion, childCount,
+                addChangeRecord(parentRecord);                                              // 25. 添加父节点要改变的事件到对应的队列里面, 最终从 FinalRequestProcessor 里面进行取出并执行
+                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,            // 26. 将子节点新生成的事件添加到对应的对立里面, 最终从 FinalRequestProcessor 里面进行取出并执行
                         0, listACL));
                 break;
             case OpCode.delete:                                                                         // 删除 path 请求
